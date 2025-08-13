@@ -901,12 +901,12 @@ def create_game():
         logger.info("Received request to create subtle difference interview game data.")
         
         generation_progress = {'status': 'generating_companies', 'message': '企業情報を生成中... (Gemini API)', 'progress': 10}
-        # companies = GeminiGenerator.generate_companies(count=1)
-        companies = GeminiGenerator._get_fallback_companies(count=1)  # フォールバックデータを使用
+        companies = GeminiGenerator.generate_companies(count=1)
+        # companies = GeminiGenerator._get_fallback_companies(count=1)  # フォールバックデータを使用
 
         generation_progress = {'status': 'generating_candidates', 'message': '就活生情報を生成中... (Gemini API)', 'progress': 50}
-        # candidates = GeminiGenerator.generate_candidates(count=3)
-        candidates = GeminiGenerator._get_fallback_candidates(count=3)  # フォールバックデータを使用
+        candidates = GeminiGenerator.generate_candidates(count=3)
+        # candidates = GeminiGenerator._get_fallback_candidates(count=3)  # フォールバックデータを使用
         
         generation_progress = {'status': 'setting_up_game', 'message': 'ゲーム設定中...', 'progress': 80}
         selected_company = random.choice(companies)
