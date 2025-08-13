@@ -182,7 +182,7 @@ def initialize_local_model():
         print("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
     try:
         tokenizer = AutoTokenizer.from_pretrained(LOCAL_MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, trust_remote_code=True)
         
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
