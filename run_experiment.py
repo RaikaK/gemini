@@ -182,7 +182,7 @@ def initialize_local_model():
         print("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
     try:
         tokenizer = AutoTokenizer.from_pretrained(LOCAL_MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, trust_remote_code=True)
         
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -263,11 +263,11 @@ class CompanyKnowledgeManager:
             
             inner_text = segment[1:-1] if is_quoted else segment
             
-            tokens = re.findall(r'[一-龯ぁ-んァ-ヶ々a-zA-Z0-9]+|\s+|.', inner_text)
+            tokens = re.findall(r'[一-龯ぁ-んァ-ヶ々ーa-zA-Z0-9]+|\s+|.', inner_text)
             
             punched_tokens = []
             for token in tokens:
-                if re.fullmatch(r'[一-龯ぁ-んァ-ヶ々a-zA-Z0-9]+', token) and random.random() < effective_percentage:
+                if re.fullmatch(r'[一-龯ぁ-んァ-ヶ々ーa-zA-Z0-9]+', token) and random.random() < effective_percentage:
                     punched_tokens.append(placeholder * len(token))
                 else:
                     punched_tokens.append(token)
