@@ -1,15 +1,15 @@
 # 面接官役のLLMを定義するファイルです。
-# Gemini APIを使用して、面接官の質問生成や学生評価を行います
+# OpenAI APIを使用して、面接官の質問生成や学生評価を行います
 
 
 import torch
 import json
-from utils import call_gemini_api, parse_json_from_response
+from utils import call_openai_api, parse_json_from_response
 from student import InstructionPromptManager
 from config import INTERVIEWER_MODEL_NAME
 
 class InterviewerLLM:
-    """面接官役のLLM (Gemini APIを使用)"""
+    """面接官役のLLM (OpenAI APIを使用)"""
     def __init__(self, company_profile):
         self.model_name = INTERVIEWER_MODEL_NAME
         self.company = company_profile
@@ -24,7 +24,7 @@ class InterviewerLLM:
         {history_str if history_str else "（まだ会話はありません）"}
         ---
         次の質問:"""
-        question = call_gemini_api(self.model_name, prompt)
+        question = call_openai_api(self.model_name, prompt)
         thought = f"履歴を分析し、質問 '{question[:30]}...' を生成しました。"
         return question, thought
 
@@ -41,7 +41,7 @@ class InterviewerLLM:
           "summary": "評価の要約 (100字程度)",
           "evaluation_details": {{"consistency":点数,"specificity":点数,"logicality":点数,"enthusiasm":点数}}
         }}"""
-        response = call_gemini_api(self.model_name, prompt)
+        response = call_openai_api(self.model_name, prompt)
         return parse_json_from_response(response)
 
 class LLamaInterviewResponseGenerator:
