@@ -1,7 +1,7 @@
 # --- APIモデル設定 (面接官役 & データ生成役) ---
-GEMINI_API_KEY = "AIzaSyA_XleL8lGvzJAE1QTpfS429amLos6jqgc"
-INTERVIEWER_MODEL_NAME = "gemini-1.5-flash"
-GENERATOR_MODEL_NAME = "gemini-1.5-flash" 
+OPENAI_API_KEY = "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"
+INTERVIEWER_MODEL_NAME = "gpt-4o-mini"
+GENERATOR_MODEL_NAME = "gpt-4o-mini" 
 
 # --- ローカルモデル設定 (学生役) ---
 LOCAL_MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"

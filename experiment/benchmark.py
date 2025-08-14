@@ -3,7 +3,7 @@
 import os
 import json
 import glob
-from utils import call_gemini_api, parse_json_from_response
+from utils import call_openai_api, parse_json_from_response
 from config import GENERATOR_MODEL_NAME
 
 class BenchmarkEvaluator:
@@ -97,7 +97,7 @@ class BenchmarkEvaluator:
             prompt = self._create_student_evaluation_prompt(
                 candidate_knowledge, turn["question"], turn["answer"]
             )
-            response = call_gemini_api(self.evaluator_model_name, prompt)
+            response = call_openai_api(self.evaluator_model_name, prompt)
             evaluation = parse_json_from_response(response)
             turn_evaluations.append({
                 "turn": turn["turn"],
@@ -118,7 +118,7 @@ class BenchmarkEvaluator:
                 prompt = self._create_interviewer_evaluation_prompt(
                     candidate_knowledge, turn["question"]
                 )
-                response = call_gemini_api(self.evaluator_model_name, prompt)
+                response = call_openai_api(self.evaluator_model_name, prompt)
                 evaluation = parse_json_from_response(response)
                 interviewer_evaluations.append({
                     "turn": turn["turn"],

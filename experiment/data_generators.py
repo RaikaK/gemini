@@ -1,5 +1,5 @@
 import json
-from utils import call_gemini_api, parse_json_from_response
+from utils import call_openai_api, parse_json_from_response
 from config import GENERATOR_MODEL_NAME
 
 def generate_company_profile():
@@ -40,7 +40,7 @@ def generate_company_profile():
     - リアルな規模感（従業員数100-5000名程度）
     - 現代的な日本企業として設定
     """
-    response = call_gemini_api(GENERATOR_MODEL_NAME, prompt)
+    response = call_openai_api(GENERATOR_MODEL_NAME, prompt)
     data = parse_json_from_response(response)
     
     if isinstance(data, dict) and "companies" in data and len(data["companies"]) > 0:
@@ -86,7 +86,7 @@ def generate_candidate_profiles(company_profile, num_candidates):
     - リアルな日本の就活生として設定
     - `preparation`は、{num_candidates}人分を 'high', 'medium', 'low' に1人ずつ割り当ててください。
     """
-    response = call_gemini_api(GENERATOR_MODEL_NAME, prompt)
+    response = call_openai_api(GENERATOR_MODEL_NAME, prompt)
     data = parse_json_from_response(response)
     
     if isinstance(data, dict) and "candidates" in data:
