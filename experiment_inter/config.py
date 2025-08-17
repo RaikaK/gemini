@@ -1,9 +1,12 @@
-# --- APIモデル設定 (面接官役 & データ生成役) ---
-OPENAI_API_KEY = "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"
-INTERVIEWER_MODEL_NAME = "gpt-4o-mini"
-GENERATOR_MODEL_NAME = "gpt-4o-mini" 
+# config.py
 
-# --- ローカルモデル設定 (学生役) ---
+# --- APIモデル設定 (データ生成 & 今回は【学生役】) ---
+OPENAI_API_KEY = "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"  # ご自身のAPIキーを設定してください
+GENERATOR_MODEL_NAME = "gpt-4o-mini"
+APPLICANT_API_MODEL = "gpt-4o-mini" # 学生役として使用するAPIモデル
+
+# --- ローカルモデル設定 (今回は【面接官役】) ---
+# main.pyで初期化され、面接官として振る舞います
 LOCAL_MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 # --- 実験設定 ---
