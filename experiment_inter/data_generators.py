@@ -84,7 +84,11 @@ def generate_candidate_profiles(company_profile, num_candidates):
     - 具体的で説得力のあるガクチカエピソード
     - 異なる強みや興味分野を持つ学生
     - リアルな日本の就活生として設定
-    - `preparation`は、{num_candidates}人分を 'high', 'medium', 'low' に1人ずつ割り当ててください。
+    - 各候補の "preparation" フィールドは以下の順序で必ず出力してください。
+      1人目: "low"
+      2人目: "medium"
+      3人目: "high"
+      この順序以外は絶対に許されません。
     """
     response = call_openai_api(GENERATOR_MODEL_NAME, prompt)
     data = parse_json_from_response(response)
