@@ -36,6 +36,28 @@ class LocalInterviewerLLM:
         
         response = outputs[0][inputs.shape[-1]:]
         return self.tokenizer.decode(response, skip_special_tokens=True).strip()
+    
+    def ask_common_question(self, already_asked_questions):
+        """全候補者向けの共通質問を生成する"""
+        asked_questions_str = "\n".join(f"- {q}" for q in already_asked_questions)
+        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
+        これから行う面接で、候補者全員に尋ねるのにふさわしい、ごく標準的な質問を1つだけ考えてください。
+        
+        # 企業の基本情報
+        - 企業名: {self.company.get('name')}
+        - 事業内容: {self.company.get('business')}
+
+        # 既に出題した質問 (これらの質問は避けてください)
+        {asked_questions_str if asked_questions_str else "（まだ質問はありません）"}
+        
+        指示:
+        - 自己紹介や志望動機、ガクチカ、長所・短所、逆質問など、一般的な質問を生成してください。
+        - 次の質問文のみを生成してください。思考プロセスや前置きは一切不要です。
+        
+        質問:"""
+        question = self._generate_response(prompt, max_tokens=100)
+        thought = "ローカルモデルが次の全体質問を生成しました。"
+        return question, thought
 
     def ask_question(self, conversation_history):
         """会話履歴に基づき、次の質問を生成する"""
@@ -97,7 +119,6 @@ class LocalInterviewerLLM:
         print("--- 最終評価(2/3): 候補者の順位付けを完了 ---")
         return response
 
-    # ★★★ この関数を全面的に修正 ★★★
     def _calculate_detection_metrics(self, llm_output_text, all_states):
         """
         LLMの構造化出力と正解データを比較し、検出性能のメトリクスを計算する（堅牢版）。
@@ -111,7 +132,8 @@ class LocalInterviewerLLM:
 
             # 正規表現で各候補者の分析ブロックを抽出
             # (?s)は複数行にまたがるマッチングを許可するフラグ
-            pattern = re.compile(f"- {re.escape(candidate_name)}:(?s)(.*?)(?=- |$)", re.DOTALL)
+            # LLMの出力形式に合わせて、名前の前の "- " を削除
+            pattern = re.compile(f"{re.escape(candidate_name)}:(?s)(.*?)(?=\\n\\n|$)")
             match = pattern.search(llm_output_text)
             
             if match:
