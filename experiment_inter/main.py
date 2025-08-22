@@ -67,18 +67,19 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
         })
 
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    common_question_index = 0
+    # 質問済みの全体質問を保持するリストを作成
+    asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
     for round_num, question_type in enumerate(config.INTERVIEW_FLOW):
         print(f"\n{'='*80}\n--- 面接ラウンド {round_num + 1}/{len(config.INTERVIEW_FLOW)} ---\n{'='*80}")
 
         if question_type == 0: # 全体質問
-            if common_question_index >= len(config.COMMON_QUESTIONS):
-                print("警告: 共通質問が不足。スキップします。")
-                continue
-            question = config.COMMON_QUESTIONS[common_question_index]
-            print(f"--- 全体質問: 「{question}」 ---")
+            print("--- 全体質問フェーズ ---")
+            print("  面接官 (Local) が全体質問を生成中...")
+            question, _ = interviewer.ask_common_question(asked_common_questions)
+            asked_common_questions.append(question) # 生成した質問をリストに追加
+            print(f"--- 生成された全体質問: 「{question}」 ---")
             
             for i, state in enumerate(candidate_states):
                 print(f"\n -> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
@@ -88,7 +89,6 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
                 )
                 print(f"  学生 (API): {answer}")
                 state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
-            common_question_index += 1
 
         elif question_type == 1: # 個別質問
             print("--- 個別質問フェーズ ---")
@@ -107,20 +107,19 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
     # --- 4. 最終評価 (新しい3つの全体評価タスク) ---
     print(f"\n{'='*80}\n--- 最終評価フェーズ ---\n{'='*80}")
     
-    best_candidate_eval = interviewer.select_best_candidate(candidate_states)
-    print("\n[評価1: 最優秀候補者]")
+    best_candidate_eval = interviewer.select_worst_candidate(candidate_states)
+    print("\n[評価1: 人狼]")
     print(best_candidate_eval)
     
     ranking_eval = interviewer.rank_candidates(candidate_states)
-    print("\n[評価2: 候補者ランキング]")
+    print("\n[評価2: 候補者ランキング（低い順）]")
     print(ranking_eval)
 
     knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states)
     print("\n[評価3: 知識欠損の分析]")
-    print(knowledge_gap_eval)
+    print(json.dumps(knowledge_gap_eval, ensure_ascii=False, indent=2)) # 整形して表示
     
-    # --- 5. 全結果の保存 (★変更点) ---
-    # final_evaluations がJSONの末尾に来るように順序を変更
+    # --- 5. 全結果の保存 ---
     final_output = {
         "experiment_info": {
             "interviewer_model": config.LOCAL_MODEL_NAME,
