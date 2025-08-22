@@ -107,12 +107,12 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
     # --- 4. 最終評価 (新しい3つの全体評価タスク) ---
     print(f"\n{'='*80}\n--- 最終評価フェーズ ---\n{'='*80}")
     
-    best_candidate_eval = interviewer.select_best_candidate(candidate_states)
-    print("\n[評価1: 最優秀候補者]")
+    best_candidate_eval = interviewer.select_worst_candidate(candidate_states)
+    print("\n[評価1: 人狼]")
     print(best_candidate_eval)
     
     ranking_eval = interviewer.rank_candidates(candidate_states)
-    print("\n[評価2: 候補者ランキング]")
+    print("\n[評価2: 候補者ランキング（低い順）]")
     print(ranking_eval)
 
     knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states)

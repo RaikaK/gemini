@@ -84,21 +84,21 @@ class LocalInterviewerLLM:
             full_log += f"会話履歴:\n{history_str}\n\n"
         return full_log.strip()
         
-    def select_best_candidate(self, all_states):
-        """評価タスク1: 最も優秀な候補者を1名選出する"""
-        print("--- 最終評価(1/3): 最優秀候補者の選定を開始 ---")
+    def select_worst_candidate(self, all_states):
+        """評価タスク1: 最も志望度が低い候補者を1名選出する"""
+        print("--- 最終評価(1/3): 人狼（最も志望度が低い候補者）の選定を開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
-        以下の全候補者の記録を確認し、「最も優秀な候補者」を1名だけ選び、名前と選定理由を100字程度で述べてください。
+        以下の全候補者の記録を確認し、「最も志望度が低いと思われる候補者」を1名だけ選び、名前と選定理由を100字程度で述べてください。
         
         {conversation_summary}
         
         出力形式:
-        最優秀候補者: [氏名]
+        人狼: [氏名]
         選定理由: [理由]
         """
         response = self._generate_response(prompt, max_tokens=200)
-        print("--- 最終評価(1/3): 最優秀候補者の選定を完了 ---")
+        print("--- 最終評価(1/3): 人狼の選定を完了 ---")
         return response
 
     def rank_candidates(self, all_states):
@@ -106,7 +106,7 @@ class LocalInterviewerLLM:
         print("--- 最終評価(2/3): 候補者の順位付けを開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
-        以下の全候補者の記録を確認し、全候補者を評価の高い順にランキング付けし、各順位の理由を簡潔に述べてください。
+        以下の全候補者の記録を確認し、全候補者を志望度が低いと思われる順にランキング付けし、各順位の理由を簡潔に述べてください。
         
         {conversation_summary}
         
