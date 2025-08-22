@@ -143,7 +143,7 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
     # --- 5. 全結果の保存 ---
     final_output = {
         "experiment_info": {
-            "interviewer_model": config.LOCAL_MODEL_TYPE if model_type == 'local' else config.INTERVIEWER_API_MODEL,
+            "interviewer_model": (config.LOCAL_MODEL_NAME_LLAMA if config.LOCAL_MODEL_TYPE == 'llama' else config.LOCAL_MODEL_NAME_SWALLOW) if model_type == 'local' else config.INTERVIEWER_API_MODEL,
             "interviewer_type": model_type,
             "applicant_model": config.APPLICANT_API_MODEL,
             "timestamp": datetime.datetime.now().isoformat()
