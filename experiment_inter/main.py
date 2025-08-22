@@ -13,7 +13,11 @@ from interv import Interviewer # 統合されたInterviewerクラスをインポ
 
 def initialize_local_model():
     """Hugging Faceからローカルモデルを読み込み、GPUに配置する"""
-    print(f"--- 面接官役のローカルモデル ({config.LOCAL_MODEL_NAME}) の初期化を開始 ---")
+    if config.LOCAL_MODEL_TYPE == 'llama':
+        LOCAL_MODEL_NAME = config.LOCAL_MODEL_NAME_LLAMA
+    else:
+        LOCAL_MODEL_NAME = config.LOCAL_MODEL_NAME_SWALLOW
+    print(f"--- 面接官役のローカルモデル ({LOCAL_MODEL_NAME}) の初期化を開始 ---")
     if not torch.cuda.is_available():
         print("警告: CUDAが利用できません。CPUでの実行は非常に遅くなります。")
         quantization_config = None
@@ -23,8 +27,8 @@ def initialize_local_model():
         torch_dtype = torch.bfloat16
         print("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
     try:
-        tokenizer = AutoTokenizer.from_pretrained(config.LOCAL_MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(config.LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(LOCAL_MODEL_NAME)
+        model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
         
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -139,7 +143,7 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
     # --- 5. 全結果の保存 ---
     final_output = {
         "experiment_info": {
-            "interviewer_model": config.LOCAL_MODEL_NAME if model_type == 'local' else config.INTERVIEWER_API_MODEL,
+            "interviewer_model": config.LOCAL_MODEL_TYPE if model_type == 'local' else config.INTERVIEWER_API_MODEL,
             "interviewer_type": model_type,
             "applicant_model": config.APPLICANT_API_MODEL,
             "timestamp": datetime.datetime.now().isoformat()
