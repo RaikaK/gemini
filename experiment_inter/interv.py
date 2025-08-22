@@ -2,61 +2,73 @@
 
 import torch
 import json
-import re # 正規表現を扱うためにインポート
+import re
+from utils import call_openai_api
+import config
 
-class LocalInterviewerLLM:
-    """面接官役のLLM (ローカルモデルを使用)"""
-    def __init__(self, company_profile, model, tokenizer):
+class Interviewer:
+    """
+    面接官役のLLMを扱う統合クラス。
+    ローカルモデルとAPIモデルの両方に対応。
+    """
+    def __init__(self, company_profile, model_type, model=None, tokenizer=None):
+        """
+        Args:
+            company_profile (dict): 企業情報
+            model_type (str): 'local' または 'api'
+            model (AutoModelForCausalLM, optional): ローカルモデル. Defaults to None.
+            tokenizer (AutoTokenizer, optional): ローカルモデル用トークナイザ. Defaults to None.
+        """
         self.company = company_profile
+        self.model_type = model_type
         self.model = model
         self.tokenizer = tokenizer
 
+        if self.model_type == 'local' and (not self.model or not self.tokenizer):
+            raise ValueError("ローカルモデルタイプには 'model' と 'tokenizer' が必要です。")
+
     def _generate_response(self, prompt, max_tokens=512):
-        """ローカルモデルを使用して応答を生成する共通ヘルパー"""
-        messages = [
-            {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
-            {"role": "user", "content": prompt}
-        ]
+        """モデルタイプに応じて応答を生成する"""
+        if self.model_type == 'local':
+            # --- ローカルモデルでの生成ロジック ---
+            messages = [
+                {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
+                {"role": "user", "content": prompt}
+            ]
+            inputs = self.tokenizer.apply_chat_template(
+                messages, add_generation_prompt=True, return_tensors="pt"
+            ).to(self.model.device)
+            attention_mask = torch.ones_like(inputs).to(self.model.device)
+            outputs = self.model.generate(
+                inputs,
+                attention_mask=attention_mask,
+                max_new_tokens=max_tokens,
+                eos_token_id=self.tokenizer.eos_token_id,
+                do_sample=True, temperature=0.6, top_p=0.9,
+            )
+            response = outputs[0][inputs.shape[-1]:]
+            return self.tokenizer.decode(response, skip_special_tokens=True).strip()
+
+        elif self.model_type == 'api':
+            # --- APIモデルでの生成ロジック ---
+            system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
+            full_prompt = f"システム指示: {system_prompt}\n\nユーザー指示:\n{prompt}"
+            return call_openai_api(config.INTERVIEWER_API_MODEL, full_prompt)
         
-        inputs = self.tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, return_tensors="pt"
-        ).to(self.model.device)
-        
-        attention_mask = torch.ones_like(inputs).to(self.model.device)
-        
-        outputs = self.model.generate(
-            inputs,
-            attention_mask=attention_mask,
-            max_new_tokens=max_tokens,
-            eos_token_id=self.tokenizer.eos_token_id,
-            do_sample=True,
-            temperature=0.6,
-            top_p=0.9,
-        )
-        
-        response = outputs[0][inputs.shape[-1]:]
-        return self.tokenizer.decode(response, skip_special_tokens=True).strip()
-    
+        else:
+            raise ValueError(f"無効なモデルタイプです: {self.model_type}")
+
     def ask_common_question(self, already_asked_questions):
         """全候補者向けの共通質問を生成する"""
         asked_questions_str = "\n".join(f"- {q}" for q in already_asked_questions)
         prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
-        これから行う面接で、候補者全員に尋ねるのにふさわしい、ごく標準的な質問を1つだけ考えてください。
-        
-        # 企業の基本情報
-        - 企業名: {self.company.get('name')}
-        - 事業内容: {self.company.get('business')}
-
+        候補者全員に尋ねるのにふさわしい、ごく標準的な質問を1つだけ考えてください。
         # 既に出題した質問 (これらの質問は避けてください)
         {asked_questions_str if asked_questions_str else "（まだ質問はありません）"}
-        
-        指示:
-        - 自己紹介や志望動機、ガクチカ、長所・短所、逆質問など、一般的な質問を生成してください。
-        - 次の質問文のみを生成してください。思考プロセスや前置きは一切不要です。
-        
+        指示: 次の質問文のみを生成してください。思考プロセスや前置きは一切不要です。
         質問:"""
         question = self._generate_response(prompt, max_tokens=100)
-        thought = "ローカルモデルが次の全体質問を生成しました。"
+        thought = f"{self.model_type}モデルが次の全体質問を生成しました。"
         return question, thought
 
     def ask_question(self, conversation_history):
@@ -64,14 +76,12 @@ class LocalInterviewerLLM:
         history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in conversation_history])
         prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
         以下の会話履歴を読み、学生の回答を深掘りするための次の質問を1つだけ考えてください。
-        
         会話履歴:
         {history_str if history_str else "（まだ会話はありません）"}
-        
         指示: 次の質問のみを生成してください。思考プロセスや前置きは不要です。
         質問:"""
         question = self._generate_response(prompt, max_tokens=100)
-        thought = "ローカルモデルが次の質問を生成しました。"
+        thought = f"{self.model_type}モデルが次の質問を生成しました。"
         return question, thought
 
     def _format_all_conversations(self, all_states):
@@ -83,27 +93,25 @@ class LocalInterviewerLLM:
             full_log += f"--- 候補者{i+1}: {profile.get('name')} ---\n"
             full_log += f"会話履歴:\n{history_str}\n\n"
         return full_log.strip()
-        
-    def select_worst_candidate(self, all_states):
+
+    def select_least_motivated_candidate(self, all_states):
         """評価タスク1: 最も志望度が低い候補者を1名選出する"""
-        print("--- 最終評価(1/3): 人狼（最も志望度が低い候補者）の選定を開始 ---")
+        print(f"--- 最終評価(1/3): 最も志望度が低い候補者の選定を開始 ({self.model_type}モデル) ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
         以下の全候補者の記録を確認し、「最も志望度が低いと思われる候補者」を1名だけ選び、名前と選定理由を100字程度で述べてください。
-        
         {conversation_summary}
-        
         出力形式:
-        人狼: [氏名]
+        最も志望度が低い候補者: [氏名]
         選定理由: [理由]
         """
         response = self._generate_response(prompt, max_tokens=200)
         print("--- 最終評価(1/3): 人狼の選定を完了 ---")
         return response
 
-    def rank_candidates(self, all_states):
-        """評価タスク2: 全候補者をランキング付けする"""
-        print("--- 最終評価(2/3): 候補者の順位付けを開始 ---")
+    def rank_candidates_by_motivation(self, all_states):
+        """評価タスク2: 全候補者を志望度が低い順にランキング付けする"""
+        print(f"--- 最終評価(2/3): 候補者の志望度順位付けを開始 ({self.model_type}モデル) ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
         以下の全候補者の記録を確認し、全候補者を志望度が低いと思われる順にランキング付けし、各順位の理由を簡潔に述べてください。
@@ -129,11 +137,7 @@ class LocalInterviewerLLM:
             candidate_name = state['profile']['name']
             note = None
             detected_missing_keys = set()
-
-            # 正規表現で各候補者の分析ブロックを抽出
-            # (?s)は複数行にまたがるマッチングを許可するフラグ
-            # LLMの出力形式に合わせて、名前の前の "- " を削除
-            pattern = re.compile(f"{re.escape(candidate_name)}:(?s)(.*?)(?=\\n\\n|$)")
+            pattern = re.compile(f"{re.escape(candidate_name)}:(.*?)(?=\\n\\n|$)", re.DOTALL)
             match = pattern.search(llm_output_text)
             
             if match:
@@ -166,15 +170,8 @@ class LocalInterviewerLLM:
             f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
             result = {
-                "metrics": {
-                    "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
-                    "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
-                },
-                "details": {
-                    "correctly_detected_gaps (TP)": list(true_positives),
-                    "incorrectly_detected_gaps (FP)": list(false_positives),
-                    "missed_gaps (FN)": list(false_negatives),
-                }
+                "metrics": {"precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3)},
+                "details": {"correctly_detected (TP)": list(true_positives), "incorrectly_detected (FP)": list(false_positives), "missed (FN)": list(false_negatives)}
             }
             if note:
                 result["note"] = note
@@ -222,8 +219,7 @@ class LocalInterviewerLLM:
           分析: [ここに分析内容を記述]
           欠損項目キー: []
         """
-        llm_analysis_text = self._generate_response(prompt, max_tokens=512)
-        
+        llm_analysis_text = self._generate_response(prompt, max_tokens=1024) # 少し長めに変更
         performance_metrics = self._calculate_detection_metrics(llm_analysis_text, all_states)
         
         print("--- 最終評価(3/3): 知識欠損の分析と精度評価を完了 ---")
