@@ -6,16 +6,13 @@ import datetime
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
-# 分割したファイルから必要なモジュールをインポート
 import config
 import data_generators
-# student.pyからはCompanyKnowledgeManagerと新しいGPTApplicantをインポート
 from student import CompanyKnowledgeManager, GPTApplicant
-# interv.pyからは新しいLocalInterviewerLLMをインポート
-from interv import LocalInterviewerLLM
+from interv import Interviewer # 統合されたInterviewerクラスをインポート
 
 def initialize_local_model():
-    """Hugging Faceからローカルモデルを読み込み、GPUに配置する (今回は面接官役)"""
+    """Hugging Faceからローカルモデルを読み込み、GPUに配置する"""
     print(f"--- 面接官役のローカルモデル ({config.LOCAL_MODEL_NAME}) の初期化を開始 ---")
     if not torch.cuda.is_available():
         print("警告: CUDAが利用できません。CPUでの実行は非常に遅くなります。")
@@ -40,8 +37,8 @@ def initialize_local_model():
         print(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
-    """面接シミュレーション全体を実行する (学生: API, 面接官: Local)"""
+def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None):
+    """面接シミュレーション全体を実行する"""
     # --- 1. 動的情報生成 ---
     company_profile = data_generators.generate_company_profile()
     if not isinstance(company_profile, dict) or "error" in company_profile:
@@ -53,8 +50,29 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
         print("学生プロフィールの生成に失敗。実験を中止します。")
         return
 
-    # --- 2. 各種マネージャーと候補者情報の初期化 (役割交代) ---
-    interviewer = LocalInterviewerLLM(company_profile, local_interviewer_model, local_interviewer_tokenizer)
+    # --- 2. 面接官と候補者の初期化 ---
+    model_type = config.INTERVIEWER_MODEL_TYPE
+    print(f"--- 面接官タイプ: {model_type} ---")
+    try:
+        if model_type == 'local':
+            interviewer = Interviewer(
+                company_profile=company_profile,
+                model_type='local',
+                model=local_interviewer_model,
+                tokenizer=local_interviewer_tokenizer
+            )
+        elif model_type == 'api':
+            interviewer = Interviewer(
+                company_profile=company_profile,
+                model_type='api'
+            )
+        else:
+            print(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
+            return
+    except ValueError as e:
+        print(f"エラー: {e}")
+        return
+
     knowledge_manager = CompanyKnowledgeManager(company_profile)
     applicant = GPTApplicant(config.APPLICANT_API_MODEL)
     
@@ -67,7 +85,6 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
         })
 
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    # 質問済みの全体質問を保持するリストを作成
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
@@ -76,9 +93,9 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
 
         if question_type == 0: # 全体質問
             print("--- 全体質問フェーズ ---")
-            print("  面接官 (Local) が全体質問を生成中...")
+            print(f"  面接官 ({model_type}) が全体質問を生成中...")
             question, _ = interviewer.ask_common_question(asked_common_questions)
-            asked_common_questions.append(question) # 生成した質問をリストに追加
+            asked_common_questions.append(question)
             print(f"--- 生成された全体質問: 「{question}」 ---")
             
             for i, state in enumerate(candidate_states):
@@ -94,9 +111,9 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
             print("--- 個別質問フェーズ ---")
             for i, state in enumerate(candidate_states):
                 print(f"\n -> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                print("  面接官 (Local) が質問を生成中...")
+                print(f"  面接官 ({model_type}) が質問を生成中...")
                 question, _ = interviewer.ask_question(state["conversation_log"])
-                print(f"  面接官 (Local): {question}")
+                print(f"  面接官 ({model_type}): {question}")
                 print("  学生 (API) が応答を生成中...")
                 answer = applicant.generate(
                     state["profile"], state["knowledge_tuple"], state["conversation_log"], question
@@ -104,25 +121,26 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
                 print(f"  学生 (API): {answer}")
                 state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
 
-    # --- 4. 最終評価 (新しい3つの全体評価タスク) ---
+    # --- 4. 最終評価 ---
     print(f"\n{'='*80}\n--- 最終評価フェーズ ---\n{'='*80}")
     
-    best_candidate_eval = interviewer.select_worst_candidate(candidate_states)
-    print("\n[評価1: 人狼]")
-    print(best_candidate_eval)
+    least_motivated_eval = interviewer.select_least_motivated_candidate(candidate_states)
+    print("\n[評価1: 最も志望度が低い候補者]")
+    print(least_motivated_eval)
     
-    ranking_eval = interviewer.rank_candidates(candidate_states)
-    print("\n[評価2: 候補者ランキング（低い順）]")
+    ranking_eval = interviewer.rank_candidates_by_motivation(candidate_states)
+    print("\n[評価2: 候補者ランキング（志望度が低い順）]")
     print(ranking_eval)
 
     knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states)
     print("\n[評価3: 知識欠損の分析]")
-    print(json.dumps(knowledge_gap_eval, ensure_ascii=False, indent=2)) # 整形して表示
+    print(json.dumps(knowledge_gap_eval, ensure_ascii=False, indent=2))
     
     # --- 5. 全結果の保存 ---
     final_output = {
         "experiment_info": {
-            "interviewer_model": config.LOCAL_MODEL_NAME,
+            "interviewer_model": config.LOCAL_MODEL_NAME if model_type == 'local' else config.INTERVIEWER_API_MODEL,
+            "interviewer_type": model_type,
             "applicant_model": config.APPLICANT_API_MODEL,
             "timestamp": datetime.datetime.now().isoformat()
         },
@@ -137,14 +155,14 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
             for s in candidate_states
         ],
         "final_evaluations": {
-            "best_candidate": best_candidate_eval,
-            "ranking": ranking_eval,
+            "least_motivated_candidate": least_motivated_eval,
+            "motivation_ranking": ranking_eval,
             "knowledge_gaps": knowledge_gap_eval
         }
     }
 
     if not os.path.exists('results'): os.makedirs('results')
-    filename = f"results/experiment_reversed_{timestamp_str}.json"
+    filename = f"results/experiment_results_{timestamp_str}.json"
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
         
@@ -153,9 +171,14 @@ def run_experiment(local_interviewer_model, local_interviewer_tokenizer):
 
 
 if __name__ == "__main__":
-    local_model, local_tokenizer = initialize_local_model()
-
-    if local_model and local_tokenizer:
-        run_experiment(local_model, local_tokenizer)
+    model_type = config.INTERVIEWER_MODEL_TYPE
+    if model_type == 'local':
+        local_model, local_tokenizer = initialize_local_model()
+        if local_model and local_tokenizer:
+            run_experiment(local_model, local_tokenizer)
+        else:
+            print("ローカルモデルの初期化に失敗したため、実験を中止します。")
+    elif model_type == 'api':
+        run_experiment()
     else:
-        print("ローカルモデルの初期化に失敗したため、実験を中止します。")
+        print(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
