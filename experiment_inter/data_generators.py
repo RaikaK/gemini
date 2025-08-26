@@ -1,6 +1,62 @@
 import json
+import random
 from utils import call_openai_api, parse_json_from_response
 from config import GENERATOR_MODEL_NAME
+
+def load_company_and_candidates_from_db(set_index=None):
+    """db.jsonから企業情報と学生プロフィールを読み込む"""
+    print("--- db.jsonから企業情報と学生プロフィールを読み込み中 ---")
+    
+    try:
+        with open('db.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        if not isinstance(data, list) or len(data) == 0:
+            print("--- db.jsonの形式が不正です ---")
+            return None, None
+        
+        # セットインデックスが指定されていない場合はランダムに選択
+        if set_index is None:
+            set_index = random.randint(0, len(data) - 1)
+        elif set_index >= len(data):
+            print(f"--- 指定されたセットインデックス {set_index} が範囲外です。最大値: {len(data) - 1} ---")
+            set_index = random.randint(0, len(data) - 1)
+        
+        selected_set = data[set_index]
+        
+        if 'company' not in selected_set or 'students' not in selected_set:
+            print("--- 選択されたセットに企業情報または学生情報が含まれていません ---")
+            return None, None
+        
+        company_profile = selected_set['company']
+        candidate_profiles = selected_set['students']
+        
+        # 学生プロフィールにpreparationフィールドを追加（aspiration_levelに基づいて設定）
+        for i, profile in enumerate(candidate_profiles):
+            aspiration_level = profile.get('aspiration_level', 'medium_70_percent')
+            if 'high_90_percent' in aspiration_level:
+                profile['preparation'] = 'high'
+            elif 'medium_70_percent' in aspiration_level:
+                profile['preparation'] = 'medium'
+            else:
+                profile['preparation'] = 'low'
+        
+        print(f"--- セット {set_index + 1} を選択しました ---")
+        print(f"--- 企業: {company_profile.get('name', 'N/A')} ---")
+        print(f"--- 学生数: {len(candidate_profiles)}人 ---")
+        
+        return company_profile, candidate_profiles
+        
+    except FileNotFoundError:
+        print("--- db.jsonファイルが見つかりません ---")
+        return None, None
+    except json.JSONDecodeError as e:
+        print(f"--- db.jsonのJSON形式が不正です: {e} ---")
+        return None, None
+    except Exception as e:
+        print(f"--- db.jsonの読み込み中にエラーが発生しました: {e} ---")
+        return None, None
+
 
 def generate_company_profile():
     """架空の企業情報を生成する"""

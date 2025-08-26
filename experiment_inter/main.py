@@ -37,18 +37,17 @@ def initialize_local_model():
         print(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None):
+def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None):
     """面接シミュレーション全体を実行する"""
-    # --- 1. 動的情報生成 ---
-    company_profile = data_generators.generate_company_profile()
-    if not isinstance(company_profile, dict) or "error" in company_profile:
-        print("企業情報の生成に失敗。実験を中止します。")
+    # --- 1. db.jsonからデータ読み込み ---
+    company_profile, candidate_profiles = data_generators.load_company_and_candidates_from_db(set_index)
+    if company_profile is None or candidate_profiles is None:
+        print("db.jsonからのデータ読み込みに失敗。実験を中止します。")
         return
 
-    candidate_profiles = data_generators.generate_candidate_profiles(company_profile, config.NUM_CANDIDATES)
-    if not isinstance(candidate_profiles, list) or not candidate_profiles:
-        print("学生プロフィールの生成に失敗。実験を中止します。")
-        return
+    if len(candidate_profiles) < config.NUM_CANDIDATES:
+        print(f"警告: 読み込まれた学生数({len(candidate_profiles)})が設定値({config.NUM_CANDIDATES})より少ないため、利用可能な学生を使用します。")
+        candidate_profiles = candidate_profiles[:config.NUM_CANDIDATES]
 
     # --- 2. 面接官と候補者の初期化 ---
     model_type = config.INTERVIEWER_MODEL_TYPE
@@ -172,13 +171,17 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
 
 if __name__ == "__main__":
     model_type = config.INTERVIEWER_MODEL_TYPE
+    
+    # セットインデックスを指定する場合はここで設定（Noneの場合はランダム選択）
+    set_index = None  # 例: set_index = 0 で最初のセットを選択
+    
     if model_type == 'local':
         local_model, local_tokenizer = initialize_local_model()
         if local_model and local_tokenizer:
-            run_experiment(local_model, local_tokenizer)
+            run_experiment(local_model, local_tokenizer, set_index)
         else:
             print("ローカルモデルの初期化に失敗したため、実験を中止します。")
     elif model_type == 'api':
-        run_experiment()
+        run_experiment(set_index=set_index)
     else:
         print(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
