@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package udi;
+option csharp_namespace = "YgomGame.UDI";
+
+
+service UdiRpc {
+    rpc SendDuel (DuelData) returns (DuelReply) {}
+}
+
+message DuelData {
+    string data = 1;
+}
+
+message DuelReply {
+    string data = 1;
+}
