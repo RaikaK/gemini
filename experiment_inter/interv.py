@@ -127,6 +127,8 @@ class Interviewer:
         print("--- 最終評価(2/3): 候補者の順位付けを完了 ---")
         return response
 
+
+
     def _calculate_detection_metrics(self, llm_output_text, all_states):
         """
         LLMの構造化出力と正解データを比較し、検出性能のメトリクスを計算する（堅牢版）。

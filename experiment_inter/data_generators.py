@@ -13,7 +13,7 @@ def load_company_and_candidates_from_db(set_index=None):
         
         if not isinstance(data, list) or len(data) == 0:
             print("--- db.jsonの形式が不正です ---")
-            return None, None
+            return None, None, None
         
         # セットインデックスが指定されていない場合はランダムに選択
         if set_index is None:
@@ -26,7 +26,7 @@ def load_company_and_candidates_from_db(set_index=None):
         
         if 'company' not in selected_set or 'students' not in selected_set:
             print("--- 選択されたセットに企業情報または学生情報が含まれていません ---")
-            return None, None
+            return None, None, None
         
         company_profile = selected_set['company']
         candidate_profiles = selected_set['students']
@@ -45,17 +45,17 @@ def load_company_and_candidates_from_db(set_index=None):
         print(f"--- 企業: {company_profile.get('name', 'N/A')} ---")
         print(f"--- 学生数: {len(candidate_profiles)}人 ---")
         
-        return company_profile, candidate_profiles
+        return company_profile, candidate_profiles, set_index
         
     except FileNotFoundError:
         print("--- db.jsonファイルが見つかりません ---")
-        return None, None
+        return None, None, None
     except json.JSONDecodeError as e:
         print(f"--- db.jsonのJSON形式が不正です: {e} ---")
-        return None, None
+        return None, None, None
     except Exception as e:
         print(f"--- db.jsonの読み込み中にエラーが発生しました: {e} ---")
-        return None, None
+        return None, None, None
 
 
 def generate_company_profile():
