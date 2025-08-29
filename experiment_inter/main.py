@@ -40,7 +40,7 @@ def initialize_local_model():
 def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None):
     """面接シミュレーション全体を実行する"""
     # --- 1. db.jsonからデータ読み込み ---
-    company_profile, candidate_profiles = data_generators.load_company_and_candidates_from_db(set_index)
+    company_profile, candidate_profiles, set_i = data_generators.load_company_and_candidates_from_db(set_index)
     if company_profile is None or candidate_profiles is None:
         print("db.jsonからのデータ読み込みに失敗。実験を中止します。")
         return
