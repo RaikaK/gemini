@@ -107,8 +107,13 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
         
         # 評価3: 知識欠損検出精度（オプション）
         knowledge_gaps_metrics = None
+        knowledge_gaps_detailed = None
         if knowledge_gaps_eval and isinstance(knowledge_gaps_eval, dict):
             knowledge_gaps_metrics = knowledge_gaps_eval.get('quantitative_performance_metrics', {})
+            knowledge_gaps_detailed = {
+                'llm_qualitative_analysis': knowledge_gaps_eval.get('llm_qualitative_analysis', ''),
+                'quantitative_performance_metrics': knowledge_gaps_eval.get('quantitative_performance_metrics', {})
+            }
         
         return {
             'is_correct': is_correct,
@@ -121,7 +126,8 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
             'y_true': y_true,
             'y_pred': y_pred,
             'ranking_accuracy': ranking_accuracy,
-            'knowledge_gaps_metrics': knowledge_gaps_metrics
+            'knowledge_gaps_metrics': knowledge_gaps_metrics,
+            'knowledge_gaps_detailed': knowledge_gaps_detailed
         }
     except Exception as e:
         log_message(f"精度指標の計算中にエラーが発生しました: {e}")
@@ -332,6 +338,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
             "motivation_ranking": ranking_eval,
             "knowledge_gaps": knowledge_gap_eval
         },
+        "knowledge_gaps_detailed": accuracy_metrics.get('knowledge_gaps_detailed') if accuracy_metrics else None,
         "accuracy_metrics": accuracy_metrics
     }
     
@@ -343,7 +350,15 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         if accuracy_metrics.get('ranking_accuracy'):
             log_message(f"評価2 - ランキング正解率: {accuracy_metrics['ranking_accuracy']['accuracy']:.3f}")
         if accuracy_metrics.get('knowledge_gaps_metrics'):
-            log_message(f"評価3 - 知識欠損検出: 利用可能")
+            kg_metrics = accuracy_metrics['knowledge_gaps_metrics']
+            log_message(f"評価3 - 知識欠損検出:")
+            log_message(f"  - 検出された知識欠損数: {kg_metrics.get('detected_gaps_count', 'N/A')}")
+            log_message(f"  - 真の知識欠損数: {kg_metrics.get('true_gaps_count', 'N/A')}")
+            log_message(f"  - 検出精度: {kg_metrics.get('detection_accuracy', 'N/A')}")
+            log_message(f"  - 検出F1スコア: {kg_metrics.get('detection_f1_score', 'N/A')}")
+            log_message(f"  - 検出された欠損詳細: {kg_metrics.get('detected_gaps_details', 'N/A')}")
+        else:
+            log_message(f"評価3 - 知識欠損検出: データなし")
     
     return result
 
@@ -392,6 +407,20 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             recall_scores = [r['accuracy_metrics']['recall'] for r in all_results if r['accuracy_metrics']]
             correct_predictions = sum(1 for r in all_results if r['accuracy_metrics'] and r['accuracy_metrics']['is_correct'])
             
+            # 評価3（知識欠損検出）の集計
+            knowledge_gaps_metrics = []
+            for r in all_results:
+                if r['accuracy_metrics'] and r['accuracy_metrics'].get('knowledge_gaps_metrics'):
+                    kg_metrics = r['accuracy_metrics']['knowledge_gaps_metrics']
+                    if isinstance(kg_metrics, dict):
+                        knowledge_gaps_metrics.append(kg_metrics)
+            
+            # 評価3の集計指標を計算
+            kg_detection_accuracies = [m.get('detection_accuracy', 0) for m in knowledge_gaps_metrics if m.get('detection_accuracy') is not None]
+            kg_detection_f1_scores = [m.get('detection_f1_score', 0) for m in knowledge_gaps_metrics if m.get('detection_f1_score') is not None]
+            kg_detected_gaps_counts = [m.get('detected_gaps_count', 0) for m in knowledge_gaps_metrics if m.get('detected_gaps_count') is not None]
+            kg_true_gaps_counts = [m.get('true_gaps_count', 0) for m in knowledge_gaps_metrics if m.get('true_gaps_count') is not None]
+            
             aggregated_metrics = {
                 'total_simulations': num_simulations,
                 'correct_predictions': correct_predictions,
@@ -400,7 +429,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                 'overall_precision': np.mean(precision_scores) if precision_scores else 0,
                 'overall_recall': np.mean(recall_scores) if recall_scores else 0,
                 'accuracy_std': np.std(accuracy_scores) if accuracy_scores else 0,
-                'f1_std': np.std(f1_scores) if f1_scores else 0
+                'f1_std': np.std(f1_scores) if f1_scores else 0,
+                # 評価3（知識欠損検出）の集計指標
+                'knowledge_gaps_metrics': {
+                    'total_simulations_with_kg_data': len(knowledge_gaps_metrics),
+                    'avg_detection_accuracy': np.mean(kg_detection_accuracies) if kg_detection_accuracies else 0,
+                    'avg_detection_f1_score': np.mean(kg_detection_f1_scores) if kg_detection_f1_scores else 0,
+                    'avg_detected_gaps_count': np.mean(kg_detected_gaps_counts) if kg_detected_gaps_counts else 0,
+                    'avg_true_gaps_count': np.mean(kg_true_gaps_counts) if kg_true_gaps_counts else 0,
+                    'detection_accuracy_std': np.std(kg_detection_accuracies) if kg_detection_accuracies else 0,
+                    'detection_f1_std': np.std(kg_detection_f1_scores) if kg_detection_f1_scores else 0
+                }
             }
             
             # 全体結果の保存
@@ -430,6 +469,19 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             log_message(f"正解予測数: {correct_predictions}/{num_simulations}")
             log_message(f"全体正解率: {aggregated_metrics['overall_accuracy']:.3f} ± {aggregated_metrics['accuracy_std']:.3f}")
             log_message(f"全体F1スコア: {aggregated_metrics['overall_f1_score']:.3f} ± {aggregated_metrics['f1_std']:.3f}")
+            
+            # 評価3（知識欠損検出）の結果表示
+            kg_metrics = aggregated_metrics['knowledge_gaps_metrics']
+            log_message(f"\n--- 評価3（知識欠損検出）の集計結果 ---")
+            log_message(f"評価3データありシミュレーション数: {kg_metrics['total_simulations_with_kg_data']}/{num_simulations}")
+            if kg_metrics['total_simulations_with_kg_data'] > 0:
+                log_message(f"平均検出精度: {kg_metrics['avg_detection_accuracy']:.3f} ± {kg_metrics['detection_accuracy_std']:.3f}")
+                log_message(f"平均検出F1スコア: {kg_metrics['avg_detection_f1_score']:.3f} ± {kg_metrics['detection_f1_std']:.3f}")
+                log_message(f"平均検出知識欠損数: {kg_metrics['avg_detected_gaps_count']:.1f}")
+                log_message(f"平均真の知識欠損数: {kg_metrics['avg_true_gaps_count']:.1f}")
+            else:
+                log_message("評価3のデータがありません")
+            
             log_message(f"結果を {filename} に保存しました。")
         
     except Exception as e:
@@ -458,7 +510,10 @@ def get_experiment_results():
                         'num_candidates': len(data['interview_transcripts']),
                         'accuracy': data['accuracy_metrics']['accuracy'] if data['accuracy_metrics'] else 0,
                         'f1_score': data['accuracy_metrics']['f1_score'] if data['accuracy_metrics'] else 0,
-                        'is_correct': data['accuracy_metrics']['is_correct'] if data['accuracy_metrics'] else False
+                        'is_correct': data['accuracy_metrics']['is_correct'] if data['accuracy_metrics'] else False,
+                        'knowledge_gaps_available': bool(data['accuracy_metrics'].get('knowledge_gaps_metrics')) if data['accuracy_metrics'] else False,
+                        'knowledge_gaps_accuracy': data['accuracy_metrics'].get('knowledge_gaps_metrics', {}).get('detection_accuracy', 'N/A') if data['accuracy_metrics'] else 'N/A',
+                        'knowledge_gaps_f1': data['accuracy_metrics'].get('knowledge_gaps_metrics', {}).get('detection_f1_score', 'N/A') if data['accuracy_metrics'] else 'N/A'
                     })
             except Exception as e:
                 print(f"結果ファイル {file_path} の読み込みに失敗: {e}")
@@ -477,7 +532,10 @@ def get_experiment_results():
                         'interviewer_type': data['experiment_summary']['interviewer_type'],
                         'overall_accuracy': data['aggregated_metrics']['overall_accuracy'],
                         'overall_f1_score': data['aggregated_metrics']['overall_f1_score'],
-                        'correct_predictions': data['aggregated_metrics']['correct_predictions']
+                        'correct_predictions': data['aggregated_metrics']['correct_predictions'],
+                        'knowledge_gaps_available': bool(data['aggregated_metrics'].get('knowledge_gaps_metrics')),
+                        'knowledge_gaps_avg_accuracy': data['aggregated_metrics'].get('knowledge_gaps_metrics', {}).get('avg_detection_accuracy', 'N/A'),
+                        'knowledge_gaps_avg_f1': data['aggregated_metrics'].get('knowledge_gaps_metrics', {}).get('avg_detection_f1_score', 'N/A')
                     })
             except Exception as e:
                 print(f"結果ファイル {file_path} の読み込みに失敗: {e}")
