@@ -78,7 +78,7 @@ class Interviewer:
         思考プロセスや前置きは一切含めず、質問文だけを出力してください。
         質問:"""
         
-        question = self._generate_response(prompt, max_tokens=150)
+        question = self._generate_response(prompt, max_tokens=8192)
         thought = "未言及の項目から戦略的に質問を生成しました。"
         return question, thought
 
@@ -109,7 +109,7 @@ class Interviewer:
         思考プロセスや前置きは一切含めず、質問文だけを出力してください。
         質問:"""
         
-        question = self._generate_response(prompt, max_tokens=150)
+        question = self._generate_response(prompt, max_tokens=8192)
         return question
 
     def select_least_motivated_candidate(self, all_states):
@@ -117,7 +117,7 @@ class Interviewer:
         print("--- 最終評価(1/3): 最も意欲の低い候補者の選定を開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"あなたは最終決定権を持つ面接官です。全候補者の記録を確認し、「最も意欲が低い、あるいは準備不足と思われる候補者」を1名だけ選び、名前とその理由を簡潔に述べてください。\n{conversation_summary}\n出力形式:\n最も意欲の低い候補者: [氏名]\n理由: [理由]"
-        response = self._generate_response(prompt, max_tokens=200)
+        response = self._generate_response(prompt, max_tokens=8192)
         print("--- 最終評価(1/3): 選定を完了 ---")
         return response
 
@@ -126,7 +126,7 @@ class Interviewer:
         print("--- 最終評価(2/3): 意欲順ランキングを開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         prompt = f"あなたは最終決定権を持つ面接官です。全候補者の記録を確認し、企業への意欲が高い順にランキング付けし、各順位の理由を簡潔に述べてください。\n{conversation_summary}\n出力形式:\n1位: [氏名] (理由: ...)\n2位: [氏名] (理由: ...)\n3位: [氏名] (理由: ...)"
-        response = self._generate_response(prompt, max_tokens=400)
+        response = self._generate_response(prompt, max_tokens=8192)
         print("--- 最終評価(2/3): ランキングを完了 ---")
         return response
 
@@ -217,7 +217,7 @@ class Interviewer:
           分析: [分析の要約]
           欠損項目キー: ["キー1", "キー2", ...]
         """
-        llm_analysis_text = self._generate_response(prompt, max_tokens=2048)
+        llm_analysis_text = self._generate_response(prompt, max_tokens=8192)
         
         performance_metrics = self._calculate_detection_metrics(llm_analysis_text, all_states)
         
