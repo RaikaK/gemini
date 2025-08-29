@@ -149,17 +149,32 @@
                                         <div class="form-text">複数回実行して統計的な分析を行います</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="interviewFlow" class="form-label">面接フロー設定</label>
-                                        <div class="form-text mb-2">面接の流れを設定（0: 全体質問, 1: 個別質問）</div>
-                                        <div class="d-flex gap-2 mb-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(0)">全体質問追加</button>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(1)">個別質問追加</button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearInterviewFlow()">クリア</button>
+                                        <label for="interviewFlowType" class="form-label">面接フロー設定</label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewFlowType" id="fixedFlow" value="fixed" checked>
+                                            <label class="form-check-label" for="fixedFlow">
+                                                固定フロー（手動設定）
+                                            </label>
                                         </div>
-                                        <div id="interviewFlowDisplay" class="bg-light p-2 rounded">
-                                            <span class="badge bg-primary me-1">1</span>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewFlowType" id="dynamicFlow" value="dynamic">
+                                            <label class="form-check-label" for="dynamicFlow">
+                                                動的フロー（面接官が自信が持てるまで自動継続、最大5ラウンド）
+                                            </label>
                                         </div>
-                                        <input type="hidden" id="interviewFlow" value="1">
+                                        
+                                        <div id="fixedFlowSettings" class="mt-3">
+                                            <div class="form-text mb-2">面接の流れを設定（0: 全体質問, 1: 個別質問）</div>
+                                            <div class="d-flex gap-2 mb-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(0)">全体質問追加</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(1)">個別質問追加</button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearInterviewFlow()">クリア</button>
+                                            </div>
+                                            <div id="interviewFlowDisplay" class="bg-light p-2 rounded">
+                                                <span class="badge bg-primary me-1">1</span>
+                                            </div>
+                                            <input type="hidden" id="interviewFlow" value="1">
+                                        </div>
                                     </div>
                                     <button id="startBtn" class="btn btn-primary btn-lg">
                                         <i class="fas fa-rocket"></i> 実験開始
@@ -273,7 +288,19 @@
         // 実験開始
         document.getElementById('startBtn').addEventListener('click', function() {
             const setIndex = document.getElementById('setIndex').value;
-            const numSimulations = document.getElementById('numSimulations').value;
+            const numSimulations = parseInt(document.getElementById('numSimulations').value);
+            const interviewFlowType = document.querySelector('input[name="interviewFlowType"]:checked').value;
+            
+            let interviewFlow = null;
+            let useDynamicFlow = false;
+            
+            if (interviewFlowType === 'fixed') {
+                interviewFlow = JSON.parse(document.getElementById('interviewFlow').value);
+                useDynamicFlow = false;
+            } else if (interviewFlowType === 'dynamic') {
+                interviewFlow = null;
+                useDynamicFlow = true;
+            }
             
             fetch('/api/start_experiment', {
                 method: 'POST',
@@ -281,9 +308,10 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
-                    set_index: setIndex,
+                    set_index: setIndex || null,
                     num_simulations: numSimulations,
-                    interview_flow: interviewFlow
+                    interview_flow: interviewFlow,
+                    use_dynamic_flow: useDynamicFlow
                 })
             })
             .then(response => response.json())
@@ -879,9 +907,21 @@
             hiddenInput.value = JSON.stringify(interviewFlow);
         }
 
-        // 初期化時に面接フロー表示を更新
+        // 面接フロー設定の表示/非表示制御
         document.addEventListener('DOMContentLoaded', function() {
             updateInterviewFlowDisplay();
+            
+            // ラジオボタンの変更イベントを設定
+            document.querySelectorAll('input[name="interviewFlowType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const fixedFlowSettings = document.getElementById('fixedFlowSettings');
+                    if (this.value === 'fixed') {
+                        fixedFlowSettings.style.display = 'block';
+                    } else {
+                        fixedFlowSettings.style.display = 'none';
+                    }
+                });
+            });
         });
 
 

@@ -84,6 +84,124 @@ class Interviewer:
         thought = f"{self.model_type}モデルが次の質問を生成しました。"
         return question, thought
 
+    def should_continue_interview(self, conversation_history, current_round, max_rounds=5):
+        """面接を続けるべきかどうかを判断する"""
+        if current_round >= max_rounds:
+            return False, "最大ラウンド数に達しました"
+        
+        if not conversation_history:
+            return True, "初回のため継続"
+        
+        # 最近の回答を分析して自信度を判定
+        recent_answers = conversation_history[-2:] if len(conversation_history) >= 2 else conversation_history
+        
+        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in recent_answers])
+        
+        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
+        現在の面接ラウンド: {current_round}/{max_rounds}
+        
+        以下の最近の会話履歴を分析し、候補者の志望度について十分な情報が得られているか判断してください。
+        
+        会話履歴:
+        {history_str}
+        
+        判断基準:
+        1. 候補者の志望度について明確な判断ができるか
+        2. 他の候補者との比較に十分な情報があるか
+        3. 面接を続けることで新たな洞察が得られる可能性があるか
+        
+        回答形式:
+        - 継続する場合: "CONTINUE"
+        - 終了する場合: "STOP"
+        - 理由: [簡潔な理由]
+        
+        回答:"""
+        
+        response = self._generate_response(prompt, max_tokens=200)
+        
+        # レスポンスを解析
+        if "CONTINUE" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "追加情報が必要"
+            return True, reason
+        elif "STOP" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "十分な情報が得られた"
+            return False, reason
+        else:
+            # デフォルトは継続
+            return True, "判断できないため継続"
+
+    def conduct_dynamic_interview(self, candidate_states, applicant, max_rounds=5):
+        """動的な面接フローを実行する"""
+        print(f"--- 動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
+        
+        asked_common_questions = []
+        current_round = 0
+        
+        while current_round < max_rounds:
+            current_round += 1
+            print(f"--- 面接ラウンド {current_round}/{max_rounds} ---")
+            
+            # 全体質問フェーズ
+            if current_round == 1 or len(asked_common_questions) < 2:
+                print("--- 全体質問フェーズ ---")
+                question, _ = self.ask_common_question(asked_common_questions)
+                asked_common_questions.append(question)
+                print(f"--- 生成された全体質問: 「{question}」 ---")
+                
+                for i, state in enumerate(candidate_states):
+                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    # 学生の回答を生成
+                    answer = applicant.generate(
+                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                    )
+                    print(f"学生 (API): {answer}")
+                    state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
+                
+                # 全体質問後の継続判断
+                should_continue, reason = self.should_continue_interview(
+                    [state['conversation_log'][-1] for state in candidate_states if state['conversation_log']], 
+                    current_round, 
+                    max_rounds
+                )
+                print(f"全体質問後の判断: {'継続' if should_continue else '終了'} - {reason}")
+                if not should_continue:
+                    break
+            
+            # 個別質問フェーズ
+            else:
+                print("--- 個別質問フェーズ ---")
+                all_continue = True
+                
+                for i, state in enumerate(candidate_states):
+                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    
+                    # 個別質問の継続判断
+                    should_continue, reason = self.should_continue_interview(
+                        state['conversation_log'], 
+                        current_round, 
+                        max_rounds
+                    )
+                    
+                    if should_continue:
+                        question, _ = self.ask_question(state['conversation_log'])
+                        print(f"面接官 ({self.model_type}): {question}")
+                        # 学生の回答を生成
+                        answer = applicant.generate(
+                            state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                        )
+                        print(f"学生 (API): {answer}")
+                        state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
+                    else:
+                        print(f"候補者 {i+1} の面接終了: {reason}")
+                        all_continue = False
+                
+                # 全候補者の面接が終了した場合
+                if not all_continue:
+                    break
+        
+        print(f"--- 動的面接フロー完了 (実行ラウンド数: {current_round}) ---")
+        return current_round
+
     def _format_all_conversations(self, all_states):
         """最終評価のために、全候補者の会話ログを整形するヘルパー"""
         full_log = ""

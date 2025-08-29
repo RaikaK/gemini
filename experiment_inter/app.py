@@ -215,7 +215,7 @@ def initialize_local_model():
         log_message(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None):
+def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None, use_dynamic_flow=False):
     """単一の面接シミュレーション実行"""
     log_message(f"=== シミュレーション {simulation_num} 開始 ===")
     
@@ -271,35 +271,41 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
-    total_rounds = len(interview_flow)
-    for round_num, question_type in enumerate(interview_flow):
-        log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
+    if use_dynamic_flow:
+        log_message("--- 動的面接フローを開始 ---")
+        total_rounds = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=5)
+        
+    else:
+        # 従来の固定面接フロー
+        total_rounds = len(interview_flow)
+        for round_num, question_type in enumerate(interview_flow):
+            log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
 
-        if question_type == 0: # 全体質問
-            log_message("--- 全体質問フェーズ ---")
-            question, _ = interviewer.ask_common_question(asked_common_questions)
-            asked_common_questions.append(question)
-            log_message(f"--- 生成された全体質問: 「{question}」 ---")
-            
-            for i, state in enumerate(candidate_states):
-                log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                answer = applicant.generate(
-                    state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                )
-                log_message(f"学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+            if question_type == 0: # 全体質問
+                log_message("--- 全体質問フェーズ ---")
+                question, _ = interviewer.ask_common_question(asked_common_questions)
+                asked_common_questions.append(question)
+                log_message(f"--- 生成された全体質問: 「{question}」 ---")
+                
+                for i, state in enumerate(candidate_states):
+                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    answer = applicant.generate(
+                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                    )
+                    log_message(f"学生 (API): {answer}")
+                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
 
-        elif question_type == 1: # 個別質問
-            log_message("--- 個別質問フェーズ ---")
-            for i, state in enumerate(candidate_states):
-                log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                question, _ = interviewer.ask_question(state["conversation_log"])
-                log_message(f"面接官 ({model_type}): {question}")
-                answer = applicant.generate(
-                    state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                )
-                log_message(f"学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+            elif question_type == 1: # 個別質問
+                log_message("--- 個別質問フェーズ ---")
+                for i, state in enumerate(candidate_states):
+                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    question, _ = interviewer.ask_question(state["conversation_log"])
+                    log_message(f"面接官 ({model_type}): {question}")
+                    answer = applicant.generate(
+                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                    )
+                    log_message(f"学生 (API): {answer}")
+                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
 
     # --- 4. 最終評価 ---
     log_message("--- 最終評価フェーズ ---")
@@ -362,7 +368,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     
     return result
 
-def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None):
+def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None, use_dynamic_flow=False):
     """Web用の面接シミュレーション実行関数（複数回対応）"""
     try:
         experiment_status['is_running'] = True
@@ -387,7 +393,7 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             update_progress(int(progress), f"シミュレーション {sim_num}/{num_simulations} を実行中...")
             
             # 単一実験の実行
-            result = run_single_experiment(local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, interview_flow)
+            result = run_single_experiment(local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, interview_flow, use_dynamic_flow)
             
             if result:
                 all_results.append(result)
@@ -449,6 +455,7 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                     "timestamp": datetime.datetime.now().isoformat(),
                     "set_index": set_index,  # 元のリクエスト値
                     "interview_flow": interview_flow,
+                    "use_dynamic_flow": use_dynamic_flow,
                     "interviewer_type": config.INTERVIEWER_MODEL_TYPE
                 },
                 "aggregated_metrics": aggregated_metrics,
@@ -557,6 +564,7 @@ def start_experiment():
     set_index = data.get('set_index') if data.get('set_index') != '' else None
     num_simulations = int(data.get('num_simulations', 1))
     interview_flow = data.get('interview_flow', config.INTERVIEW_FLOW)
+    use_dynamic_flow = data.get('use_dynamic_flow', False)
     
     # バックグラウンドで実験を実行
     def run_in_background():
@@ -565,11 +573,11 @@ def start_experiment():
         if model_type == 'local':
             local_model, local_tokenizer = initialize_local_model()
             if local_model and local_tokenizer:
-                run_experiment_web(local_model, local_tokenizer, set_index, num_simulations, interview_flow)
+                run_experiment_web(local_model, local_tokenizer, set_index, num_simulations, interview_flow, use_dynamic_flow)
             else:
                 log_message("ローカルモデルの初期化に失敗したため、実験を中止します。")
         elif model_type == 'api':
-            run_experiment_web(set_index=set_index, num_simulations=num_simulations, interview_flow=interview_flow)
+            run_experiment_web(set_index=set_index, num_simulations=num_simulations, interview_flow=interview_flow, use_dynamic_flow=use_dynamic_flow)
         else:
             log_message(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
     
