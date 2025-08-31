@@ -41,35 +41,17 @@ def initialize_local_model():
         print(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def load_db(filepath):
-    """
-    指定されたファイルパスからデータセットを読み込む
-    """
-    try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            dataset = json.load(f)
-            print(f"データセットを {filepath} から読み込みました。全 {len(dataset)} 件。")
-            return dataset
-    except FileNotFoundError:
-        print(f"エラー: データセットファイル '{filepath}' が見つかりません。")
-        return None
-    except json.JSONDecodeError:
-        print(f"エラー: データセットファイル '{filepath}' の形式が不正です。")
-        return None
-
-def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None):
+def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None):
     """面接シミュレーション全体を実行する"""
-    # --- 1. データセットから情報取得 ---
-    DATASET_INDEX = 0
-    # データセット全体を読み込む
-    full_dataset = load_db("db.json")
-    if not full_dataset or DATASET_INDEX >= len(full_dataset):
-        print("エラー: データセットの読み込みに失敗したか、指定されたインデックスが無効です。")
-    else:
-        # 指定されたインデックスのデータを取得
-        selected_data = full_dataset[DATASET_INDEX]
-        company_profile = selected_data["company"]
-        candidate_profiles = selected_data["students"]
+    # --- 1. db.jsonからデータ読み込み ---
+    company_profile, candidate_profiles, set_i = data_generators.load_company_and_candidates_from_db(set_index)
+    if company_profile is None or candidate_profiles is None:
+        print("db.jsonからのデータ読み込みに失敗。実験を中止します。")
+        return
+
+    if len(candidate_profiles) < config.NUM_CANDIDATES:
+        print(f"警告: 読み込まれた学生数({len(candidate_profiles)})が設定値({config.NUM_CANDIDATES})より少ないため、利用可能な学生を使用します。")
+        candidate_profiles = candidate_profiles[:config.NUM_CANDIDATES]
 
     # --- 2. 面接官と候補者の初期化 ---
     model_type = config.INTERVIEWER_MODEL_TYPE
@@ -192,13 +174,17 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
 
 if __name__ == "__main__":
     model_type = config.INTERVIEWER_MODEL_TYPE
+    
+    # セットインデックスを指定する場合はここで設定（Noneの場合はランダム選択）
+    set_index = None  # 例: set_index = 0 で最初のセットを選択
+    
     if model_type == 'local':
         local_model, local_tokenizer = initialize_local_model()
         if local_model and local_tokenizer:
-            run_experiment(local_model, local_tokenizer)
+            run_experiment(local_model, local_tokenizer, set_index)
         else:
             print("ローカルモデルの初期化に失敗したため、実験を中止します。")
     elif model_type == 'api':
-        run_experiment()
+        run_experiment(set_index=set_index)
     else:
         print(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
