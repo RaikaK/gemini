@@ -19,6 +19,10 @@ class Interviewer:
             model (AutoModelForCausalLM, optional): ローカルモデル. Defaults to None.
             tokenizer (AutoTokenizer, optional): ローカルモデル用トークナイザ. Defaults to None.
         """
+        # 企業情報の"id", "name", "basic_info"キーを削除
+        for key in ['id', 'name', 'basic_info']:
+            if key in company_profile:
+                del company_profile[key]
         self.company = company_profile
         self.model_type = model_type
         self.model = model
@@ -127,6 +131,20 @@ class Interviewer:
         print("--- 最終評価(2/3): 候補者の順位付けを完了 ---")
         return response
 
+    def get_all_keys(self, data):
+        """辞書を再帰的に走査し、全てのネストされたキーを'parent.child'形式で返す"""
+        keys = set()
+        def _extract_keys(obj, parent_key=''):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    new_key = f"{parent_key}.{k}" if parent_key else k
+                    keys.add(new_key)
+                    _extract_keys(v, new_key)
+            elif isinstance(obj, list):
+                pass
+        _extract_keys(data)
+        return keys
+    
     def _calculate_detection_metrics(self, llm_output_text, all_states):
         """
         LLMの構造化出力と正解データを比較し、検出性能のメトリクスを計算する（堅牢版）。
@@ -137,7 +155,9 @@ class Interviewer:
             candidate_name = state['profile']['name']
             note = None
             detected_missing_keys = set()
-            pattern = re.compile(f"{re.escape(candidate_name)}:(.*?)(?=\\n\\n|$)", re.DOTALL)
+            pattern = re.compile(f'**{re.escape(candidate_name)}:**\n\n(.*?)(?=\n\n**|$)', re.DOTALL)
+            print("pattern", pattern)
+            print("llm_output_text", llm_output_text)
             match = pattern.search(llm_output_text)
             
             if match:
@@ -155,9 +175,19 @@ class Interviewer:
             else:
                 note = "LLM output for this candidate was missing."
             
+            # 企業の全てのキーを取得
+            all_company_keys = self.get_all_keys(self.company)
+            print("all_company_keys", all_company_keys)
+            # 候補者が実際に知っている知識のキーを取得
+            researched_company_keys = self.get_all_keys(state['profile']['researched_company_info'])
+            print(f"{candidate_name} researched_company_keys", researched_company_keys)
+            # 企業の全てのキーから、候補者が知っているキーを引いて、実際に欠損しているキーを特定
+            actual_missing_keys = all_company_keys.difference(researched_company_keys)
+            print(f"{candidate_name} acctual_missing_keys", actual_missing_keys)
+
             # 正解データ（実際に欠損していた項目）
-            possessed_knowledge = state['knowledge_tuple'][0]
-            actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
+            # possessed_knowledge = state['knowledge_tuple'][0]
+            # actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
 
             # メトリクス計算
             true_positives = actual_missing_keys.intersection(detected_missing_keys)

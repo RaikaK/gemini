@@ -41,18 +41,35 @@ def initialize_local_model():
         print(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
+def load_db(filepath):
+    """
+    指定されたファイルパスからデータセットを読み込む
+    """
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            dataset = json.load(f)
+            print(f"データセットを {filepath} から読み込みました。全 {len(dataset)} 件。")
+            return dataset
+    except FileNotFoundError:
+        print(f"エラー: データセットファイル '{filepath}' が見つかりません。")
+        return None
+    except json.JSONDecodeError:
+        print(f"エラー: データセットファイル '{filepath}' の形式が不正です。")
+        return None
+
 def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None):
     """面接シミュレーション全体を実行する"""
-    # --- 1. 動的情報生成 ---
-    company_profile = data_generators.generate_company_profile()
-    if not isinstance(company_profile, dict) or "error" in company_profile:
-        print("企業情報の生成に失敗。実験を中止します。")
-        return
-
-    candidate_profiles = data_generators.generate_candidate_profiles(company_profile, config.NUM_CANDIDATES)
-    if not isinstance(candidate_profiles, list) or not candidate_profiles:
-        print("学生プロフィールの生成に失敗。実験を中止します。")
-        return
+    # --- 1. データセットから情報取得 ---
+    DATASET_INDEX = 0
+    # データセット全体を読み込む
+    full_dataset = load_db("db.json")
+    if not full_dataset or DATASET_INDEX >= len(full_dataset):
+        print("エラー: データセットの読み込みに失敗したか、指定されたインデックスが無効です。")
+    else:
+        # 指定されたインデックスのデータを取得
+        selected_data = full_dataset[DATASET_INDEX]
+        company_profile = selected_data["company"]
+        candidate_profiles = selected_data["students"]
 
     # --- 2. 面接官と候補者の初期化 ---
     model_type = config.INTERVIEWER_MODEL_TYPE
@@ -77,16 +94,17 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
         print(f"エラー: {e}")
         return
 
-    knowledge_manager = CompanyKnowledgeManager(company_profile)
+    # knowledge_manager = CompanyKnowledgeManager(company_profile)
     applicant = GPTApplicant(config.APPLICANT_API_MODEL)
     
     candidate_states = []
     for profile in candidate_profiles:
         candidate_states.append({
             "profile": profile,
-            "knowledge_tuple": knowledge_manager.get_knowledge_for_level(profile.get('preparation', 'low')),
+            "knowledge_tuple": (profile["researched_company_info"],"provided"),
             "conversation_log": []
         })
+    print("candidate_state", candidate_states)
 
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     asked_common_questions = []
@@ -152,8 +170,6 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
         "interview_transcripts": [
             {
                 "candidate_info": s["profile"],
-                "possessed_company_knowledge": s["knowledge_tuple"][0],
-                "knowledge_coverage_info": s["knowledge_tuple"][1],
                 "conversation_log": s["conversation_log"]
             }
             for s in candidate_states
