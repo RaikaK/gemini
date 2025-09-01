@@ -1,4 +1,5 @@
 # master-duel-ai
-fujiyamax開発ブランチ  
-yokoyama開発ブランチ
-koki開発ブランチ
+Pythonのお決まり文句
+```python
+sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+```
