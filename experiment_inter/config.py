@@ -22,6 +22,11 @@ NUM_CANDIDATES = 3 # 生成する学生の数
 # 例: [0, 1, 1, 1] = 全体質問1回 + 個別質問3回
 INTERVIEW_FLOW = [0, 1, 1, 1]  # 全体質問1回 + 個別質問3回
 
+# --- 智的動的面接フローの設定 ---
+# 智的動的フローを使用するかどうか
+USE_INTELLIGENT_DYNAMIC_FLOW = True  # True: 智的動的フロー, False: 固定フロー
+MAX_DYNAMIC_ROUNDS = 5  # 動的フローでの最大ラウンド数
+
 # --- 対話設定 ---
 MAX_CONVERSATION_TURNS = 10  # 1回の面接での最大対話回数
 MIN_CONVERSATION_TURNS = 1   # 1回の面接での最小対話回数

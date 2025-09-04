@@ -130,8 +130,125 @@ class Interviewer:
             # デフォルトは継続
             return True, "判断できないため継続"
 
+    def decide_next_question_type(self, candidate_states, asked_common_questions, current_round, max_rounds=5):
+        """次の質問タイプ（全体質問 vs 個別質問）を智的に決定する"""
+        
+        # 基本的な条件チェック
+        if current_round == 1:
+            return "common", "初回は全体質問から開始"
+        
+        if len(asked_common_questions) == 0:
+            return "common", "まだ全体質問を行っていない"
+        
+        # 全候補者の回答状況を分析
+        all_responses_count = sum(len(state['conversation_log']) for state in candidate_states)
+        avg_responses_per_candidate = all_responses_count / len(candidate_states) if candidate_states else 0
+        
+        # 最新の全体質問からの経過ラウンド数を計算
+        last_common_round = 0
+        for state in candidate_states:
+            for turn in state['conversation_log']:
+                # 全候補者が同じ質問を受けているかチェック（全体質問の特徴）
+                if turn['turn'] > last_common_round:
+                    # 他の候補者も同じ質問を受けているかチェック
+                    same_question_count = sum(1 for other_state in candidate_states 
+                                            if any(other_turn['question'] == turn['question'] 
+                                                  for other_turn in other_state['conversation_log']))
+                    if same_question_count == len(candidate_states):
+                        last_common_round = turn['turn']
+        
+        rounds_since_common = current_round - last_common_round
+        
+        # LLMによる状況分析
+        situation_summary = self._analyze_interview_situation(candidate_states, asked_common_questions, current_round)
+        
+        prompt = f"""あなたは、{self.company.get('name')}の面接戦略エキスパートです。
+        現在の面接状況を分析し、次に行うべき質問タイプを決定してください。
+
+        # 現在の状況
+        - 現在のラウンド: {current_round}/{max_rounds}
+        - 実施済み全体質問数: {len(asked_common_questions)}
+        - 候補者あたり平均回答数: {avg_responses_per_candidate:.1f}
+        - 最後の全体質問からの経過ラウンド: {rounds_since_common}
+        
+        # 状況分析
+        {situation_summary}
+        
+        # 判断基準
+        【全体質問を選ぶべき場合】
+        - 候補者間の比較材料が不足している
+        - 特定の重要なトピックについて全員の見解が必要
+        - 個別質問で深掘りする前に基盤となる情報が必要
+        - 最後の全体質問から時間が経ちすぎている（3ラウンド以上）
+        
+        【個別質問を選ぶべき場合】
+        - 特定の候補者の回答をより深く探る必要がある
+        - 候補者ごとに異なる角度からの質問が効果的
+        - 志望度の判定に必要な個人的な動機を探る必要がある
+        - 十分な全体質問が既に実施されている
+        
+        回答形式:
+        決定: COMMON または INDIVIDUAL
+        理由: [詳細な理由を100字程度で]
+        
+        回答:"""
+        
+        response = self._generate_response(prompt, max_tokens=300)
+        
+        # レスポンスを解析
+        if "COMMON" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "全体質問が適切"
+            return "common", reason
+        elif "INDIVIDUAL" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "個別質問が適切"
+            return "individual", reason
+        else:
+            # デフォルトの判断ロジック
+            if rounds_since_common >= 3 or len(asked_common_questions) < 2:
+                return "common", "バランスを保つため全体質問を選択"
+            else:
+                return "individual", "深掘りのため個別質問を選択"
+
+    def _analyze_interview_situation(self, candidate_states, asked_common_questions, current_round):
+        """現在の面接状況を分析して要約を作成"""
+        
+        # 各候補者の回答の特徴を分析
+        candidate_analysis = []
+        for i, state in enumerate(candidate_states):
+            name = state['profile'].get('name', f'候補者{i+1}')
+            response_count = len(state['conversation_log'])
+            
+            # 最新の回答の長さと内容の傾向を分析
+            if state['conversation_log']:
+                recent_answers = [turn['answer'] for turn in state['conversation_log'][-2:]]
+                avg_answer_length = sum(len(answer) for answer in recent_answers) / len(recent_answers)
+                
+                # 回答の詳細度を簡易評価
+                detail_level = "高い" if avg_answer_length > 100 else "中程度" if avg_answer_length > 50 else "低い"
+                candidate_analysis.append(f"- {name}: 回答数{response_count}, 詳細度{detail_level}")
+            else:
+                candidate_analysis.append(f"- {name}: 未回答")
+        
+        # 質問のバランス分析
+        common_questions_str = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(asked_common_questions))
+        
+        situation = f"""
+候補者別の回答状況:
+{chr(10).join(candidate_analysis)}
+
+実施済み全体質問:
+{common_questions_str if common_questions_str else "  なし"}
+
+現在の課題:
+- 候補者間の比較材料の充実度
+- 各候補者の志望度判定に必要な情報の蓄積状況
+- 面接の残り時間と効率性のバランス
+        """
+        
+        return situation.strip()
+
     def conduct_dynamic_interview(self, candidate_states, applicant, max_rounds=5):
-        """動的な面接フローを実行する"""
+        """動的面接フローを実行する"""
         print(f"--- 動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
         
         asked_common_questions = []
@@ -141,9 +258,17 @@ class Interviewer:
             current_round += 1
             print(f"--- 面接ラウンド {current_round}/{max_rounds} ---")
             
-            # 全体質問フェーズ
-            if current_round == 1 or len(asked_common_questions) < 2:
-                print("--- 全体質問フェーズ ---")
+            # 次の質問タイプを智的に決定
+            question_type, reason = self.decide_next_question_type(
+                candidate_states, asked_common_questions, current_round, max_rounds
+            )
+            
+            print(f"--- 選択された質問タイプ: {question_type} ---")
+            print(f"--- 選択理由: {reason} ---")
+            
+            if question_type == "common":
+                # 全体質問フェーズ
+                print("--- 全体質問フェーズを実行 ---")
                 question, _ = self.ask_common_question(asked_common_questions)
                 asked_common_questions.append(question)
                 print(f"--- 生成された全体質問: 「{question}」 ---")
@@ -158,31 +283,29 @@ class Interviewer:
                     state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
                 
                 # 全体質問後の継続判断
-                should_continue, reason = self.should_continue_interview(
-                    [state['conversation_log'][-1] for state in candidate_states if state['conversation_log']], 
-                    current_round, 
-                    max_rounds
+                overall_responses = [state['conversation_log'][-1] for state in candidate_states if state['conversation_log']]
+                should_continue, continue_reason = self.should_continue_interview(
+                    overall_responses, current_round, max_rounds
                 )
-                print(f"全体質問後の判断: {'継続' if should_continue else '終了'} - {reason}")
+                print(f"全体質問後の継続判断: {'継続' if should_continue else '終了'} - {continue_reason}")
                 if not should_continue:
                     break
-            
-            # 個別質問フェーズ
-            else:
-                print("--- 個別質問フェーズ ---")
-                all_continue = True
+                    
+            elif question_type == "individual":
+                # 個別質問フェーズ
+                print("--- 個別質問フェーズを実行 ---")
+                any_continued = False
                 
                 for i, state in enumerate(candidate_states):
-                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} への個別面接判断")
                     
                     # 個別質問の継続判断
                     should_continue, reason = self.should_continue_interview(
-                        state['conversation_log'], 
-                        current_round, 
-                        max_rounds
+                        state['conversation_log'], current_round, max_rounds
                     )
                     
                     if should_continue:
+                        any_continued = True
                         question, _ = self.ask_question(state['conversation_log'])
                         print(f"面接官 ({self.model_type}): {question}")
                         # 学生の回答を生成
@@ -192,15 +315,82 @@ class Interviewer:
                         print(f"学生 (API): {answer}")
                         state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
                     else:
-                        print(f"候補者 {i+1} の面接終了: {reason}")
-                        all_continue = False
+                        print(f"候補者 {i+1} の個別面接終了: {reason}")
                 
-                # 全候補者の面接が終了した場合
-                if not all_continue:
+                # 誰も継続しない場合は面接終了
+                if not any_continued:
+                    print("--- 全候補者の個別面接が完了したため面接終了 ---")
+                    break
+            
+            # 面接全体の進捗評価
+            if current_round >= 3:  # 最低3ラウンド後に全体評価
+                overall_should_continue, overall_reason = self._evaluate_overall_progress(
+                    candidate_states, current_round, max_rounds
+                )
+                print(f"面接全体の進捗評価: {'継続' if overall_should_continue else '終了'} - {overall_reason}")
+                if not overall_should_continue:
                     break
         
-        print(f"--- 動的面接フロー完了 (実行ラウンド数: {current_round}) ---")
+        print(f"--- 智的動的面接フロー完了 (実行ラウンド数: {current_round}) ---")
         return current_round
+
+    def _evaluate_overall_progress(self, candidate_states, current_round, max_rounds):
+        """面接全体の進捗を評価し、継続の必要性を判断"""
+        
+        # 各候補者の情報収集状況を分析
+        candidate_info_summary = []
+        for i, state in enumerate(candidate_states):
+            name = state['profile'].get('name', f'候補者{i+1}')
+            response_count = len(state['conversation_log'])
+            
+            if state['conversation_log']:
+                total_answer_length = sum(len(turn['answer']) for turn in state['conversation_log'])
+                avg_answer_length = total_answer_length / response_count
+                info_richness = "豊富" if avg_answer_length > 120 else "標準" if avg_answer_length > 60 else "限定的"
+            else:
+                info_richness = "なし"
+            
+            candidate_info_summary.append(f"- {name}: {response_count}回答, 情報量{info_richness}")
+        
+        summary_text = "\n".join(candidate_info_summary)
+        
+        prompt = f"""あなたは、{self.company.get('name')}の面接効率化エキスパートです。
+        現在の面接の進捗状況を評価し、志望度の低い候補者を特定するのに十分な情報が得られているか判断してください。
+
+        # 現在の状況
+        - 現在のラウンド: {current_round}/{max_rounds}
+        - 各候補者の情報収集状況:
+        {summary_text}
+
+        # 判断基準
+        1. 各候補者の志望度を判断するのに十分な回答が得られているか
+        2. 候補者間の比較が可能な材料が揃っているか
+        3. 残りのラウンドで得られる追加情報の価値
+        4. 面接の効率性（時間対効果）
+
+        # 終了条件
+        - 全候補者から志望度判定に必要な情報が得られた
+        - 候補者間の差が明確になった
+        - 追加の質問をしても新たな洞察が得られそうにない
+
+        回答形式:
+        判定: CONTINUE または STOP
+        理由: [判断の根拠を100字程度で]
+
+        回答:"""
+        
+        response = self._generate_response(prompt, max_tokens=300)
+        
+        # レスポンスを解析
+        if "CONTINUE" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "さらなる情報収集が必要"
+            return True, reason
+        elif "STOP" in response.upper():
+            reason = response.split("理由:")[-1].strip() if "理由:" in response else "十分な情報が収集された"
+            return False, reason
+        else:
+            # デフォルトは継続（安全側）
+            return True, "判断不明のため継続"
 
     def _format_all_conversations(self, all_states):
         """最終評価のために、全候補者の会話ログを整形するヘルパー"""

@@ -271,9 +271,9 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
-    if use_dynamic_flow:
-        log_message("--- 動的面接フローを開始 ---")
-        total_rounds = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=5)
+    if use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW:
+        log_message("--- 智的動的面接フローを開始 ---")
+        total_rounds = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=config.MAX_DYNAMIC_ROUNDS)
         
     else:
         # 従来の固定面接フロー
