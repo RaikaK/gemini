@@ -149,6 +149,40 @@
                                         <div class="form-text">複数回実行して統計的な分析を行います</div>
                                     </div>
                                     <div class="mb-3">
+                                        <label for="interviewerModel" class="form-label">面接官モデル設定</label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewerModelType" id="apiModel" value="api" checked>
+                                            <label class="form-check-label" for="apiModel">
+                                                APIモデル (OpenAI GPT)
+                                            </label>
+                                        </div>
+                                        <div id="apiModelSettings" class="ms-4 mb-2">
+                                            <select class="form-select form-select-sm" id="apiModelName">
+                                                <option value="gpt-4o-mini" selected>GPT-4o Mini (高速・低コスト)</option>
+                                                <option value="gpt-4o">GPT-4o (高性能)</option>
+                                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (最低コスト)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewerModelType" id="localModel" value="local">
+                                            <label class="form-check-label" for="localModel">
+                                                ローカルモデル (自社GPU)
+                                            </label>
+                                        </div>
+                                        <div id="localModelSettings" class="ms-4 mb-2" style="display: none;">
+                                            <select class="form-select form-select-sm" id="localModelName">
+                                                <option value="meta-llama/Llama-3.1-8B-Instruct" selected>Llama 3.1 8B Instruct</option>
+                                                <option value="meta-llama/Llama-3.1-70B-Instruct">Llama 3.1 70B Instruct (大容量GPU必要)</option>
+                                                <option value="microsoft/DialoGPT-medium">DialoGPT Medium</option>
+                                                <option value="microsoft/DialoGPT-large">DialoGPT Large</option>
+                                            </select>
+                                            <div class="form-text text-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> ローカルモデルは初回読み込みに時間がかかります
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="interviewFlowType" class="form-label">面接フロー設定</label>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="interviewFlowType" id="fixedFlow" value="fixed" checked>
@@ -290,9 +324,11 @@
             const setIndex = document.getElementById('setIndex').value;
             const numSimulations = parseInt(document.getElementById('numSimulations').value);
             const interviewFlowType = document.querySelector('input[name="interviewFlowType"]:checked').value;
+            const interviewerModelType = document.querySelector('input[name="interviewerModelType"]:checked').value;
             
             let interviewFlow = null;
             let useDynamicFlow = false;
+            let interviewerModelName = null;
             
             if (interviewFlowType === 'fixed') {
                 interviewFlow = JSON.parse(document.getElementById('interviewFlow').value);
@@ -300,6 +336,13 @@
             } else if (interviewFlowType === 'dynamic') {
                 interviewFlow = null;
                 useDynamicFlow = true;
+            }
+            
+            // 面接官モデル設定
+            if (interviewerModelType === 'api') {
+                interviewerModelName = document.getElementById('apiModelName').value;
+            } else if (interviewerModelType === 'local') {
+                interviewerModelName = document.getElementById('localModelName').value;
             }
             
             fetch('/api/start_experiment', {
@@ -311,7 +354,9 @@
                     set_index: setIndex || null,
                     num_simulations: numSimulations,
                     interview_flow: interviewFlow,
-                    use_dynamic_flow: useDynamicFlow
+                    use_dynamic_flow: useDynamicFlow,
+                    interviewer_model_type: interviewerModelType,
+                    interviewer_model_name: interviewerModelName
                 })
             })
             .then(response => response.json())
@@ -431,6 +476,11 @@
                             <span class="badge bg-warning">${result.total_simulations}回</span><br>
                             <span class="badge bg-success">正解: ${result.correct_predictions}/${result.total_simulations}</span>
                         </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">面接官モデル</small><br>
+                            <span class="badge bg-secondary">${result.interviewer_type}</span><br>
+                            <span class="badge bg-outline-secondary" style="font-size: 0.7em;">${(result.interviewer_model_name || 'N/A').split('/').pop()}</span>
+                        </div>
                     `;
                 } else {
                     typeBadge = '<span class="badge bg-primary">個別</span>';
@@ -444,6 +494,11 @@
                         <div class="col-md-3">
                             <small class="text-muted">候補者数</small><br>
                             <span class="badge bg-info">${result.num_candidates}名</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">面接官モデル</small><br>
+                            <span class="badge bg-secondary">${result.interviewer_type}</span><br>
+                            <span class="badge bg-outline-secondary" style="font-size: 0.7em;">${(result.interviewer_model_name || 'N/A').split('/').pop()}</span>
                         </div>
                     `;
                 }
@@ -495,7 +550,9 @@
                                     <li><strong>総シミュレーション数:</strong> ${data.experiment_summary.total_simulations}</li>
                                     <li><strong>データセット:</strong> ${data.experiment_summary.set_index !== null ? `Dataset_${data.experiment_summary.set_index + 1}` : 'ランダム選択'}</li>
                                     <li><strong>面接官タイプ:</strong> ${data.experiment_summary.interviewer_type}</li>
+                                    <li><strong>面接官モデル:</strong> ${data.experiment_summary.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_summary.interview_flow ? data.experiment_summary.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
+                                    <li><strong>動的フロー:</strong> ${data.experiment_summary.use_dynamic_flow ? '有効' : '無効'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_summary.timestamp).toLocaleString('ja-JP')}</li>
                                 </ul>
                             </div>
@@ -659,6 +716,7 @@
                                     <li><strong>シミュレーション番号:</strong> ${data.simulation_num}</li>
                                     <li><strong>データセット:</strong> ${data.experiment_info.dataset_name || `Dataset_${data.experiment_info.dataset_index + 1}`}</li>
                                     <li><strong>面接官タイプ:</strong> ${data.experiment_info.interviewer_type}</li>
+                                    <li><strong>面接官モデル:</strong> ${data.experiment_info.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接回数:</strong> ${data.experiment_info.total_rounds}回</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_info.interview_flow ? data.experiment_info.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_info.timestamp).toLocaleString('ja-JP')}</li>
@@ -911,7 +969,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateInterviewFlowDisplay();
             
-            // ラジオボタンの変更イベントを設定
+            // 面接フロータイプのラジオボタンの変更イベントを設定
             document.querySelectorAll('input[name="interviewFlowType"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const fixedFlowSettings = document.getElementById('fixedFlowSettings');
@@ -919,6 +977,21 @@
                         fixedFlowSettings.style.display = 'block';
                     } else {
                         fixedFlowSettings.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 面接官モデルタイプのラジオボタンの変更イベントを設定
+            document.querySelectorAll('input[name="interviewerModelType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const apiModelSettings = document.getElementById('apiModelSettings');
+                    const localModelSettings = document.getElementById('localModelSettings');
+                    if (this.value === 'api') {
+                        apiModelSettings.style.display = 'block';
+                        localModelSettings.style.display = 'none';
+                    } else if (this.value === 'local') {
+                        apiModelSettings.style.display = 'none';
+                        localModelSettings.style.display = 'block';
                     }
                 });
             });

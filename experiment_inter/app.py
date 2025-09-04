@@ -184,9 +184,12 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         log_message(f"ランキング精度の計算中にエラーが発生しました: {e}")
         return None
 
-def initialize_local_model():
+def initialize_local_model(model_name=None):
     """Hugging Faceからローカルモデルを読み込み、GPUに配置する"""
-    log_message(f"--- 面接官役のローカルモデル ({config.LOCAL_MODEL_NAME}) の初期化を開始 ---")
+    if model_name is None:
+        model_name = config.LOCAL_MODEL_NAME
+    
+    log_message(f"--- 面接官役のローカルモデル ({model_name}) の初期化を開始 ---")
     
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -201,8 +204,8 @@ def initialize_local_model():
         log_message("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
     
     try:
-        tokenizer = AutoTokenizer.from_pretrained(config.LOCAL_MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(config.LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
         
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -215,13 +218,22 @@ def initialize_local_model():
         log_message(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None, use_dynamic_flow=False):
+def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """単一の面接シミュレーション実行"""
     log_message(f"=== シミュレーション {simulation_num} 開始 ===")
     
     # 面接フローが指定されていない場合はデフォルトを使用
     if interview_flow is None:
         interview_flow = config.INTERVIEW_FLOW
+    
+    # モデル設定が指定されていない場合はconfigから取得
+    if interviewer_model_type is None:
+        interviewer_model_type = config.INTERVIEWER_MODEL_TYPE
+    if interviewer_model_name is None:
+        if interviewer_model_type == 'api':
+            interviewer_model_name = config.INTERVIEWER_API_MODEL
+        else:
+            interviewer_model_name = config.LOCAL_MODEL_NAME
     
     # --- 1. db.jsonからデータ読み込み ---
     company_profile, candidate_profiles, actual_set_index = data_generators.load_company_and_candidates_from_db(set_index)
@@ -234,24 +246,38 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         candidate_profiles = candidate_profiles[:config.NUM_CANDIDATES]
 
     # --- 2. 面接官と候補者の初期化 ---
-    model_type = config.INTERVIEWER_MODEL_TYPE
-    log_message(f"--- 面接官タイプ: {model_type} ---")
+    log_message(f"--- 面接官タイプ: {interviewer_model_type} ({interviewer_model_name}) ---")
     
     try:
-        if model_type == 'local':
+        if interviewer_model_type == 'local':
+            # ローカルモデルが事前に初期化されていない場合は新しく初期化
+            if local_interviewer_model is None or local_interviewer_tokenizer is None:
+                log_message(f"ローカルモデル {interviewer_model_name} を新しく初期化します...")
+                local_interviewer_model, local_interviewer_tokenizer = initialize_local_model(interviewer_model_name)
+                if local_interviewer_model is None or local_interviewer_tokenizer is None:
+                    log_message("ローカルモデルの初期化に失敗しました。")
+                    return None
+            
             interviewer = Interviewer(
                 company_profile=company_profile,
                 model_type='local',
                 model=local_interviewer_model,
                 tokenizer=local_interviewer_tokenizer
             )
-        elif model_type == 'api':
-            interviewer = Interviewer(
-                company_profile=company_profile,
-                model_type='api'
-            )
+        elif interviewer_model_type == 'api':
+            # APIモデル名を動的に設定
+            original_api_model = config.INTERVIEWER_API_MODEL
+            config.INTERVIEWER_API_MODEL = interviewer_model_name
+            try:
+                interviewer = Interviewer(
+                    company_profile=company_profile,
+                    model_type='api'
+                )
+            finally:
+                # 元の設定を復元
+                config.INTERVIEWER_API_MODEL = original_api_model
         else:
-            log_message(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
+            log_message(f"エラー: 無効な面接官モデルタイプ '{interviewer_model_type}' が指定されています。")
             return None
     except ValueError as e:
         log_message(f"エラー: {e}")
@@ -300,7 +326,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                 for i, state in enumerate(candidate_states):
                     log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
                     question, _ = interviewer.ask_question(state["conversation_log"])
-                    log_message(f"面接官 ({model_type}): {question}")
+                    log_message(f"面接官 ({interviewer_model_type}): {question}")
                     answer = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
@@ -323,7 +349,8 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         "experiment_info": {
             "dataset_index": actual_set_index,
             "dataset_name": f"Dataset_{actual_set_index + 1}",
-            "interviewer_type": model_type,
+            "interviewer_type": interviewer_model_type,
+            "interviewer_model_name": interviewer_model_name,
             "interview_flow": interview_flow,
             "total_rounds": total_rounds,
             "timestamp": datetime.datetime.now().isoformat(),
@@ -368,7 +395,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     
     return result
 
-def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None, use_dynamic_flow=False):
+def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """Web用の面接シミュレーション実行関数（複数回対応）"""
     try:
         experiment_status['is_running'] = True
@@ -378,7 +405,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
         experiment_status['current_simulation'] = 0
         experiment_status['total_simulations'] = num_simulations
         
+        # モデル設定が指定されていない場合はconfigから取得
+        if interviewer_model_type is None:
+            interviewer_model_type = config.INTERVIEWER_MODEL_TYPE
+        if interviewer_model_name is None:
+            if interviewer_model_type == 'api':
+                interviewer_model_name = config.INTERVIEWER_API_MODEL
+            else:
+                interviewer_model_name = config.LOCAL_MODEL_NAME
+        
         update_progress(0, f"{num_simulations}回のシミュレーションを開始しています...")
+        log_message(f"面接官モデル設定: {interviewer_model_type} ({interviewer_model_name})")
         
         # 結果保存用のディレクトリ作成
         if not RESULTS_DIR.exists(): 
@@ -393,7 +430,10 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             update_progress(int(progress), f"シミュレーション {sim_num}/{num_simulations} を実行中...")
             
             # 単一実験の実行
-            result = run_single_experiment(local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, interview_flow, use_dynamic_flow)
+            result = run_single_experiment(
+                local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, 
+                interview_flow, use_dynamic_flow, interviewer_model_type, interviewer_model_name
+            )
             
             if result:
                 all_results.append(result)
@@ -456,7 +496,8 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                     "set_index": set_index,  # 元のリクエスト値
                     "interview_flow": interview_flow,
                     "use_dynamic_flow": use_dynamic_flow,
-                    "interviewer_type": config.INTERVIEWER_MODEL_TYPE
+                    "interviewer_type": interviewer_model_type,
+                    "interviewer_model_name": interviewer_model_name
                 },
                 "aggregated_metrics": aggregated_metrics,
                 "individual_results": all_results
@@ -513,6 +554,7 @@ def get_experiment_results():
                         'dataset_index': data['experiment_info'].get('dataset_index', 'N/A'),
                         'dataset_name': data['experiment_info'].get('dataset_name', 'N/A'),
                         'interviewer_type': data['experiment_info']['interviewer_type'],
+                        'interviewer_model_name': data['experiment_info'].get('interviewer_model_name', 'N/A'),
                         'company_name': data['company_profile'].get('name', 'N/A'),
                         'num_candidates': len(data['interview_transcripts']),
                         'accuracy': data['accuracy_metrics']['accuracy'] if data['accuracy_metrics'] else 0,
@@ -537,6 +579,7 @@ def get_experiment_results():
                         'total_simulations': data['experiment_summary']['total_simulations'],
                         'set_index': data['experiment_summary'].get('set_index', 'N/A'),
                         'interviewer_type': data['experiment_summary']['interviewer_type'],
+                        'interviewer_model_name': data['experiment_summary'].get('interviewer_model_name', 'N/A'),
                         'overall_accuracy': data['aggregated_metrics']['overall_accuracy'],
                         'overall_f1_score': data['aggregated_metrics']['overall_f1_score'],
                         'correct_predictions': data['aggregated_metrics']['correct_predictions'],
@@ -565,27 +608,35 @@ def start_experiment():
     num_simulations = int(data.get('num_simulations', 1))
     interview_flow = data.get('interview_flow', config.INTERVIEW_FLOW)
     use_dynamic_flow = data.get('use_dynamic_flow', False)
+    interviewer_model_type = data.get('interviewer_model_type', config.INTERVIEWER_MODEL_TYPE)
+    interviewer_model_name = data.get('interviewer_model_name')
     
     # バックグラウンドで実験を実行
     def run_in_background():
-        model_type = config.INTERVIEWER_MODEL_TYPE
-        
-        if model_type == 'local':
-            local_model, local_tokenizer = initialize_local_model()
+        if interviewer_model_type == 'local':
+            local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
             if local_model and local_tokenizer:
-                run_experiment_web(local_model, local_tokenizer, set_index, num_simulations, interview_flow, use_dynamic_flow)
+                run_experiment_web(
+                    local_model, local_tokenizer, set_index, num_simulations, 
+                    interview_flow, use_dynamic_flow, interviewer_model_type, interviewer_model_name
+                )
             else:
                 log_message("ローカルモデルの初期化に失敗したため、実験を中止します。")
-        elif model_type == 'api':
-            run_experiment_web(set_index=set_index, num_simulations=num_simulations, interview_flow=interview_flow, use_dynamic_flow=use_dynamic_flow)
+        elif interviewer_model_type == 'api':
+            run_experiment_web(
+                set_index=set_index, num_simulations=num_simulations, 
+                interview_flow=interview_flow, use_dynamic_flow=use_dynamic_flow,
+                interviewer_model_type=interviewer_model_type, interviewer_model_name=interviewer_model_name
+            )
         else:
-            log_message(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
+            log_message(f"エラー: 無効な面接官モデルタイプ '{interviewer_model_type}' が指定されています。")
     
     thread = threading.Thread(target=run_in_background)
     thread.daemon = True
     thread.start()
     
-    return jsonify({'message': f'{num_simulations}回の実験を開始しました'})
+    model_info = f"{interviewer_model_type}モデル ({interviewer_model_name})" if interviewer_model_name else f"{interviewer_model_type}モデル"
+    return jsonify({'message': f'{num_simulations}回の実験を開始しました ({model_info}を使用)'})
 
 @app.route('/api/status')
 def get_status():
