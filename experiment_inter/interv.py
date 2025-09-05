@@ -35,17 +35,24 @@ class Interviewer:
                 {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
                 {"role": "user", "content": prompt}
             ]
+            
             inputs = self.tokenizer.apply_chat_template(
                 messages, add_generation_prompt=True, return_tensors="pt"
             ).to(self.model.device)
+            
             attention_mask = torch.ones_like(inputs).to(self.model.device)
+            
             outputs = self.model.generate(
                 inputs,
                 attention_mask=attention_mask,
                 max_new_tokens=max_tokens,
                 eos_token_id=self.tokenizer.eos_token_id,
-                do_sample=True, temperature=0.6, top_p=0.9,
+                do_sample=True,
+                temperature=0.6,
+                top_p=0.9,
+                repetition_penalty=1.2
             )
+            
             response = outputs[0][inputs.shape[-1]:]
             return self.tokenizer.decode(response, skip_special_tokens=True).strip()
 
@@ -90,16 +97,25 @@ class Interviewer:
         return question, thought
 
     def ask_question(self, conversation_history):
-        """会話履歴に基づき、次の質問を生成する"""
+        """
+        まだ話題に上がっていない企業情報の項目について、意図的に質問を生成する。
+        """
         history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in conversation_history])
-        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
-        以下の会話履歴を読み、学生の回答を深掘りするための次の質問を1つだけ考えてください。
-        会話履歴:
+        all_company_keys = list(self.company.keys())
+
+        prompt = f"""あなたは、学生の企業研究の深さを測る、戦略的な採用面接官です。
+        # あなたが質問できる企業情報の項目リスト
+        {all_company_keys}
+        # これまでの会話履歴
         {history_str if history_str else "（まだ会話はありません）"}
-        指示: 次の質問のみを生成してください。思考プロセスや前置きは不要です。
+        # 指示
+        1.  **分析**: 上記の「項目リスト」と「会話履歴」を比較し、まだ十分に話題に上がっていない項目は何かを特定してください。
+        2.  **質問生成**: 特定した項目の中から、学生の企業理解度を測るために最も効果的なものを1つ選び、それに関する具体的な質問を生成してください。
+        思考プロセスや前置きは一切含めず、質問文だけを出力してください。
         質問:"""
-        question = self._generate_response(prompt, max_tokens=100)
-        thought = f"{self.model_type}モデルが次の質問を生成しました。"
+        
+        question = self._generate_response(prompt, max_tokens=8192)
+        thought = "未言及の項目から戦略的に質問を生成しました。"
         return question, thought
 
     def should_continue_interview(self, conversation_history, current_round, max_rounds=5):
@@ -425,96 +441,86 @@ class Interviewer:
         return full_log.strip()
 
     def select_least_motivated_candidate(self, all_states):
-        """評価タスク1: 最も志望度が低い候補者を1名選出する"""
-        print(f"--- 最終評価(1/3): 最も志望度が低い候補者の選定を開始 ({self.model_type}モデル) ---")
+        """評価タスク1: 最も意欲の低い候補者を選定する"""
+        print("--- 最終評価(1/3): 最も意欲の低い候補者の選定を開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
-        prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
-        以下の全候補者の記録を確認し、「最も志望度が低いと思われる候補者」を1名だけ選び、名前と選定理由を100字程度で述べてください。
-        {conversation_summary}
-        出力形式:
-        最も志望度が低い候補者: [氏名]
-        選定理由: [理由]
-        """
-        response = self._generate_response(prompt, max_tokens=200)
-        print("--- 最終評価(1/3): 人狼の選定を完了 ---")
+        prompt = f"あなたは最終決定権を持つ面接官です。全候補者の記録を確認し、「最も意欲が低い、あるいは準備不足と思われる候補者」を1名だけ選び、名前とその理由を簡潔に述べてください。\n{conversation_summary}\n出力形式:\n最も意欲の低い候補者: [氏名]\n理由: [理由]"
+        response = self._generate_response(prompt, max_tokens=8192)
+        print("--- 最終評価(1/3): 選定を完了 ---")
         return response
 
     def rank_candidates_by_motivation(self, all_states):
-        """評価タスク2: 全候補者を志望度が低い順にランキング付けする"""
-        print(f"--- 最終評価(2/3): 候補者の志望度順位付けを開始 ({self.model_type}モデル) ---")
+        """評価タスク2: 候補者を意欲順にランキング付けする"""
+        print("--- 最終評価(2/3): 意欲順ランキングを開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
-        prompt = f"""あなたは、{self.company.get('name')}の最終決定権を持つ面接官です。
-        以下の全候補者の記録を確認し、全候補者を志望度が低いと思われる順にランキング付けし、各順位の理由を簡潔に述べてください。
-        
-        {conversation_summary}
-        
-        出力形式:
-        1位: [氏名] (理由: ...)
-        2位: [氏名] (理由: ...)
-        3位: [氏名] (理由: ...)
-        """
-        response = self._generate_response(prompt, max_tokens=400)
-        print("--- 最終評価(2/3): 候補者の順位付けを完了 ---")
+        prompt = f"あなたは最終決定権を持つ面接官です。全候補者の記録を確認し、企業への意欲が高い順にランキング付けし、各順位の理由を簡潔に述べてください。\n{conversation_summary}\n出力形式:\n1位: [氏名] (理由: ...)\n2位: [氏名] (理由: ...)\n3位: [氏名] (理由: ...)"
+        response = self._generate_response(prompt, max_tokens=8192)
+        print("--- 最終評価(2/3): ランキングを完了 ---")
         return response
 
-
-
     def _calculate_detection_metrics(self, llm_output_text, all_states):
-        """
-        LLMの構造化出力と正解データを比較し、検出性能のメトリクスを計算する（堅牢版）。
-        """
+        """LLMの出力と正解データを比較し、TP/FP/FNなどの性能メトリクスを計算する"""
         evaluation_results = {}
+        candidate_states_map = {s['profile']['name']: s for s in all_states}
+        sections = re.split(r'(?=- [^\n]+:)', llm_output_text)
+        
+        for section in sections:
+            section = section.strip()
+            if not section or ':' not in section: continue
 
-        for state in all_states:
-            candidate_name = state['profile']['name']
+            first_line = section.split('\n', 1)[0]
+            candidate_name = first_line.replace('-', '').strip().split(':', 1)[0].strip()
+            if candidate_name not in candidate_states_map: continue
+            
+            state = candidate_states_map[candidate_name]
             note = None
             detected_missing_keys = set()
-            pattern = re.compile(f"{re.escape(candidate_name)}:(.*?)(?=\\n\\n|$)", re.DOTALL)
-            match = pattern.search(llm_output_text)
             
-            if match:
-                candidate_block = match.group(1).strip()
-                # 欠損項目キーの行を探す
-                key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", candidate_block)
-                if key_line_match:
-                    try:
-                        keys_str = key_line_match.group(1)
-                        detected_missing_keys = set(json.loads(keys_str))
-                    except json.JSONDecodeError:
-                        note = "Detected '欠損項目キー' but failed to parse JSON."
-                else:
-                    note = "Candidate block found, but '欠損項目キー' line is missing."
+            key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", section)
+            if key_line_match:
+                try:
+                    keys_str = key_line_match.group(1)
+                    detected_missing_keys = set(json.loads(keys_str))
+                except json.JSONDecodeError:
+                    note = "Detected '欠損項目キー' but failed to parse JSON."
             else:
-                note = "LLM output for this candidate was missing."
-            
-            # 正解データ（実際に欠損していた項目）
+                note = "Candidate block found, but '欠損項目キー' line is missing."
+
             possessed_knowledge = state['knowledge_tuple'][0]
             actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
-
-            # メトリクス計算
             true_positives = actual_missing_keys.intersection(detected_missing_keys)
             false_positives = detected_missing_keys.difference(actual_missing_keys)
             false_negatives = actual_missing_keys.difference(detected_missing_keys)
-
             tp_count, fp_count, fn_count = len(true_positives), len(false_positives), len(false_negatives)
             precision = tp_count / (tp_count + fp_count) if (tp_count + fp_count) > 0 else 0.0
             recall = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0.0
             f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
             result = {
-                "metrics": {"precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3)},
-                "details": {"correctly_detected (TP)": list(true_positives), "incorrectly_detected (FP)": list(false_positives), "missed (FN)": list(false_negatives)}
+                "metrics": {
+                    "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
+                    "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
+                },
+                "details": {
+                    "correctly_detected_gaps (TP)": list(true_positives),
+                    "incorrectly_detected_gaps (FP)": list(false_positives),
+                    "missed_gaps (FN)": list(false_negatives),
+                }
             }
-            if note:
-                result["note"] = note
+            if note: result["note"] = note
             evaluation_results[candidate_name] = result
-            
+
+        for state in all_states:
+            if state['profile']['name'] not in evaluation_results:
+                actual_missing_keys = {key for key, value in state['knowledge_tuple'][0].items() if not value}
+                evaluation_results[state['profile']['name']] = {
+                     "metrics": {"precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
+                    "details": {"correctly_detected_gaps (TP)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
+                    "note": "LLM output for this candidate was not found or failed to parse."}
         return evaluation_results
 
     def detect_knowledge_gaps(self, all_states):
-        """
-        評価タスク3: 知識欠損の分析と、その検出精度の評価を同時に行う。
-        """
+        """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う"""
         print("--- 最終評価(3/3): 知識欠損の分析と精度評価を開始 ---")
         
         conversation_summary = self._format_all_conversations(all_states)
@@ -551,7 +557,9 @@ class Interviewer:
           分析: [ここに分析内容を記述]
           欠損項目キー: []
         """
-        llm_analysis_text = self._generate_response(prompt, max_tokens=1024) # 少し長めに変更
+
+        llm_analysis_text = self._generate_response(prompt, max_tokens=8192)
+        
         performance_metrics = self._calculate_detection_metrics(llm_analysis_text, all_states)
         
         print("--- 最終評価(3/3): 知識欠損の分析と精度評価を完了 ---")
@@ -560,3 +568,12 @@ class Interviewer:
             "llm_qualitative_analysis": llm_analysis_text,
             "quantitative_performance_metrics": performance_metrics
         }
+    
+    def _format_all_conversations(self, all_states):
+        """全候補者の会話ログを整形するヘルパー"""
+        full_log = ""
+        for i, state in enumerate(all_states):
+            profile = state['profile']
+            history_str = "\n".join([f"  面接官: {turn['question']}\n  {profile.get('name')}: {turn['answer']}" for turn in state['conversation_log']])
+            full_log += f"--- 候補者{i+1}: {profile.get('name')} ---\n会話履歴:\n{history_str}\n\n"
+        return full_log.strip()
