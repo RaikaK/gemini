@@ -58,17 +58,35 @@ class Interviewer:
         else:
             raise ValueError(f"無効なモデルタイプです: {self.model_type}")
 
-    def ask_common_question(self, already_asked_questions):
-        """全候補者向けの共通質問を生成する"""
-        asked_questions_str = "\n".join(f"- {q}" for q in already_asked_questions)
-        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
-        候補者全員に尋ねるのにふさわしい、ごく標準的な質問を1つだけ考えてください。
-        # 既に出題した質問 (これらの質問は避けてください)
-        {asked_questions_str if asked_questions_str else "（まだ質問はありません）"}
-        指示: 次の質問文のみを生成してください。思考プロセスや前置きは一切不要です。
+    def ask_common_question(self, all_states, all_questions_history):
+        """
+        全候補者の会話を横断的に分析し、知識の穴を突く戦略的な「全体質問」を生成する。
+        """
+        conversation_summary = self._format_all_conversations(all_states)
+        all_company_keys = list(self.company.keys())
+        history_str = "\n".join(f"- {q}" for q in all_questions_history)
+
+        prompt = f"""あなたは、面接全体を俯瞰し、全候補者の理解度を効率的に測る、戦略的な採用面接官です。
+        これから全候補者に対して同じ共通質問をします。
+
+        # あなたが質問できる企業情報の項目リスト
+        {all_company_keys}
+
+        # これまでの全候補者との会話概要
+        {conversation_summary}
+
+        # これまでに行った全ての質問（重複しないように）
+        {history_str if history_str else "  (なし)"}
+
+        # 指示
+        1.  **全体分析**: 全候補者の会話を俯瞰し、ほとんどの候補者がまだ十分に言及していない「共通の未言及項目」を特定してください。
+        2.  **戦略的質問生成**: 特定した項目の中から、候補者たちの企業研究の深さを比較する上で最も重要だと思われるものを1つ選び、それに関する具体的な共通質問を生成してください。
+
+        思考プロセスや前置きは一切含めず、質問文だけを出力してください。
         質問:"""
-        question = self._generate_response(prompt, max_tokens=100)
-        thought = f"{self.model_type}モデルが次の全体質問を生成しました。"
+        
+        question = self._generate_response(prompt, max_tokens=8192)
+        thought = f"{self.model_type}モデルが次の戦略的全体質問を生成しました。"
         return question, thought
 
     def ask_question(self, conversation_history):
@@ -271,7 +289,7 @@ class Interviewer:
                 # 全体質問フェーズ
                 print("--- 全体質問フェーズを実行 ---")
                 actual_interview_flow.append(0)  # 0 = 全体質問
-                question, _ = self.ask_common_question(asked_common_questions)
+                question, _ = self.ask_common_question(candidate_states, asked_common_questions)
                 asked_common_questions.append(question)
                 print(f"--- 生成された全体質問: 「{question}」 ---")
                 
