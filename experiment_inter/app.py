@@ -297,9 +297,12 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
+    actual_interview_flow = interview_flow  # デフォルトは指定されたフロー
+    
     if use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW:
         log_message("--- 智的動的面接フローを開始 ---")
-        total_rounds = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=config.MAX_DYNAMIC_ROUNDS)
+        total_rounds, actual_interview_flow = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=config.MAX_DYNAMIC_ROUNDS)
+        log_message(f"--- 実際に実行された面接フロー: {actual_interview_flow} ---")
         
     else:
         # 従来の固定面接フロー
@@ -351,7 +354,8 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
             "dataset_name": f"Dataset_{actual_set_index + 1}",
             "interviewer_type": interviewer_model_type,
             "interviewer_model_name": interviewer_model_name,
-            "interview_flow": interview_flow,
+            "interview_flow": actual_interview_flow,
+            "use_dynamic_flow": use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW,
             "total_rounds": total_rounds,
             "timestamp": datetime.datetime.now().isoformat(),
             "set_index": set_index  # 元のリクエスト値（Noneの場合はランダム）
@@ -494,8 +498,8 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                     "total_simulations": num_simulations,
                     "timestamp": datetime.datetime.now().isoformat(),
                     "set_index": set_index,  # 元のリクエスト値
-                    "interview_flow": interview_flow,
-                    "use_dynamic_flow": use_dynamic_flow,
+                    "interview_flow": all_results[0]['experiment_info']['interview_flow'] if all_results else interview_flow,  # 実際のフローを記録
+                    "use_dynamic_flow": use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW,
                     "interviewer_type": interviewer_model_type,
                     "interviewer_model_name": interviewer_model_name
                 },

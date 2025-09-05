@@ -248,11 +248,12 @@ class Interviewer:
         return situation.strip()
 
     def conduct_dynamic_interview(self, candidate_states, applicant, max_rounds=5):
-        """動的面接フローを実行する"""
-        print(f"--- 動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
+        """智的な動的面接フローを実行する"""
+        print(f"--- 智的動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
         
         asked_common_questions = []
         current_round = 0
+        actual_interview_flow = []  # 実際に実行された面接フローを記録
         
         while current_round < max_rounds:
             current_round += 1
@@ -269,6 +270,7 @@ class Interviewer:
             if question_type == "common":
                 # 全体質問フェーズ
                 print("--- 全体質問フェーズを実行 ---")
+                actual_interview_flow.append(0)  # 0 = 全体質問
                 question, _ = self.ask_common_question(asked_common_questions)
                 asked_common_questions.append(question)
                 print(f"--- 生成された全体質問: 「{question}」 ---")
@@ -294,6 +296,7 @@ class Interviewer:
             elif question_type == "individual":
                 # 個別質問フェーズ
                 print("--- 個別質問フェーズを実行 ---")
+                actual_interview_flow.append(1)  # 1 = 個別質問
                 any_continued = False
                 
                 for i, state in enumerate(candidate_states):
@@ -332,7 +335,8 @@ class Interviewer:
                     break
         
         print(f"--- 智的動的面接フロー完了 (実行ラウンド数: {current_round}) ---")
-        return current_round
+        print(f"--- 実際の面接フロー: {actual_interview_flow} ---")
+        return current_round, actual_interview_flow
 
     def _evaluate_overall_progress(self, candidate_states, current_round, max_rounds):
         """面接全体の進捗を評価し、継続の必要性を判断"""

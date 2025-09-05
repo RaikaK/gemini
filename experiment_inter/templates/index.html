@@ -552,7 +552,7 @@
                                     <li><strong>面接官タイプ:</strong> ${data.experiment_summary.interviewer_type}</li>
                                     <li><strong>面接官モデル:</strong> ${data.experiment_summary.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_summary.interview_flow ? data.experiment_summary.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
-                                    <li><strong>動的フロー:</strong> ${data.experiment_summary.use_dynamic_flow ? '有効' : '無効'}</li>
+                                    <li><strong>動的フロー:</strong> ${data.experiment_summary.use_dynamic_flow ? '有効（上記は実際の実行フロー）' : '無効'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_summary.timestamp).toLocaleString('ja-JP')}</li>
                                 </ul>
                             </div>
@@ -719,6 +719,7 @@
                                     <li><strong>面接官モデル:</strong> ${data.experiment_info.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接回数:</strong> ${data.experiment_info.total_rounds}回</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_info.interview_flow ? data.experiment_info.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
+                                    <li><strong>動的フロー:</strong> ${data.experiment_info.use_dynamic_flow ? '有効（上記は実際の実行フロー）' : '無効'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_info.timestamp).toLocaleString('ja-JP')}</li>
                                 </ul>
                             </div>
