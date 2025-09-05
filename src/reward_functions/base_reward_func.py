@@ -8,6 +8,8 @@ from ygo.udi_io import UdiIO
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models.command_request import CommandRequest
 
+from src.ygo_env_wrapper.action_data import ActionData
+
 
 class BaseRewardFunction(abc.ABC):
     def __init__(self, udi_io: UdiIO, is_normalized: bool):
@@ -19,9 +21,7 @@ class BaseRewardFunction(abc.ABC):
     @abc.abstractmethod
     def eval(
         self,
-        duel_state_data: DuelStateData,
-        cmd_request: CommandRequest,
-        cmd_index: int,
+        action_data: ActionData,
     ) -> float:
-        """状態(duel_state_data), 選択可能なコマンド(cmd_request), 実際に実行したコマンド(cmd_index)に基づいて報酬を計算する"""
+        """action_dataが実行された後、呼ばれ、action_dataに含まれるある状態sにおける行動aを評価できる。次状態を考慮した報酬関数を設計する場合、self.udi_ioから、実行後の状態(つまり、次状態)を取得し評価を行う"""
         pass

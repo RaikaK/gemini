@@ -7,14 +7,15 @@ from ygo.models.duel_log_data import DuelEndData
 from ygo.constants.enums import ResultType
 import ygo.constants as c
 
-from src.ygo_env_wrapper.base_reward_func import BaseRewardFunction
+from src.reward_functions.base_reward_func import BaseRewardFunction
+from src.ygo_env_wrapper.action_data import ActionData
 
 
 class NormalRewardFunction(BaseRewardFunction):
     def __init__(self, udi_io, is_normalized):
         super().__init__(udi_io, is_normalized)
 
-    def eval(self, duel_state_data, cmd_request, cmd_index):
+    def eval(self, action_data: ActionData) -> float:
         """ゲームに勝利した場合: 1.0, 負けた場合: -1.0, それ以外: 0.0"""
 
         # 終了かどうかを判定
