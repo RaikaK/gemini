@@ -1,0 +1,70 @@
+import sys
+
+sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+
+import argparse
+
+from ygo import constants
+from ygo.udi_io import UdiIO
+
+from src.ygo_env_wrapper.action_data import ActionData
+from src.ygo_env_wrapper.ygo_env import YgoEnv
+from src.agents.random_agent.random_agent import RandomAgent
+
+
+if __name__ == "__main__":
+    print("起動コマンド（通常）")
+    print("python player0_thread.py")
+    print("起動コマンド（継続）")
+
+    print("設定テスト開始")
+    x = constants.PosId.EX_R_MONSTER
+    print(x)
+    print("起動テスト完了")
+    print("引数を読み込みます。")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tcpport", type=int, default=52010)
+    parser.add_argument("--tcphost", type=str, default="10.95.102.79")
+    parser.add_argument(
+        "-g", "--gRPC", action="store_true", help="using gRPC", default="-g"
+    )
+    parser.add_argument(
+        "--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer"
+    )
+    parser.add_argument("--LoadWeightName", type=str, default=None)
+    parser.add_argument("-x", type=int, default=0, help="Dummy")
+    args = parser.parse_args()
+    print("ＵＤＩの設定を行います。")
+    connect = UdiIO.Connect.SOCKET
+    if args.gRPC:
+        connect = UdiIO.Connect.GRPC
+
+    # UDIの初期化
+    udi_io = UdiIO(
+        tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1
+    )
+    # UDIのログは大量に出るため、出力しないようにする
+    udi_io.log_response_history = False
+
+    # エージェントの用意
+    agent = RandomAgent()
+
+    # 環境ラッパーの起動
+    env = YgoEnv(udi_io=udi_io)
+    action_data: ActionData = None
+    state = env.reset()
+
+    while True:
+        if state["is_duel_start"]:
+            print("Duel Start")
+        elif state["is_duel_end"]:
+            print("Duel End")
+            print(state["duel_end_data"])
+
+        if state["is_cmd_required"]:
+            action_data = agent.select_action(state)
+
+        state = env.step(action_data)
+
+        # エージェントの学習
+        agent.update(action_data=action_data, next_state=state)
