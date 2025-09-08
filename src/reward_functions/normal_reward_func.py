@@ -15,7 +15,7 @@ class NormalRewardFunction(BaseRewardFunction):
     def __init__(self, udi_io, is_normalized):
         super().__init__(udi_io, is_normalized)
 
-    def eval(self, action_data: ActionData) -> float:
+    def eval(self, action_data: ActionData=None) -> float:
         """ゲームに勝利した場合: 1.0, 負けた場合: -1.0, それ以外: 0.0"""
 
         # 終了かどうかを判定

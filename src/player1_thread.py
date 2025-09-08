@@ -3,6 +3,7 @@ import sys
 sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
 
 import argparse
+import time
 
 from ygo import constants
 from ygo.udi_io import UdiIO
@@ -11,6 +12,11 @@ from src.ygo_env_wrapper.action_data import ActionData
 from src.ygo_env_wrapper.ygo_env import YgoEnv
 from src.agents.random_agent.random_agent import RandomAgent
 
+# Instance-1でのDuelSimulatorの起動コマンド
+# DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
+
+
+WAITING_TIME = 1e-4
 
 if __name__ == "__main__":
     print("起動コマンド（通常）")
@@ -68,3 +74,8 @@ if __name__ == "__main__":
 
         # エージェントの学習
         agent.update(action_data=action_data, next_state=state)
+
+        # アクションデータの初期化
+        action_data = None
+                
+        time.sleep(WAITING_TIME)

@@ -9,6 +9,9 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models import CommandEntry
 
+# シミュレータ起動コマンド
+# DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
+
 
 class RandomAgent(BaseYgoAgent):
     def __init__(self):
@@ -27,11 +30,12 @@ class RandomAgent(BaseYgoAgent):
                 command_request=command_request,
                 command_entry=selected_command_entry,
             )
+            print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
             return action_data
 
         print("No command selected")
         return None
 
-    def update(self, action_data: ActionData, reward: float, next_state: dict):
-        print("RandomAgent does not learn")
+    def update(self, action_data: ActionData, next_state: dict):
+        # print("RandomAgent does not learn")
         return

@@ -26,6 +26,13 @@ class YgoEnv:
     
     def reset(self):
         return self.step(None)
+    
+    def execute_command(self, action_data:ActionData):
+        if action_data is not None:
+            # print("send cmd")
+            cmd_index = action_data.command_index
+            # cmd_indexの実行
+            self.udi_io.output_command(cmd_index)
 
     def step(
         self, action_data: ActionData, 
@@ -40,16 +47,11 @@ class YgoEnv:
         - コマンドリクエスト: "command_request"
         - 報酬: "reward"
         """
-        # コマンドの実行
-        reward: float = 0.0
+        reward = 0.0
         if action_data is not None:
-            # print("send cmd")
-            cmd_index = action_data.command_index
-            # cmd_indexの実行
-            self.udi_io.output_command(cmd_index)
-            # 報酬を計算
-            reward = self.reward_func.eval(action_data=action_data)
-    
+            self.execute_command(action_data=action_data)
+            reward: float = self.reward_func.eval(action_data=action_data)
+
         try:
             if (not self.udi_io.input()):
                 pass
@@ -164,3 +166,5 @@ if __name__ == "__main__":
             action_data = cli_player(result=result)
         
         result = env.step(action_data=action_data)
+
+        action_data = None
