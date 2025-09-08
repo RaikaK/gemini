@@ -143,7 +143,7 @@ if __name__ == "__main__":
     udi_io.log_response_history = False
     text_util = TextUtil()
 
-    env = YgoEnv(udi_io=udi_io, text_util=text_util, reward_func=None)
+    env = YgoEnv(udi_io=udi_io)
     print("finish initialized")
 
     action_data = None
