@@ -149,17 +149,66 @@
                                         <div class="form-text">複数回実行して統計的な分析を行います</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="interviewFlow" class="form-label">面接フロー設定</label>
-                                        <div class="form-text mb-2">面接の流れを設定（0: 全体質問, 1: 個別質問）</div>
-                                        <div class="d-flex gap-2 mb-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(0)">全体質問追加</button>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(1)">個別質問追加</button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearInterviewFlow()">クリア</button>
+                                        <label for="interviewerModel" class="form-label">面接官モデル設定</label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewerModelType" id="apiModel" value="api" checked>
+                                            <label class="form-check-label" for="apiModel">
+                                                APIモデル (OpenAI GPT)
+                                            </label>
                                         </div>
-                                        <div id="interviewFlowDisplay" class="bg-light p-2 rounded">
-                                            <span class="badge bg-primary me-1">1</span>
+                                        <div id="apiModelSettings" class="ms-4 mb-2">
+                                            <select class="form-select form-select-sm" id="apiModelName">
+                                                <option value="gpt-4o-mini" selected>GPT-4o Mini (高速・低コスト)</option>
+                                                <option value="gpt-4o">GPT-4o (高性能)</option>
+                                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (最低コスト)</option>
+                                            </select>
                                         </div>
-                                        <input type="hidden" id="interviewFlow" value="1">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewerModelType" id="localModel" value="local">
+                                            <label class="form-check-label" for="localModel">
+                                                ローカルモデル (自社GPU)
+                                            </label>
+                                        </div>
+                                        <div id="localModelSettings" class="ms-4 mb-2" style="display: none;">
+                                            <select class="form-select form-select-sm" id="localModelName">
+                                                <option value="meta-llama/Llama-3.1-8B-Instruct" selected>Llama 3.1 8B Instruct</option>
+                                                <option value="meta-llama/Llama-3.1-70B-Instruct">Llama 3.1 70B Instruct (大容量GPU必要)</option>
+                                                <option value="microsoft/DialoGPT-medium">DialoGPT Medium</option>
+                                                <option value="microsoft/DialoGPT-large">DialoGPT Large</option>
+                                            </select>
+                                            <div class="form-text text-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> ローカルモデルは初回読み込みに時間がかかります
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="interviewFlowType" class="form-label">面接フロー設定</label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewFlowType" id="fixedFlow" value="fixed" checked>
+                                            <label class="form-check-label" for="fixedFlow">
+                                                固定フロー（手動設定）
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="interviewFlowType" id="dynamicFlow" value="dynamic">
+                                            <label class="form-check-label" for="dynamicFlow">
+                                                智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大5ラウンド）
+                                            </label>
+                                        </div>
+                                        
+                                        <div id="fixedFlowSettings" class="mt-3">
+                                            <div class="form-text mb-2">面接の流れを設定（0: 全体質問, 1: 個別質問）</div>
+                                            <div class="d-flex gap-2 mb-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(0)">全体質問追加</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuestionType(1)">個別質問追加</button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearInterviewFlow()">クリア</button>
+                                            </div>
+                                            <div id="interviewFlowDisplay" class="bg-light p-2 rounded">
+                                                <span class="badge bg-primary me-1">1</span>
+                                            </div>
+                                            <input type="hidden" id="interviewFlow" value="1">
+                                        </div>
                                     </div>
                                     <button id="startBtn" class="btn btn-primary btn-lg">
                                         <i class="fas fa-rocket"></i> 実験開始
@@ -273,7 +322,28 @@
         // 実験開始
         document.getElementById('startBtn').addEventListener('click', function() {
             const setIndex = document.getElementById('setIndex').value;
-            const numSimulations = document.getElementById('numSimulations').value;
+            const numSimulations = parseInt(document.getElementById('numSimulations').value);
+            const interviewFlowType = document.querySelector('input[name="interviewFlowType"]:checked').value;
+            const interviewerModelType = document.querySelector('input[name="interviewerModelType"]:checked').value;
+            
+            let interviewFlow = null;
+            let useDynamicFlow = false;
+            let interviewerModelName = null;
+            
+            if (interviewFlowType === 'fixed') {
+                interviewFlow = JSON.parse(document.getElementById('interviewFlow').value);
+                useDynamicFlow = false;
+            } else if (interviewFlowType === 'dynamic') {
+                interviewFlow = null;
+                useDynamicFlow = true;
+            }
+            
+            // 面接官モデル設定
+            if (interviewerModelType === 'api') {
+                interviewerModelName = document.getElementById('apiModelName').value;
+            } else if (interviewerModelType === 'local') {
+                interviewerModelName = document.getElementById('localModelName').value;
+            }
             
             fetch('/api/start_experiment', {
                 method: 'POST',
@@ -281,9 +351,12 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
-                    set_index: setIndex,
+                    set_index: setIndex || null,
                     num_simulations: numSimulations,
-                    interview_flow: interviewFlow
+                    interview_flow: interviewFlow,
+                    use_dynamic_flow: useDynamicFlow,
+                    interviewer_model_type: interviewerModelType,
+                    interviewer_model_name: interviewerModelName
                 })
             })
             .then(response => response.json())
@@ -396,11 +469,17 @@
                             <small class="text-muted">精度指標</small><br>
                             <span class="badge bg-success">正解率: ${(result.overall_accuracy * 100).toFixed(1)}%</span><br>
                             <span class="badge bg-info">F1: ${result.overall_f1_score.toFixed(3)}</span>
+                            ${result.knowledge_gaps_available && result.knowledge_gaps_avg_accuracy !== undefined && result.knowledge_gaps_avg_accuracy !== 'N/A' ? `<br><span class="badge bg-warning">評価3: ${(result.knowledge_gaps_avg_accuracy * 100).toFixed(1)}%</span>` : ''}
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted">シミュレーション</small><br>
                             <span class="badge bg-warning">${result.total_simulations}回</span><br>
                             <span class="badge bg-success">正解: ${result.correct_predictions}/${result.total_simulations}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">面接官モデル</small><br>
+                            <span class="badge bg-secondary">${result.interviewer_type}</span><br>
+                            <span class="badge bg-outline-secondary" style="font-size: 0.7em;">${(result.interviewer_model_name || 'N/A').split('/').pop()}</span>
                         </div>
                     `;
                 } else {
@@ -410,10 +489,16 @@
                             <small class="text-muted">精度指標</small><br>
                             <span class="badge ${result.is_correct ? 'bg-success' : 'bg-danger'}">${result.is_correct ? '正解' : '不正解'}</span><br>
                             <span class="badge bg-info">F1: ${result.f1_score.toFixed(3)}</span>
+                            ${result.knowledge_gaps_available && result.knowledge_gaps_accuracy !== undefined && result.knowledge_gaps_accuracy !== 'N/A' ? `<br><span class="badge bg-warning">評価3: ${(result.knowledge_gaps_accuracy * 100).toFixed(1)}%</span>` : ''}
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted">候補者数</small><br>
                             <span class="badge bg-info">${result.num_candidates}名</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">面接官モデル</small><br>
+                            <span class="badge bg-secondary">${result.interviewer_type}</span><br>
+                            <span class="badge bg-outline-secondary" style="font-size: 0.7em;">${(result.interviewer_model_name || 'N/A').split('/').pop()}</span>
                         </div>
                     `;
                 }
@@ -465,7 +550,9 @@
                                     <li><strong>総シミュレーション数:</strong> ${data.experiment_summary.total_simulations}</li>
                                     <li><strong>データセット:</strong> ${data.experiment_summary.set_index !== null ? `Dataset_${data.experiment_summary.set_index + 1}` : 'ランダム選択'}</li>
                                     <li><strong>面接官タイプ:</strong> ${data.experiment_summary.interviewer_type}</li>
+                                    <li><strong>面接官モデル:</strong> ${data.experiment_summary.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_summary.interview_flow ? data.experiment_summary.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
+                                    <li><strong>動的フロー:</strong> ${data.experiment_summary.use_dynamic_flow ? '有効（上記は実際の実行フロー）' : '無効'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_summary.timestamp).toLocaleString('ja-JP')}</li>
                                 </ul>
                             </div>
@@ -523,7 +610,13 @@
                                                         <li><strong>評価1 - 正解率:</strong> ${(result.accuracy_metrics.accuracy * 100).toFixed(1)}%</li>
                                                         <li><strong>評価1 - F1スコア:</strong> ${result.accuracy_metrics.f1_score.toFixed(3)}</li>
                                                         <li><strong>評価2 - ランキング正解率:</strong> ${result.accuracy_metrics.ranking_accuracy ? (result.accuracy_metrics.ranking_accuracy.accuracy * 100).toFixed(1) + '%' : 'N/A'}</li>
-                                                        <li><strong>評価3 - 知識欠損検出:</strong> ${result.accuracy_metrics.knowledge_gaps_metrics ? '利用可能' : 'N/A'}</li>
+                                                        <li><strong>評価3 - 知識欠損検出:</strong> 
+                                                            ${result.accuracy_metrics.knowledge_gaps_metrics && 
+                                                              result.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy !== undefined && 
+                                                              result.accuracy_metrics.knowledge_gaps_metrics.detection_f1_score !== undefined ? 
+                                                                `検出精度: ${(result.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy * 100).toFixed(1)}%, F1: ${result.accuracy_metrics.knowledge_gaps_metrics.detection_f1_score.toFixed(3)}` : 
+                                                                'N/A'}
+                                                        </li>
                                                         <li><strong>真の志望度最低:</strong> ${result.accuracy_metrics.true_least_motivated.name}</li>
                                                         <li><strong>予測志望度最低:</strong> ${result.accuracy_metrics.predicted_least_motivated}</li>
                                                     </ul>
@@ -553,6 +646,65 @@
                                 </div>
                             `).join('')}
                         </div>
+                        
+                        ${data.individual_results.some(result => result.knowledge_gaps_detailed) ? `
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h6>評価3 - 知識欠損検出詳細分析（サマリー）</h6>
+                                <div class="accordion" id="knowledgeGapsAccordion">
+                                    ${data.individual_results.filter(result => result.knowledge_gaps_detailed).map((result, index) => `
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#kg${index}">
+                                                    シミュレーション ${result.simulation_num}: ${result.company_profile.name}
+                                                </button>
+                                            </h2>
+                                            <div id="kg${index}" class="accordion-collapse collapse" data-bs-parent="#knowledgeGapsAccordion">
+                                                <div class="accordion-body">
+                                                    <h6>LLM定性分析</h6>
+                                                    <div class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em;">
+                                                        ${result.knowledge_gaps_detailed.llm_qualitative_analysis}
+                                                    </div>
+                                                    
+                                                    <h6>各候補者の定量的性能指標</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>候補者名</th>
+                                                                    <th>Precision</th>
+                                                                    <th>Recall</th>
+                                                                    <th>F1-Score</th>
+                                                                    <th>正しく検出 (TP)</th>
+                                                                    <th>誤検出 (FP)</th>
+                                                                    <th>見逃し (FN)</th>
+                                                                    <th>備考</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                ${Object.entries(result.knowledge_gaps_detailed.quantitative_performance_metrics).map(([candidate_name, metrics]) => `
+                                                                    <tr>
+                                                                        <td><strong>${candidate_name}</strong></td>
+                                                                        <td>${metrics.metrics.precision}</td>
+                                                                        <td>${metrics.metrics.recall}</td>
+                                                                        <td>${metrics.metrics.f1_score}</td>
+                                                                        <td>${metrics.details['correctly_detected (TP)'].join(', ') || 'なし'}</td>
+                                                                        <td>${metrics.details['incorrectly_detected (FP)'].join(', ') || 'なし'}</td>
+                                                                        <td>${metrics.details['missed (FN)'].join(', ') || 'なし'}</td>
+                                                                        <td>${metrics.note || '-'}</td>
+                                                                    </tr>
+                                                                `).join('')}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
                     `;
                 } else {
                     // 個別結果の表示
@@ -564,8 +716,10 @@
                                     <li><strong>シミュレーション番号:</strong> ${data.simulation_num}</li>
                                     <li><strong>データセット:</strong> ${data.experiment_info.dataset_name || `Dataset_${data.experiment_info.dataset_index + 1}`}</li>
                                     <li><strong>面接官タイプ:</strong> ${data.experiment_info.interviewer_type}</li>
+                                    <li><strong>面接官モデル:</strong> ${data.experiment_info.interviewer_model_name || 'N/A'}</li>
                                     <li><strong>面接回数:</strong> ${data.experiment_info.total_rounds}回</li>
                                     <li><strong>面接フロー:</strong> ${data.experiment_info.interview_flow ? data.experiment_info.interview_flow.map((type, i) => `${i+1}回目: ${type === 0 ? '全体質問' : '個別質問'}`).join(', ') : 'N/A'}</li>
+                                    <li><strong>動的フロー:</strong> ${data.experiment_info.use_dynamic_flow ? '有効（上記は実際の実行フロー）' : '無効'}</li>
                                     <li><strong>実行時刻:</strong> ${new Date(data.experiment_info.timestamp).toLocaleString('ja-JP')}</li>
                                 </ul>
                             </div>
@@ -602,7 +756,10 @@
                                                     <small>評価2ランキング</small>
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <h5>${data.accuracy_metrics.knowledge_gaps_metrics ? '✓' : '✗'}</h5>
+                                                    <h5>${data.accuracy_metrics.knowledge_gaps_metrics && 
+                                                         data.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy !== undefined ? 
+                                                        (data.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy * 100).toFixed(1) + '%' : 
+                                                        'N/A'}</h5>
                                                     <small>評価3知識欠損</small>
                                                 </div>
                                             </div>
@@ -637,11 +794,92 @@
                                                     </div>
                                                 </div>
                                                 ` : ''}
+                                                ${data.accuracy_metrics.knowledge_gaps_metrics && 
+                                                  data.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy !== undefined && 
+                                                  data.accuracy_metrics.knowledge_gaps_metrics.detection_f1_score !== undefined ? `
+                                                <div class="mt-3">
+                                                    <h6>評価3 - 知識欠損検出詳細:</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>検出精度:</strong></td>
+                                                                    <td>${(data.accuracy_metrics.knowledge_gaps_metrics.detection_accuracy * 100).toFixed(1)}%</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>検出F1スコア:</strong></td>
+                                                                    <td>${data.accuracy_metrics.knowledge_gaps_metrics.detection_f1_score.toFixed(3)}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>検出された知識欠損数:</strong></td>
+                                                                    <td>${data.accuracy_metrics.knowledge_gaps_metrics.detected_gaps_count || 'N/A'}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>真の知識欠損数:</strong></td>
+                                                                    <td>${data.accuracy_metrics.knowledge_gaps_metrics.true_gaps_count || 'N/A'}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>検出された欠損詳細:</strong></td>
+                                                                    <td>${data.accuracy_metrics.knowledge_gaps_metrics.detected_gaps_details || 'N/A'}</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                ` : ''}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            
+                            ${data.knowledge_gaps_detailed ? `
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h6>評価3 - 知識欠損検出詳細分析</h6>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6>LLM定性分析</h6>
+                                            <div class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em;">
+                                                ${data.knowledge_gaps_detailed.llm_qualitative_analysis}
+                                            </div>
+                                            
+                                            <h6>各候補者の定量的性能指標</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>候補者名</th>
+                                                            <th>Precision</th>
+                                                            <th>Recall</th>
+                                                            <th>F1-Score</th>
+                                                            <th>正しく検出 (TP)</th>
+                                                            <th>誤検出 (FP)</th>
+                                                            <th>見逃し (FN)</th>
+                                                            <th>備考</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${Object.entries(data.knowledge_gaps_detailed.quantitative_performance_metrics).map(([candidate_name, metrics]) => `
+                                                            <tr>
+                                                                <td><strong>${candidate_name}</strong></td>
+                                                                <td>${metrics.metrics.precision}</td>
+                                                                <td>${metrics.metrics.recall}</td>
+                                                                <td>${metrics.metrics.f1_score}</td>
+                                                                <td>${metrics.details['correctly_detected (TP)'].join(', ') || 'なし'}</td>
+                                                                <td>${metrics.details['incorrectly_detected (FP)'].join(', ') || 'なし'}</td>
+                                                                <td>${metrics.details['missed (FN)'].join(', ') || 'なし'}</td>
+                                                                <td>${metrics.note || '-'}</td>
+                                                            </tr>
+                                                        `).join('')}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
                                                             <div class="col-md-6">
                                     <h6>最終評価</h6>
                                     <div class="card">
@@ -728,9 +966,36 @@
             hiddenInput.value = JSON.stringify(interviewFlow);
         }
 
-        // 初期化時に面接フロー表示を更新
+        // 面接フロー設定の表示/非表示制御
         document.addEventListener('DOMContentLoaded', function() {
             updateInterviewFlowDisplay();
+            
+            // 面接フロータイプのラジオボタンの変更イベントを設定
+            document.querySelectorAll('input[name="interviewFlowType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const fixedFlowSettings = document.getElementById('fixedFlowSettings');
+                    if (this.value === 'fixed') {
+                        fixedFlowSettings.style.display = 'block';
+                    } else {
+                        fixedFlowSettings.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 面接官モデルタイプのラジオボタンの変更イベントを設定
+            document.querySelectorAll('input[name="interviewerModelType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const apiModelSettings = document.getElementById('apiModelSettings');
+                    const localModelSettings = document.getElementById('localModelSettings');
+                    if (this.value === 'api') {
+                        apiModelSettings.style.display = 'block';
+                        localModelSettings.style.display = 'none';
+                    } else if (this.value === 'local') {
+                        apiModelSettings.style.display = 'none';
+                        localModelSettings.style.display = 'block';
+                    }
+                });
+            });
         });
 
 

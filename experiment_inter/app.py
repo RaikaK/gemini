@@ -107,8 +107,13 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
         
         # 評価3: 知識欠損検出精度（オプション）
         knowledge_gaps_metrics = None
+        knowledge_gaps_detailed = None
         if knowledge_gaps_eval and isinstance(knowledge_gaps_eval, dict):
             knowledge_gaps_metrics = knowledge_gaps_eval.get('quantitative_performance_metrics', {})
+            knowledge_gaps_detailed = {
+                'llm_qualitative_analysis': knowledge_gaps_eval.get('llm_qualitative_analysis', ''),
+                'quantitative_performance_metrics': knowledge_gaps_eval.get('quantitative_performance_metrics', {})
+            }
         
         return {
             'is_correct': is_correct,
@@ -121,7 +126,8 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
             'y_true': y_true,
             'y_pred': y_pred,
             'ranking_accuracy': ranking_accuracy,
-            'knowledge_gaps_metrics': knowledge_gaps_metrics
+            'knowledge_gaps_metrics': knowledge_gaps_metrics,
+            'knowledge_gaps_detailed': knowledge_gaps_detailed
         }
     except Exception as e:
         log_message(f"精度指標の計算中にエラーが発生しました: {e}")
@@ -178,9 +184,12 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         log_message(f"ランキング精度の計算中にエラーが発生しました: {e}")
         return None
 
-def initialize_local_model():
+def initialize_local_model(model_name=None):
     """Hugging Faceからローカルモデルを読み込み、GPUに配置する"""
-    log_message(f"--- 面接官役のローカルモデル ({config.LOCAL_MODEL_NAME}) の初期化を開始 ---")
+    if model_name is None:
+        model_name = config.LOCAL_MODEL_NAME
+    
+    log_message(f"--- 面接官役のローカルモデル ({model_name}) の初期化を開始 ---")
     
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -195,8 +204,8 @@ def initialize_local_model():
         log_message("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
     
     try:
-        tokenizer = AutoTokenizer.from_pretrained(config.LOCAL_MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(config.LOCAL_MODEL_NAME, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
         
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -209,13 +218,22 @@ def initialize_local_model():
         log_message(f"モデルの初期化中にエラーが発生しました: {e}")
         return None, None
 
-def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None):
+def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """単一の面接シミュレーション実行"""
     log_message(f"=== シミュレーション {simulation_num} 開始 ===")
     
     # 面接フローが指定されていない場合はデフォルトを使用
     if interview_flow is None:
         interview_flow = config.INTERVIEW_FLOW
+    
+    # モデル設定が指定されていない場合はconfigから取得
+    if interviewer_model_type is None:
+        interviewer_model_type = config.INTERVIEWER_MODEL_TYPE
+    if interviewer_model_name is None:
+        if interviewer_model_type == 'api':
+            interviewer_model_name = config.INTERVIEWER_API_MODEL
+        else:
+            interviewer_model_name = config.LOCAL_MODEL_NAME
     
     # --- 1. db.jsonからデータ読み込み ---
     company_profile, candidate_profiles, actual_set_index = data_generators.load_company_and_candidates_from_db(set_index)
@@ -228,24 +246,38 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         candidate_profiles = candidate_profiles[:config.NUM_CANDIDATES]
 
     # --- 2. 面接官と候補者の初期化 ---
-    model_type = config.INTERVIEWER_MODEL_TYPE
-    log_message(f"--- 面接官タイプ: {model_type} ---")
+    log_message(f"--- 面接官タイプ: {interviewer_model_type} ({interviewer_model_name}) ---")
     
     try:
-        if model_type == 'local':
+        if interviewer_model_type == 'local':
+            # ローカルモデルが事前に初期化されていない場合は新しく初期化
+            if local_interviewer_model is None or local_interviewer_tokenizer is None:
+                log_message(f"ローカルモデル {interviewer_model_name} を新しく初期化します...")
+                local_interviewer_model, local_interviewer_tokenizer = initialize_local_model(interviewer_model_name)
+                if local_interviewer_model is None or local_interviewer_tokenizer is None:
+                    log_message("ローカルモデルの初期化に失敗しました。")
+                    return None
+            
             interviewer = Interviewer(
                 company_profile=company_profile,
                 model_type='local',
                 model=local_interviewer_model,
                 tokenizer=local_interviewer_tokenizer
             )
-        elif model_type == 'api':
-            interviewer = Interviewer(
-                company_profile=company_profile,
-                model_type='api'
-            )
+        elif interviewer_model_type == 'api':
+            # APIモデル名を動的に設定
+            original_api_model = config.INTERVIEWER_API_MODEL
+            config.INTERVIEWER_API_MODEL = interviewer_model_name
+            try:
+                interviewer = Interviewer(
+                    company_profile=company_profile,
+                    model_type='api'
+                )
+            finally:
+                # 元の設定を復元
+                config.INTERVIEWER_API_MODEL = original_api_model
         else:
-            log_message(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
+            log_message(f"エラー: 無効な面接官モデルタイプ '{interviewer_model_type}' が指定されています。")
             return None
     except ValueError as e:
         log_message(f"エラー: {e}")
@@ -265,35 +297,44 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
-    total_rounds = len(interview_flow)
-    for round_num, question_type in enumerate(interview_flow):
-        log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
+    actual_interview_flow = interview_flow  # デフォルトは指定されたフロー
+    
+    if use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW:
+        log_message("--- 智的動的面接フローを開始 ---")
+        total_rounds, actual_interview_flow = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=config.MAX_DYNAMIC_ROUNDS)
+        log_message(f"--- 実際に実行された面接フロー: {actual_interview_flow} ---")
+        
+    else:
+        # 従来の固定面接フロー
+        total_rounds = len(interview_flow)
+        for round_num, question_type in enumerate(interview_flow):
+            log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
 
-        if question_type == 0: # 全体質問
-            log_message("--- 全体質問フェーズ ---")
-            question, _ = interviewer.ask_common_question(asked_common_questions)
-            asked_common_questions.append(question)
-            log_message(f"--- 生成された全体質問: 「{question}」 ---")
-            
-            for i, state in enumerate(candidate_states):
-                log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                answer = applicant.generate(
-                    state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                )
-                log_message(f"学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+            if question_type == 0: # 全体質問
+                log_message("--- 全体質問フェーズ ---")
+                question, _ = interviewer.ask_common_question(asked_common_questions)
+                asked_common_questions.append(question)
+                log_message(f"--- 生成された全体質問: 「{question}」 ---")
+                
+                for i, state in enumerate(candidate_states):
+                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    answer = applicant.generate(
+                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                    )
+                    log_message(f"学生 (API): {answer}")
+                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
 
-        elif question_type == 1: # 個別質問
-            log_message("--- 個別質問フェーズ ---")
-            for i, state in enumerate(candidate_states):
-                log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                question, _ = interviewer.ask_question(state["conversation_log"])
-                log_message(f"面接官 ({model_type}): {question}")
-                answer = applicant.generate(
-                    state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                )
-                log_message(f"学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+            elif question_type == 1: # 個別質問
+                log_message("--- 個別質問フェーズ ---")
+                for i, state in enumerate(candidate_states):
+                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    question, _ = interviewer.ask_question(state["conversation_log"])
+                    log_message(f"面接官 ({interviewer_model_type}): {question}")
+                    answer = applicant.generate(
+                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                    )
+                    log_message(f"学生 (API): {answer}")
+                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
 
     # --- 4. 最終評価 ---
     log_message("--- 最終評価フェーズ ---")
@@ -311,8 +352,10 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         "experiment_info": {
             "dataset_index": actual_set_index,
             "dataset_name": f"Dataset_{actual_set_index + 1}",
-            "interviewer_type": model_type,
-            "interview_flow": interview_flow,
+            "interviewer_type": interviewer_model_type,
+            "interviewer_model_name": interviewer_model_name,
+            "interview_flow": actual_interview_flow,
+            "use_dynamic_flow": use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW,
             "total_rounds": total_rounds,
             "timestamp": datetime.datetime.now().isoformat(),
             "set_index": set_index  # 元のリクエスト値（Noneの場合はランダム）
@@ -332,6 +375,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
             "motivation_ranking": ranking_eval,
             "knowledge_gaps": knowledge_gap_eval
         },
+        "knowledge_gaps_detailed": accuracy_metrics.get('knowledge_gaps_detailed') if accuracy_metrics else None,
         "accuracy_metrics": accuracy_metrics
     }
     
@@ -343,11 +387,19 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         if accuracy_metrics.get('ranking_accuracy'):
             log_message(f"評価2 - ランキング正解率: {accuracy_metrics['ranking_accuracy']['accuracy']:.3f}")
         if accuracy_metrics.get('knowledge_gaps_metrics'):
-            log_message(f"評価3 - 知識欠損検出: 利用可能")
+            kg_metrics = accuracy_metrics['knowledge_gaps_metrics']
+            log_message(f"評価3 - 知識欠損検出:")
+            log_message(f"  - 検出された知識欠損数: {kg_metrics.get('detected_gaps_count', 'N/A')}")
+            log_message(f"  - 真の知識欠損数: {kg_metrics.get('true_gaps_count', 'N/A')}")
+            log_message(f"  - 検出精度: {kg_metrics.get('detection_accuracy', 'N/A')}")
+            log_message(f"  - 検出F1スコア: {kg_metrics.get('detection_f1_score', 'N/A')}")
+            log_message(f"  - 検出された欠損詳細: {kg_metrics.get('detected_gaps_details', 'N/A')}")
+        else:
+            log_message(f"評価3 - 知識欠損検出: データなし")
     
     return result
 
-def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None):
+def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """Web用の面接シミュレーション実行関数（複数回対応）"""
     try:
         experiment_status['is_running'] = True
@@ -357,7 +409,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
         experiment_status['current_simulation'] = 0
         experiment_status['total_simulations'] = num_simulations
         
+        # モデル設定が指定されていない場合はconfigから取得
+        if interviewer_model_type is None:
+            interviewer_model_type = config.INTERVIEWER_MODEL_TYPE
+        if interviewer_model_name is None:
+            if interviewer_model_type == 'api':
+                interviewer_model_name = config.INTERVIEWER_API_MODEL
+            else:
+                interviewer_model_name = config.LOCAL_MODEL_NAME
+        
         update_progress(0, f"{num_simulations}回のシミュレーションを開始しています...")
+        log_message(f"面接官モデル設定: {interviewer_model_type} ({interviewer_model_name})")
         
         # 結果保存用のディレクトリ作成
         if not RESULTS_DIR.exists(): 
@@ -372,7 +434,10 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             update_progress(int(progress), f"シミュレーション {sim_num}/{num_simulations} を実行中...")
             
             # 単一実験の実行
-            result = run_single_experiment(local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, interview_flow)
+            result = run_single_experiment(
+                local_interviewer_model, local_interviewer_tokenizer, set_index, sim_num, 
+                interview_flow, use_dynamic_flow, interviewer_model_type, interviewer_model_name
+            )
             
             if result:
                 all_results.append(result)
@@ -392,6 +457,20 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             recall_scores = [r['accuracy_metrics']['recall'] for r in all_results if r['accuracy_metrics']]
             correct_predictions = sum(1 for r in all_results if r['accuracy_metrics'] and r['accuracy_metrics']['is_correct'])
             
+            # 評価3（知識欠損検出）の集計
+            knowledge_gaps_metrics = []
+            for r in all_results:
+                if r['accuracy_metrics'] and r['accuracy_metrics'].get('knowledge_gaps_metrics'):
+                    kg_metrics = r['accuracy_metrics']['knowledge_gaps_metrics']
+                    if isinstance(kg_metrics, dict):
+                        knowledge_gaps_metrics.append(kg_metrics)
+            
+            # 評価3の集計指標を計算
+            kg_detection_accuracies = [m.get('detection_accuracy', 0) for m in knowledge_gaps_metrics if m.get('detection_accuracy') is not None]
+            kg_detection_f1_scores = [m.get('detection_f1_score', 0) for m in knowledge_gaps_metrics if m.get('detection_f1_score') is not None]
+            kg_detected_gaps_counts = [m.get('detected_gaps_count', 0) for m in knowledge_gaps_metrics if m.get('detected_gaps_count') is not None]
+            kg_true_gaps_counts = [m.get('true_gaps_count', 0) for m in knowledge_gaps_metrics if m.get('true_gaps_count') is not None]
+            
             aggregated_metrics = {
                 'total_simulations': num_simulations,
                 'correct_predictions': correct_predictions,
@@ -400,7 +479,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                 'overall_precision': np.mean(precision_scores) if precision_scores else 0,
                 'overall_recall': np.mean(recall_scores) if recall_scores else 0,
                 'accuracy_std': np.std(accuracy_scores) if accuracy_scores else 0,
-                'f1_std': np.std(f1_scores) if f1_scores else 0
+                'f1_std': np.std(f1_scores) if f1_scores else 0,
+                # 評価3（知識欠損検出）の集計指標
+                'knowledge_gaps_metrics': {
+                    'total_simulations_with_kg_data': len(knowledge_gaps_metrics),
+                    'avg_detection_accuracy': np.mean(kg_detection_accuracies) if kg_detection_accuracies else 0,
+                    'avg_detection_f1_score': np.mean(kg_detection_f1_scores) if kg_detection_f1_scores else 0,
+                    'avg_detected_gaps_count': np.mean(kg_detected_gaps_counts) if kg_detected_gaps_counts else 0,
+                    'avg_true_gaps_count': np.mean(kg_true_gaps_counts) if kg_true_gaps_counts else 0,
+                    'detection_accuracy_std': np.std(kg_detection_accuracies) if kg_detection_accuracies else 0,
+                    'detection_f1_std': np.std(kg_detection_f1_scores) if kg_detection_f1_scores else 0
+                }
             }
             
             # 全体結果の保存
@@ -409,8 +498,10 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                     "total_simulations": num_simulations,
                     "timestamp": datetime.datetime.now().isoformat(),
                     "set_index": set_index,  # 元のリクエスト値
-                    "interview_flow": interview_flow,
-                    "interviewer_type": config.INTERVIEWER_MODEL_TYPE
+                    "interview_flow": all_results[0]['experiment_info']['interview_flow'] if all_results else interview_flow,  # 実際のフローを記録
+                    "use_dynamic_flow": use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW,
+                    "interviewer_type": interviewer_model_type,
+                    "interviewer_model_name": interviewer_model_name
                 },
                 "aggregated_metrics": aggregated_metrics,
                 "individual_results": all_results
@@ -430,6 +521,19 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             log_message(f"正解予測数: {correct_predictions}/{num_simulations}")
             log_message(f"全体正解率: {aggregated_metrics['overall_accuracy']:.3f} ± {aggregated_metrics['accuracy_std']:.3f}")
             log_message(f"全体F1スコア: {aggregated_metrics['overall_f1_score']:.3f} ± {aggregated_metrics['f1_std']:.3f}")
+            
+            # 評価3（知識欠損検出）の結果表示
+            kg_metrics = aggregated_metrics['knowledge_gaps_metrics']
+            log_message(f"\n--- 評価3（知識欠損検出）の集計結果 ---")
+            log_message(f"評価3データありシミュレーション数: {kg_metrics['total_simulations_with_kg_data']}/{num_simulations}")
+            if kg_metrics['total_simulations_with_kg_data'] > 0:
+                log_message(f"平均検出精度: {kg_metrics['avg_detection_accuracy']:.3f} ± {kg_metrics['detection_accuracy_std']:.3f}")
+                log_message(f"平均検出F1スコア: {kg_metrics['avg_detection_f1_score']:.3f} ± {kg_metrics['detection_f1_std']:.3f}")
+                log_message(f"平均検出知識欠損数: {kg_metrics['avg_detected_gaps_count']:.1f}")
+                log_message(f"平均真の知識欠損数: {kg_metrics['avg_true_gaps_count']:.1f}")
+            else:
+                log_message("評価3のデータがありません")
+            
             log_message(f"結果を {filename} に保存しました。")
         
     except Exception as e:
@@ -454,11 +558,15 @@ def get_experiment_results():
                         'dataset_index': data['experiment_info'].get('dataset_index', 'N/A'),
                         'dataset_name': data['experiment_info'].get('dataset_name', 'N/A'),
                         'interviewer_type': data['experiment_info']['interviewer_type'],
+                        'interviewer_model_name': data['experiment_info'].get('interviewer_model_name', 'N/A'),
                         'company_name': data['company_profile'].get('name', 'N/A'),
                         'num_candidates': len(data['interview_transcripts']),
                         'accuracy': data['accuracy_metrics']['accuracy'] if data['accuracy_metrics'] else 0,
                         'f1_score': data['accuracy_metrics']['f1_score'] if data['accuracy_metrics'] else 0,
-                        'is_correct': data['accuracy_metrics']['is_correct'] if data['accuracy_metrics'] else False
+                        'is_correct': data['accuracy_metrics']['is_correct'] if data['accuracy_metrics'] else False,
+                        'knowledge_gaps_available': bool(data['accuracy_metrics'].get('knowledge_gaps_metrics')) if data['accuracy_metrics'] else False,
+                        'knowledge_gaps_accuracy': data['accuracy_metrics'].get('knowledge_gaps_metrics', {}).get('detection_accuracy', 'N/A') if data['accuracy_metrics'] else 'N/A',
+                        'knowledge_gaps_f1': data['accuracy_metrics'].get('knowledge_gaps_metrics', {}).get('detection_f1_score', 'N/A') if data['accuracy_metrics'] else 'N/A'
                     })
             except Exception as e:
                 print(f"結果ファイル {file_path} の読み込みに失敗: {e}")
@@ -475,9 +583,13 @@ def get_experiment_results():
                         'total_simulations': data['experiment_summary']['total_simulations'],
                         'set_index': data['experiment_summary'].get('set_index', 'N/A'),
                         'interviewer_type': data['experiment_summary']['interviewer_type'],
+                        'interviewer_model_name': data['experiment_summary'].get('interviewer_model_name', 'N/A'),
                         'overall_accuracy': data['aggregated_metrics']['overall_accuracy'],
                         'overall_f1_score': data['aggregated_metrics']['overall_f1_score'],
-                        'correct_predictions': data['aggregated_metrics']['correct_predictions']
+                        'correct_predictions': data['aggregated_metrics']['correct_predictions'],
+                        'knowledge_gaps_available': bool(data['aggregated_metrics'].get('knowledge_gaps_metrics')),
+                        'knowledge_gaps_avg_accuracy': data['aggregated_metrics'].get('knowledge_gaps_metrics', {}).get('avg_detection_accuracy', 'N/A'),
+                        'knowledge_gaps_avg_f1': data['aggregated_metrics'].get('knowledge_gaps_metrics', {}).get('avg_detection_f1_score', 'N/A')
                     })
             except Exception as e:
                 print(f"結果ファイル {file_path} の読み込みに失敗: {e}")
@@ -499,27 +611,36 @@ def start_experiment():
     set_index = data.get('set_index') if data.get('set_index') != '' else None
     num_simulations = int(data.get('num_simulations', 1))
     interview_flow = data.get('interview_flow', config.INTERVIEW_FLOW)
+    use_dynamic_flow = data.get('use_dynamic_flow', False)
+    interviewer_model_type = data.get('interviewer_model_type', config.INTERVIEWER_MODEL_TYPE)
+    interviewer_model_name = data.get('interviewer_model_name')
     
     # バックグラウンドで実験を実行
     def run_in_background():
-        model_type = config.INTERVIEWER_MODEL_TYPE
-        
-        if model_type == 'local':
-            local_model, local_tokenizer = initialize_local_model()
+        if interviewer_model_type == 'local':
+            local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
             if local_model and local_tokenizer:
-                run_experiment_web(local_model, local_tokenizer, set_index, num_simulations, interview_flow)
+                run_experiment_web(
+                    local_model, local_tokenizer, set_index, num_simulations, 
+                    interview_flow, use_dynamic_flow, interviewer_model_type, interviewer_model_name
+                )
             else:
                 log_message("ローカルモデルの初期化に失敗したため、実験を中止します。")
-        elif model_type == 'api':
-            run_experiment_web(set_index=set_index, num_simulations=num_simulations, interview_flow=interview_flow)
+        elif interviewer_model_type == 'api':
+            run_experiment_web(
+                set_index=set_index, num_simulations=num_simulations, 
+                interview_flow=interview_flow, use_dynamic_flow=use_dynamic_flow,
+                interviewer_model_type=interviewer_model_type, interviewer_model_name=interviewer_model_name
+            )
         else:
-            log_message(f"エラー: config.pyのINTERVIEWER_MODEL_TYPEに無効な値 '{model_type}' が設定されています。")
+            log_message(f"エラー: 無効な面接官モデルタイプ '{interviewer_model_type}' が指定されています。")
     
     thread = threading.Thread(target=run_in_background)
     thread.daemon = True
     thread.start()
     
-    return jsonify({'message': f'{num_simulations}回の実験を開始しました'})
+    model_info = f"{interviewer_model_type}モデル ({interviewer_model_name})" if interviewer_model_name else f"{interviewer_model_type}モデル"
+    return jsonify({'message': f'{num_simulations}回の実験を開始しました ({model_info}を使用)'})
 
 @app.route('/api/status')
 def get_status():
