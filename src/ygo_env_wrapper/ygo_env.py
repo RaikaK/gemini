@@ -16,20 +16,13 @@ from src.reward_functions.base_reward_func import BaseRewardFunction
 from src.reward_functions.normal_reward_func import NormalRewardFunction
 from src.ygo_env_wrapper.action_data import ActionData
 
-WAITING_TIME = 1
-
 
 class YgoEnv:
-    def __init__(self, udi_io: UdiIO, text_util: TextUtil, reward_func: BaseRewardFunction):
+    """udiから取得するygo環境のラッパー"""
+    def __init__(self, udi_io: UdiIO):
         self.udi_io = udi_io  # MDクライアントの情報参照
-        self.text_util = text_util
-        if self.text_util is None:
-            self.text_util = TextUtil()
 
-        self.reward_func = reward_func  # 報酬関数
-        # 何も指定がない場合は、 NormalRewardFunctionを使用
-        if self.reward_func is None:
-            self.reward_func = NormalRewardFunction(udi_io, is_normalized=True)
+        self.reward_func = NormalRewardFunction(udi_io, is_normalized=True) # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
     
     def reset(self):
         return self.step(None)
@@ -38,8 +31,7 @@ class YgoEnv:
         self, action_data: ActionData, 
     ) -> dict:
         """
-        コマンド(cmd_index)を実行し、
-        is_cmd_required==Trueのときreturnする
+        コマンド(cmd_index)を実行し、次状態を返す
         - デュエルスタートかどうか： "is_duel_start"
         - デュエルエンドかどうか: "is_duel_end"
         - アクション選択が必要かどうか: "is_cmd_required"
@@ -47,7 +39,6 @@ class YgoEnv:
         - 状態: "state"
         - コマンドリクエスト: "command_request"
         - 報酬: "reward"
-        を返す
         """
         # コマンドの実行
         reward: float = 0.0
