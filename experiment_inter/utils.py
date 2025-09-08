@@ -5,13 +5,13 @@ from openai import OpenAI
 from config import OPENAI_API_KEY
 
 def call_openai_api(model_name, prompt):
-    """OpenAI APIを呼び出し、テキスト応答を返す"""
+    """OpenAI APIを呼び出し、テキスト応答とtoken数情報を返す"""
     if not OPENAI_API_KEY or OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE":
         error_message = "APIキーが設定されていません。処理を中断します。"
         print(f"エラー: {error_message}")
         if "JSON" in prompt:
-            return json.dumps({"error": error_message})
-        return error_message
+            return json.dumps({"error": error_message}), {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
@@ -20,9 +20,19 @@ def call_openai_api(model_name, prompt):
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        return response.choices[0].message.content
+        
+        # token数情報を取得
+        usage = response.usage
+        token_info = {
+            "prompt_tokens": usage.prompt_tokens,
+            "completion_tokens": usage.completion_tokens,
+            "total_tokens": usage.total_tokens
+        }
+        
+        return response.choices[0].message.content, token_info
     except Exception as e:
-        return f"API呼び出しエラー: {e}"
+        error_message = f"API呼び出しエラー: {e}"
+        return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
 # 後方互換性のためのエイリアス
 def call_gemini_api(model_name, prompt):

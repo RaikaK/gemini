@@ -318,11 +318,17 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                 
                 for i, state in enumerate(candidate_states):
                     log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                    answer = applicant.generate(
+                    answer, token_info = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
                     log_message(f"学生 (API): {answer}")
-                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                    state["conversation_log"].append({
+                        "turn": round_num + 1, 
+                        "question": question, 
+                        "answer": answer,
+                        "token_info": token_info
+                    })
 
             elif question_type == 1: # 個別質問
                 log_message("--- 個別質問フェーズ ---")
@@ -330,11 +336,17 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                     log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
                     question, _ = interviewer.ask_question(state["conversation_log"])
                     log_message(f"面接官 ({interviewer_model_type}): {question}")
-                    answer = applicant.generate(
+                    answer, token_info = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
                     log_message(f"学生 (API): {answer}")
-                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                    state["conversation_log"].append({
+                        "turn": round_num + 1, 
+                        "question": question, 
+                        "answer": answer,
+                        "token_info": token_info
+                    })
 
     # --- 4. 最終評価 ---
     log_message("--- 最終評価フェーズ ---")
@@ -457,6 +469,20 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             recall_scores = [r['accuracy_metrics']['recall'] for r in all_results if r['accuracy_metrics']]
             correct_predictions = sum(1 for r in all_results if r['accuracy_metrics'] and r['accuracy_metrics']['is_correct'])
             
+            # Token数の集計
+            total_tokens = []
+            prompt_tokens = []
+            completion_tokens = []
+            
+            for result in all_results:
+                for transcript in result.get('interview_transcripts', []):
+                    for conversation in transcript.get('conversation_log', []):
+                        if 'token_info' in conversation:
+                            token_info = conversation['token_info']
+                            total_tokens.append(token_info.get('total_tokens', 0))
+                            prompt_tokens.append(token_info.get('prompt_tokens', 0))
+                            completion_tokens.append(token_info.get('completion_tokens', 0))
+            
             # 評価3（知識欠損検出）の集計
             knowledge_gaps_metrics = []
             for r in all_results:
@@ -480,6 +506,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                 'overall_recall': np.mean(recall_scores) if recall_scores else 0,
                 'accuracy_std': np.std(accuracy_scores) if accuracy_scores else 0,
                 'f1_std': np.std(f1_scores) if f1_scores else 0,
+                # Token数の集計指標
+                'token_usage_metrics': {
+                    'total_api_calls': len(total_tokens),
+                    'total_tokens_used': sum(total_tokens) if total_tokens else 0,
+                    'avg_tokens_per_call': np.mean(total_tokens) if total_tokens else 0,
+                    'avg_prompt_tokens': np.mean(prompt_tokens) if prompt_tokens else 0,
+                    'avg_completion_tokens': np.mean(completion_tokens) if completion_tokens else 0,
+                    'total_prompt_tokens': sum(prompt_tokens) if prompt_tokens else 0,
+                    'total_completion_tokens': sum(completion_tokens) if completion_tokens else 0,
+                    'tokens_std': np.std(total_tokens) if total_tokens else 0
+                },
                 # 評価3（知識欠損検出）の集計指標
                 'knowledge_gaps_metrics': {
                     'total_simulations_with_kg_data': len(knowledge_gaps_metrics),
@@ -521,6 +558,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             log_message(f"正解予測数: {correct_predictions}/{num_simulations}")
             log_message(f"全体正解率: {aggregated_metrics['overall_accuracy']:.3f} ± {aggregated_metrics['accuracy_std']:.3f}")
             log_message(f"全体F1スコア: {aggregated_metrics['overall_f1_score']:.3f} ± {aggregated_metrics['f1_std']:.3f}")
+            
+            # Token数統計の表示
+            token_metrics = aggregated_metrics['token_usage_metrics']
+            log_message(f"\n--- Token数統計 ---")
+            log_message(f"総API呼び出し回数: {token_metrics['total_api_calls']}")
+            log_message(f"総使用Token数: {token_metrics['total_tokens_used']:,}")
+            log_message(f"平均Token数/呼び出し: {token_metrics['avg_tokens_per_call']:.1f} ± {token_metrics['tokens_std']:.1f}")
+            log_message(f"総プロンプトToken数: {token_metrics['total_prompt_tokens']:,}")
+            log_message(f"総回答Token数: {token_metrics['total_completion_tokens']:,}")
+            log_message(f"平均プロンプトToken数: {token_metrics['avg_prompt_tokens']:.1f}")
+            log_message(f"平均回答Token数: {token_metrics['avg_completion_tokens']:.1f}")
             
             # 評価3（知識欠損検出）の結果表示
             kg_metrics = aggregated_metrics['knowledge_gaps_metrics']

@@ -100,11 +100,17 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
             for i, state in enumerate(candidate_states):
                 print(f"\n -> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
                 print("  学生 (API) が応答を生成中...")
-                answer = applicant.generate(
+                answer, token_info = applicant.generate(
                     state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                 )
                 print(f"  学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                print(f"  Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                state["conversation_log"].append({
+                    "turn": round_num + 1, 
+                    "question": question, 
+                    "answer": answer,
+                    "token_info": token_info
+                })
 
         elif question_type == 1: # 個別質問
             print("--- 個別質問フェーズ ---")
@@ -114,11 +120,17 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
                 question, _ = interviewer.ask_question(state["conversation_log"])
                 print(f"  面接官 ({model_type}): {question}")
                 print("  学生 (API) が応答を生成中...")
-                answer = applicant.generate(
+                answer, token_info = applicant.generate(
                     state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                 )
                 print(f"  学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                print(f"  Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                state["conversation_log"].append({
+                    "turn": round_num + 1, 
+                    "question": question, 
+                    "answer": answer,
+                    "token_info": token_info
+                })
 
     # --- 4. 最終評価 ---
     print(f"\n{'='*80}\n--- 最終評価フェーズ ---\n{'='*80}")

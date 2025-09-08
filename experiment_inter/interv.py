@@ -60,16 +60,16 @@ class Interviewer:
             # --- APIモデルでの生成ロジック ---
             system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
             full_prompt = f"システム指示: {system_prompt}\n\nユーザー指示:\n{prompt}"
-            return call_openai_api(config.INTERVIEWER_API_MODEL, full_prompt)
+            response_text, _ = call_openai_api(config.INTERVIEWER_API_MODEL, full_prompt)
+            return response_text
         
         else:
             raise ValueError(f"無効なモデルタイプです: {self.model_type}")
 
-    def ask_common_question(self, all_states, all_questions_history):
+    def ask_common_question(self, all_questions_history):
         """
         全候補者の会話を横断的に分析し、知識の穴を突く戦略的な「全体質問」を生成する。
         """
-        conversation_summary = self._format_all_conversations(all_states)
         all_company_keys = list(self.company.keys())
         history_str = "\n".join(f"- {q}" for q in all_questions_history)
 
@@ -78,9 +78,6 @@ class Interviewer:
 
         # あなたが質問できる企業情報の項目リスト
         {all_company_keys}
-
-        # これまでの全候補者との会話概要
-        {conversation_summary}
 
         # これまでに行った全ての質問（重複しないように）
         {history_str if history_str else "  (なし)"}
@@ -305,18 +302,24 @@ class Interviewer:
                 # 全体質問フェーズ
                 print("--- 全体質問フェーズを実行 ---")
                 actual_interview_flow.append(0)  # 0 = 全体質問
-                question, _ = self.ask_common_question(candidate_states, asked_common_questions)
+                question, _ = self.ask_common_question(asked_common_questions)
                 asked_common_questions.append(question)
                 print(f"--- 生成された全体質問: 「{question}」 ---")
                 
                 for i, state in enumerate(candidate_states):
                     print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
                     # 学生の回答を生成
-                    answer = applicant.generate(
+                    answer, token_info = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
                     print(f"学生 (API): {answer}")
-                    state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
+                    print(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                    state["conversation_log"].append({
+                        "turn": current_round, 
+                        "question": question, 
+                        "answer": answer,
+                        "token_info": token_info
+                    })
                 
                 # 全体質問後の継続判断
                 overall_responses = [state['conversation_log'][-1] for state in candidate_states if state['conversation_log']]
@@ -346,11 +349,17 @@ class Interviewer:
                         question, _ = self.ask_question(state['conversation_log'])
                         print(f"面接官 ({self.model_type}): {question}")
                         # 学生の回答を生成
-                        answer = applicant.generate(
+                        answer, token_info = applicant.generate(
                             state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                         )
                         print(f"学生 (API): {answer}")
-                        state["conversation_log"].append({"turn": current_round, "question": question, "answer": answer})
+                        print(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                        state["conversation_log"].append({
+                            "turn": current_round, 
+                            "question": question, 
+                            "answer": answer,
+                            "token_info": token_info
+                        })
                     else:
                         print(f"候補者 {i+1} の個別面接終了: {reason}")
                 

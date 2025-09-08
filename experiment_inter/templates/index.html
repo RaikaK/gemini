@@ -583,6 +583,28 @@
                                             <h5>正解予測: ${data.aggregated_metrics.correct_predictions}/${data.aggregated_metrics.total_simulations}</h5>
                                             <small class="text-muted">標準偏差: 正解率 ±${data.aggregated_metrics.accuracy_std.toFixed(3)}, F1 ±${data.aggregated_metrics.f1_std.toFixed(3)}</small>
                                         </div>
+                                        ${data.aggregated_metrics.token_usage_metrics ? `
+                                        <hr>
+                                        <h6>Token使用統計</h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <h4 class="text-secondary">${data.aggregated_metrics.token_usage_metrics.total_tokens_used.toLocaleString()}</h4>
+                                                <small>総Token数</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h4 class="text-secondary">${data.aggregated_metrics.token_usage_metrics.total_api_calls}</h4>
+                                                <small>API呼び出し回数</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h4 class="text-secondary">${data.aggregated_metrics.token_usage_metrics.avg_tokens_per_call.toFixed(1)}</h4>
+                                                <small>平均Token数/呼び出し</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h4 class="text-secondary">${data.aggregated_metrics.token_usage_metrics.avg_completion_tokens.toFixed(1)}</h4>
+                                                <small>平均回答Token数</small>
+                                            </div>
+                                        </div>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -620,6 +642,36 @@
                                                         <li><strong>真の志望度最低:</strong> ${result.accuracy_metrics.true_least_motivated.name}</li>
                                                         <li><strong>予測志望度最低:</strong> ${result.accuracy_metrics.predicted_least_motivated}</li>
                                                     </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Token使用統計</h6>
+                                                    ${(() => {
+                                                        let totalTokens = 0;
+                                                        let totalCalls = 0;
+                                                        let totalPromptTokens = 0;
+                                                        let totalCompletionTokens = 0;
+                                                        
+                                                        result.interview_transcripts.forEach(transcript => {
+                                                            transcript.conversation_log.forEach(log => {
+                                                                if (log.token_info) {
+                                                                    totalTokens += log.token_info.total_tokens || 0;
+                                                                    totalPromptTokens += log.token_info.prompt_tokens || 0;
+                                                                    totalCompletionTokens += log.token_info.completion_tokens || 0;
+                                                                    totalCalls++;
+                                                                }
+                                                            });
+                                                        });
+                                                        
+                                                        return totalCalls > 0 ? `
+                                                        <ul class="list-unstyled">
+                                                            <li><strong>総Token数:</strong> ${totalTokens.toLocaleString()}</li>
+                                                            <li><strong>API呼び出し回数:</strong> ${totalCalls}</li>
+                                                            <li><strong>平均Token数/呼び出し:</strong> ${(totalTokens / totalCalls).toFixed(1)}</li>
+                                                            <li><strong>総プロンプトToken数:</strong> ${totalPromptTokens.toLocaleString()}</li>
+                                                            <li><strong>総回答Token数:</strong> ${totalCompletionTokens.toLocaleString()}</li>
+                                                        </ul>
+                                                        ` : '<p class="text-muted">Token情報なし</p>';
+                                                    })()}
                                                 </div>
                                                                                         <div class="col-md-6">
                                             <h6>最終評価</h6>
@@ -688,9 +740,9 @@
                                                                         <td>${metrics.metrics.precision}</td>
                                                                         <td>${metrics.metrics.recall}</td>
                                                                         <td>${metrics.metrics.f1_score}</td>
-                                                                        <td>${metrics.details['correctly_detected (TP)'].join(', ') || 'なし'}</td>
-                                                                        <td>${metrics.details['incorrectly_detected (FP)'].join(', ') || 'なし'}</td>
-                                                                        <td>${metrics.details['missed (FN)'].join(', ') || 'なし'}</td>
+                                                                        <td>${metrics.details && metrics.details['correctly_detected (TP)'] ? metrics.details['correctly_detected (TP)'].join(', ') : 'なし'}</td>
+                                                                        <td>${metrics.details && metrics.details['incorrectly_detected (FP)'] ? metrics.details['incorrectly_detected (FP)'].join(', ') : 'なし'}</td>
+                                                                        <td>${metrics.details && metrics.details['missed (FN)'] ? metrics.details['missed (FN)'].join(', ') : 'なし'}</td>
                                                                         <td>${metrics.note || '-'}</td>
                                                                     </tr>
                                                                 `).join('')}
@@ -866,9 +918,9 @@
                                                                 <td>${metrics.metrics.precision}</td>
                                                                 <td>${metrics.metrics.recall}</td>
                                                                 <td>${metrics.metrics.f1_score}</td>
-                                                                <td>${metrics.details['correctly_detected (TP)'].join(', ') || 'なし'}</td>
-                                                                <td>${metrics.details['incorrectly_detected (FP)'].join(', ') || 'なし'}</td>
-                                                                <td>${metrics.details['missed (FN)'].join(', ') || 'なし'}</td>
+                                                                <td>${metrics.details && metrics.details['correctly_detected (TP)'] ? metrics.details['correctly_detected (TP)'].join(', ') : 'なし'}</td>
+                                                                <td>${metrics.details && metrics.details['incorrectly_detected (FP)'] ? metrics.details['incorrectly_detected (FP)'].join(', ') : 'なし'}</td>
+                                                                <td>${metrics.details && metrics.details['missed (FN)'] ? metrics.details['missed (FN)'].join(', ') : 'なし'}</td>
                                                                 <td>${metrics.note || '-'}</td>
                                                             </tr>
                                                         `).join('')}
@@ -923,6 +975,7 @@
                                                         <strong>ラウンド ${log.turn}:</strong><br>
                                                         <strong>質問:</strong> ${log.question}<br>
                                                         <strong>回答:</strong> ${log.answer}
+                                                        ${log.token_info ? `<br><small class="text-muted">Token数: ${log.token_info.total_tokens} (プロンプト: ${log.token_info.prompt_tokens}, 回答: ${log.token_info.completion_tokens})</small>` : ''}
                                                     </div>`
                                                 ).join('')}
                                             </div>
