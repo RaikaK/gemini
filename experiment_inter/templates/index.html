@@ -160,25 +160,48 @@
                                             <select class="form-select form-select-sm" id="apiModelName">
                                                 <option value="gpt-4o-mini" selected>GPT-4o Mini (高速・低コスト)</option>
                                                 <option value="gpt-4o">GPT-4o (高性能)</option>
+                                                <option value="gpt-4">GPT-4 (標準版)</option>
                                                 <option value="gpt-4-turbo">GPT-4 Turbo</option>
                                                 <option value="gpt-3.5-turbo">GPT-3.5 Turbo (最低コスト)</option>
+                                                <option value="gpt-5">GPT-5</option>
                                             </select>
                                         </div>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="interviewerModelType" id="localModel" value="local">
                                             <label class="form-check-label" for="localModel">
-                                                ローカルモデル (自社GPU)
+                                                ローカルモデル
                                             </label>
                                         </div>
                                         <div id="localModelSettings" class="ms-4 mb-2" style="display: none;">
-                                            <select class="form-select form-select-sm" id="localModelName">
-                                                <option value="meta-llama/Llama-3.1-8B-Instruct" selected>Llama 3.1 8B Instruct</option>
+                                            <select class="form-select form-select-sm" id="localModelName" onchange="updateLocalModelStatus()">
+                                                <!-- 主要な日本語対応モデル -->
+                                                <option value="meta-llama/Llama-3.1-8B-Instruct" selected>Llama 3.1 8B Instruct (llama3)</option>
+                                                <option value="elyza/ELYZA-japanese-Llama-2-7b-instruct">ELYZA Japanese Llama 2 7B Instruct</option>
+                                                <option value="tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5">SWALLOW 8B Instruct</option>
+                                                <option value="elyza/Llama-3-ELYZA-JP-8B">Llama 3 ELYZA JP 8B</option>
+                                                
+                                                <!-- Llama 3シリーズ -->
                                                 <option value="meta-llama/Llama-3.1-70B-Instruct">Llama 3.1 70B Instruct (大容量GPU必要)</option>
-                                                <option value="microsoft/DialoGPT-medium">DialoGPT Medium</option>
-                                                <option value="microsoft/DialoGPT-large">DialoGPT Large</option>
+                                                
+                                                <!-- 日本語特化モデル -->
+                                                <option value="stabilityai/japanese-stablelm-instruct-gamma-7b">Japanese StableLM Instruct Gamma 7B</option>
+                                                <option value="rinna/weblab-10b-instruction-sft">WebLab 10B Instruction SFT</option>
+                                                <option value="cyberagent/calm2-7b-chat">CALM2 7B Chat</option>
+                                                <option value="cyberagent/calm2-3b-chat">CALM2 3B Chat (軽量)</option>
+                                                
+                                                <!-- 軽量・高性能モデル -->
+                                                <option value="google/gemma-2-9b-it">Gemma 2 9B IT</option>
+                                                <option value="TinyLlama/TinyLlama-1.1B-Chat-v1.0">TinyLlama 1.1B Chat (超軽量)</option>
+                                                
+                                                <!-- その他の高性能モデル -->
+                                                <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B Instruct</option>
+                                                <option value="Qwen/Qwen-7B-Chat">Qwen 7B Chat</option>
+                                                <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini 4K Instruct</option>
                                             </select>
-                                            <div class="form-text text-warning">
-                                                <i class="fas fa-exclamation-triangle"></i> ローカルモデルは初回読み込みに時間がかかります
+                                            <div id="localModelStatus" class="mt-2">
+                                                <div class="form-text text-info">
+                                                    <i class="fas fa-info-circle"></i> モデル選択時に初回ダウンロードが実行されます
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -193,7 +216,7 @@
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="interviewFlowType" id="dynamicFlow" value="dynamic">
                                             <label class="form-check-label" for="dynamicFlow">
-                                                智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大5ラウンド）
+                                                智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大10ラウンド）
                                             </label>
                                         </div>
                                         
@@ -243,6 +266,16 @@
                                 <i class="fas fa-history"></i> 過去の実験結果
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab">
+                                <i class="fas fa-database"></i> ローカルモデル管理
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="spreadsheet-tab" data-bs-toggle="tab" data-bs-target="#spreadsheet" type="button" role="tab">
+                                <i class="fas fa-table"></i> スプレッドシート連携
+                            </button>
+                        </li>
 
                     </ul>
 
@@ -284,6 +317,45 @@
                             </div>
                         </div>
 
+                        <!-- ローカルモデル管理 -->
+                        <div class="tab-pane fade" id="models" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0"><i class="fas fa-database"></i> ローカルモデル管理</h6>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="loadModelsStatus()">
+                                            <i class="fas fa-sync"></i> 更新
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="modelsStatus">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- スプレッドシート連携 -->
+                        <div class="tab-pane fade" id="spreadsheet" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0"><i class="fas fa-table"></i> スプレッドシート連携</h6>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="loadSpreadsheetStatus()">
+                                            <i class="fas fa-sync"></i> 更新
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="spreadsheetStatus">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
                 </div>
@@ -316,6 +388,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateStatus();
             loadResults();
+            loadModelsStatus();
+            loadSpreadsheetStatus();
+            updateLocalModelStatus(); // ローカルモデル状態を初期化
             statusUpdateInterval = setInterval(updateStatus, 1000);
         });
 
@@ -1051,8 +1126,386 @@
             });
         });
 
+        // モデル管理機能
+        function loadModelsStatus() {
+            fetch('/api/models/status')
+            .then(response => response.json())
+            .then(data => {
+                displayModelsStatus(data);
+            })
+            .catch(error => {
+                console.error('Models status load error:', error);
+                document.getElementById('modelsStatus').innerHTML = 
+                    '<div class="text-center text-danger">モデル状態の読み込みに失敗しました</div>';
+            });
+        }
 
+        function displayModelsStatus(data) {
+            const modelsStatus = document.getElementById('modelsStatus');
+            
+            if (data.error) {
+                modelsStatus.innerHTML = `<div class="text-center text-danger">エラー: ${data.error}</div>`;
+                return;
+            }
 
+            let html = '';
+            
+            // Hugging Face CLI状態
+            html += `
+                <div class="alert ${data.hf_cli_installed ? 'alert-success' : 'alert-warning'} mb-3">
+                    <i class="fas ${data.hf_cli_installed ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                    Hugging Face CLI: ${data.hf_cli_installed ? 'インストール済み' : '未インストール'}
+                </div>
+            `;
+
+            // ディスク使用量
+            if (data.disk_usage && Object.keys(data.disk_usage).length > 0) {
+                let totalSize = 0;
+                html += '<h6>ディスク使用量</h6><div class="row mb-3">';
+                for (const [modelKey, size] of Object.entries(data.disk_usage)) {
+                    const sizeGB = (size / (1024**3)).toFixed(1);
+                    totalSize += parseFloat(sizeGB);
+                    html += `
+                        <div class="col-md-4 mb-2">
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <small class="text-muted">${modelKey}</small><br>
+                                    <strong>${sizeGB}GB</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `</div><p class="text-muted">合計: ${totalSize.toFixed(1)}GB</p>`;
+            }
+
+            // モデル一覧
+            html += '<h6>利用可能なモデル</h6>';
+            for (const [modelKey, modelInfo] of Object.entries(data.models)) {
+                const statusBadge = modelInfo.downloaded ? 
+                    '<span class="badge bg-success">ダウンロード済み</span>' : 
+                    '<span class="badge bg-secondary">未ダウンロード</span>';
+                
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">${modelKey}</h6>
+                                    <p class="text-muted mb-1">${modelInfo.description}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-hdd"></i> ${modelInfo.size_gb}GB | 
+                                        <i class="fas fa-microchip"></i> ${modelInfo.recommended_gpu}
+                                    </small>
+                                </div>
+                                <div class="col-md-3">
+                                    ${statusBadge}
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    ${modelInfo.downloaded ? 
+                                        `<button class="btn btn-outline-danger btn-sm" onclick="cleanupModel('${modelKey}')">
+                                            <i class="fas fa-trash"></i> 削除
+                                        </button>` :
+                                        `<button class="btn btn-primary btn-sm" onclick="downloadModel('${modelKey}')">
+                                            <i class="fas fa-download"></i> ダウンロード
+                                        </button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            modelsStatus.innerHTML = html;
+        }
+
+        function downloadModel(modelKey) {
+            if (!confirm(`モデル ${modelKey} をダウンロードしますか？\n（時間がかかる場合があります）`)) {
+                return;
+            }
+
+            fetch('/api/models/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ model_key: modelKey })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadModelsStatus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('ダウンロードに失敗しました');
+            });
+        }
+
+        function cleanupModel(modelKey) {
+            if (!confirm(`モデル ${modelKey} を削除しますか？\n（この操作は取り消せません）`)) {
+                return;
+            }
+
+            fetch('/api/models/cleanup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ model_key: modelKey })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadModelsStatus();
+                    updateLocalModelStatus(); // ローカルモデル状態も更新
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('削除に失敗しました');
+            });
+        }
+
+        // ローカルモデル選択時の状態更新
+        function updateLocalModelStatus() {
+            const selectedModel = document.getElementById('localModelName').value;
+            const statusDiv = document.getElementById('localModelStatus');
+            
+            if (!selectedModel) {
+                statusDiv.innerHTML = '<div class="form-text text-info"><i class="fas fa-info-circle"></i> モデルを選択してください</div>';
+                return;
+            }
+            
+            // モデルキーを取得
+            const modelKey = getModelKeyFromPath(selectedModel);
+            if (!modelKey) {
+                statusDiv.innerHTML = '<div class="form-text text-warning"><i class="fas fa-exclamation-triangle"></i> 未知のモデルです</div>';
+                return;
+            }
+            
+            // モデル状態を取得
+            fetch('/api/models/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    statusDiv.innerHTML = '<div class="form-text text-danger"><i class="fas fa-exclamation-triangle"></i> 状態取得エラー</div>';
+                    return;
+                }
+                
+                const modelInfo = data.models[modelKey];
+                if (!modelInfo) {
+                    statusDiv.innerHTML = '<div class="form-text text-warning"><i class="fas fa-exclamation-triangle"></i> モデル情報が見つかりません</div>';
+                    return;
+                }
+                
+                if (modelInfo.downloaded) {
+                    statusDiv.innerHTML = `
+                        <div class="form-text text-success">
+                            <i class="fas fa-check-circle"></i> ダウンロード済み (${modelInfo.size_gb}GB)
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="form-text text-warning">
+                            <i class="fas fa-download"></i> 未ダウンロード (${modelInfo.size_gb}GB) - 実験実行時に自動ダウンロードされます
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Model status error:', error);
+                statusDiv.innerHTML = '<div class="form-text text-danger"><i class="fas fa-exclamation-triangle"></i> 状態取得に失敗しました</div>';
+            });
+        }
+        
+        // モデルパスからキーを取得するヘルパー関数
+        function getModelKeyFromPath(modelPath) {
+            const modelMappings = {
+                'meta-llama/Llama-3.1-8B-Instruct': 'llama3',
+                'elyza/ELYZA-japanese-Llama-2-7b-instruct': 'ELYZA-japanese-Llama-2',
+                'tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5': 'SWALLOW',
+                'elyza/Llama-3-ELYZA-JP-8B': 'llama3-elyza-jp',
+                'meta-llama/Llama-3.1-70B-Instruct': 'llama3-70b',
+                'stabilityai/japanese-stablelm-instruct-gamma-7b': 'japanese-stablelm',
+                'rinna/weblab-10b-instruction-sft': 'weblab-10b',
+                'cyberagent/calm2-7b-chat': 'calm2-7b',
+                'cyberagent/calm2-3b-chat': 'calm2-3b',
+                'google/gemma-2-9b-it': 'gemma2-9b',
+                'TinyLlama/TinyLlama-1.1B-Chat-v1.0': 'tinyllama',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistral-7b',
+                'Qwen/Qwen-7B-Chat': 'qwen-7b',
+                'microsoft/Phi-3-mini-4k-instruct': 'phi-3'
+            };
+            return modelMappings[modelPath] || null;
+        }
+
+        // スプレッドシート連携機能
+        function loadSpreadsheetStatus() {
+            fetch('/api/spreadsheet/status')
+            .then(response => response.json())
+            .then(data => {
+                displaySpreadsheetStatus(data);
+            })
+            .catch(error => {
+                console.error('Spreadsheet status load error:', error);
+                document.getElementById('spreadsheetStatus').innerHTML = 
+                    '<div class="text-center text-danger">スプレッドシート状態の読み込みに失敗しました</div>';
+            });
+        }
+
+        function displaySpreadsheetStatus(data) {
+            const spreadsheetStatus = document.getElementById('spreadsheetStatus');
+            
+            if (!data.enabled) {
+                spreadsheetStatus.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> スプレッドシート連携が設定されていません</h6>
+                        <p class="mb-2">スプレッドシート連携を使用するには、以下の手順で設定してください：</p>
+                        <ol class="mb-3">
+                            <li>Google Apps Script エディタで新しいプロジェクトを作成</li>
+                            <li><code>gas_spreadsheet_integration.js</code> のコードをコピー&ペースト</li>
+                            <li>スプレッドシートのIDを設定</li>
+                            <li>デプロイしてWebアプリとして公開</li>
+                            <li>WebアプリのURLを <code>spreadsheet_config.json</code> に設定</li>
+                        </ol>
+                        <div class="text-muted">
+                            <small>設定ファイル: <code>spreadsheet_config.json</code></small>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let statusBadge = '';
+            let statusMessage = '';
+            let actionButtons = '';
+
+            if (data.connected) {
+                statusBadge = '<span class="badge bg-success">接続済み</span>';
+                statusMessage = data.message;
+                
+                const stats = data.stats || {};
+                actionButtons = `
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="initializeSpreadsheet()">
+                            <i class="fas fa-cog"></i> スプレッドシート初期化
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm me-2" onclick="clearSpreadsheetData()">
+                            <i class="fas fa-trash"></i> データクリア
+                        </button>
+                    </div>
+                `;
+
+                if (stats.hasData) {
+                    statusMessage += `
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                記録済みデータ: ${stats.totalRows}行 | 
+                                シミュレーション: ${Object.entries(stats.simulationNumbers || {}).map(([sim, count]) => `#${sim}(${count}件)`).join(', ')}
+                            </small>
+                        </div>
+                    `;
+                }
+            } else {
+                statusBadge = '<span class="badge bg-danger">接続エラー</span>';
+                statusMessage = data.message;
+                actionButtons = `
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadSpreadsheetStatus()">
+                            <i class="fas fa-sync"></i> 再接続テスト
+                        </button>
+                    </div>
+                `;
+            }
+
+            spreadsheetStatus.innerHTML = `
+                <div class="alert ${data.connected ? 'alert-success' : 'alert-danger'}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6><i class="fas fa-table"></i> スプレッドシート連携状態</h6>
+                            <p class="mb-0">${statusBadge} ${statusMessage}</p>
+                        </div>
+                    </div>
+                    ${actionButtons}
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> スプレッドシート連携について</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">スプレッドシート連携により、実験結果が自動的にGoogleスプレッドシートに記録されます。</p>
+                        <ul class="mb-2">
+                            <li><strong>記録される情報:</strong> 実験設定、精度指標、Token使用統計、企業情報、実行時間、JSONファイル名など</li>
+                            <li><strong>記録タイミング:</strong> 各シミュレーション完了時に自動記録</li>
+                            <li><strong>データ形式:</strong> 個別結果のみを構造化された表形式で記録</li>
+                            <li><strong>詳細情報:</strong> 詳細な面接記録はJSONファイルを参照</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initializeSpreadsheet() {
+            if (!confirm('スプレッドシートを初期化しますか？\n（ヘッダー行が設定されます）')) {
+                return;
+            }
+
+            fetch('/api/spreadsheet/initialize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadSpreadsheetStatus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('初期化に失敗しました');
+            });
+        }
+
+        function clearSpreadsheetData() {
+            if (!confirm('スプレッドシートのデータをクリアしますか？\n（ヘッダー行以外のすべてのデータが削除されます）\n\nこの操作は取り消せません。')) {
+                return;
+            }
+
+            fetch('/api/spreadsheet/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadSpreadsheetStatus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('データクリアに失敗しました');
+            });
+        }
 
     </script>
 </body>
