@@ -36,6 +36,6 @@ class RandomAgent(BaseYgoAgent):
         print("No command selected")
         return None
 
-    def update(self, action_data: ActionData, next_state: dict):
+    def update(self, state:dict, action_data: ActionData, next_state: dict):
         # print("RandomAgent does not learn")
         return

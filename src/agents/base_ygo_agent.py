@@ -18,6 +18,6 @@ class BaseYgoAgent(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def update(self, action_data: ActionData, next_state: dict):
-        """行動データと次状態を用いてエージェントの学習を行う"""
+    def update(self, state:dict, action_data: ActionData, next_state: dict):
+        """状態sとその時の行動action_data、その後の次状態next_stateを取得してエージェントの内部状態を更新する"""
         pass
