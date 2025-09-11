@@ -16,6 +16,30 @@ import config
 import data_generators
 from student import CompanyKnowledgeManager, GPTApplicant
 from interv import Interviewer
+from spreadsheet_integration import get_spreadsheet_integration
+try:
+    from model_manager import HuggingFaceModelManager
+except ImportError:
+    # フォールバック: 基本的なモデル管理機能のみ
+    class HuggingFaceModelManager:
+        def __init__(self):
+            pass
+        def check_hf_cli_installed(self):
+            return False
+        def install_hf_cli(self):
+            return False
+        def is_model_downloaded(self, model_key):
+            return False
+        def download_model(self, model_key):
+            return False
+        def initialize_model(self, model_key):
+            return None, None
+        def list_available_models(self):
+            return []
+        def get_model_info(self, model_key):
+            return None
+        def get_disk_usage(self):
+            return {}
 
 app = Flask(__name__)
 
@@ -32,6 +56,9 @@ experiment_status = {
 }
 
 experiment_queue = queue.Queue()
+
+# モデル管理システムの初期化
+model_manager = HuggingFaceModelManager()
 
 # 絶対パスでresultsディレクトリを指定
 RESULTS_DIR = Path(__file__).parent / 'results'
@@ -185,41 +212,69 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         return None
 
 def initialize_local_model(model_name=None):
-    """Hugging Faceからローカルモデルを読み込み、GPUに配置する"""
+    """Hugging Face CLIを使ったローカルモデルの初期化（選択時にダウンロード）"""
     if model_name is None:
         model_name = config.LOCAL_MODEL_NAME
     
     log_message(f"--- 面接官役のローカルモデル ({model_name}) の初期化を開始 ---")
     
-    import torch
-    from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+    # モデルキーを取得（フルパスからキーに変換）
+    model_key = None
+    for key, model_id in config.AVAILABLE_LOCAL_MODELS.items():
+        if model_id == model_name:
+            model_key = key
+            break
     
-    if not torch.cuda.is_available():
-        log_message("警告: CUDAが利用できません。CPUでの実行は非常に遅くなります。")
-        quantization_config = None
-        torch_dtype = torch.float32
-    else:
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
-        torch_dtype = torch.bfloat16
-        log_message("CUDAを検出。4bit量子化を有効にしてモデルを読み込みます。")
-    
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=quantization_config, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
-        
-        if tokenizer.pad_token_id is None:
-            tokenizer.pad_token_id = tokenizer.eos_token_id
-        if model.config.pad_token_id is None:
-            model.config.pad_token_id = model.config.eos_token_id
-            
-        log_message("--- 面接官役のローカルモデルの初期化完了 ---")
-        return model, tokenizer
-    except Exception as e:
-        log_message(f"モデルの初期化中にエラーが発生しました: {e}")
+    if not model_key:
+        log_message(f"エラー: 未知のモデル {model_name}")
         return None, None
+    
+    # Hugging Face CLIの確認
+    if not model_manager.check_hf_cli_installed():
+        log_message("Hugging Face CLIがインストールされていません。インストール中...")
+        if not model_manager.install_hf_cli():
+            log_message("Hugging Face CLIのインストールに失敗しました")
+            return None, None
+    
+    # モデルのダウンロード確認（選択時に初めてダウンロード）
+    if not model_manager.is_model_downloaded(model_key):
+        model_info = model_manager.get_model_info(model_key)
+        if model_info:
+            log_message(f"モデル {model_key} が初回選択されました。ダウンロードを開始します...")
+            log_message(f"モデルサイズ: {model_info['size_gb']}GB")
+            log_message(f"推奨GPU: {model_info['recommended_gpu']}")
+            log_message("ダウンロードには時間がかかる場合があります。しばらくお待ちください...")
+            
+            # 進捗表示付きでダウンロード
+            def progress_callback(message):
+                log_message(f"[ダウンロード進捗] {message}")
+            
+            if not model_manager.download_model(model_key, progress_callback=progress_callback):
+                log_message(f"モデル {model_key} のダウンロードに失敗しました")
+                return None, None
+            else:
+                log_message(f"モデル {model_key} のダウンロードが完了しました")
+        else:
+            log_message(f"モデル {model_key} の情報を取得できませんでした")
+            return None, None
+    else:
+        log_message(f"モデル {model_key} は既にダウンロード済みです")
+    
+    # モデルの初期化
+    log_message(f"モデル {model_key} を初期化中...")
+    model, tokenizer = model_manager.initialize_model(model_key)
+    
+    if model and tokenizer:
+        log_message("--- 面接官役のローカルモデルの初期化完了 ---")
+    else:
+        log_message("--- 面接官役のローカルモデルの初期化に失敗 ---")
+    
+    return model, tokenizer
 
 def run_single_experiment(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, simulation_num=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """単一の面接シミュレーション実行"""
+    import time
+    start_time = time.time()
     log_message(f"=== シミュレーション {simulation_num} 開始 ===")
     
     # 面接フローが指定されていない場合はデフォルトを使用
@@ -306,11 +361,11 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         
     else:
         # 従来の固定面接フロー
-        total_rounds = len(interview_flow)
-        for round_num, question_type in enumerate(interview_flow):
-            log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
-
+        current_round = 0
+        for question_type in interview_flow:
             if question_type == 0: # 全体質問
+                current_round += 1
+                log_message(f"--- 面接ラウンド {current_round} (全体質問) ---")
                 log_message("--- 全体質問フェーズ ---")
                 question, _ = interviewer.ask_common_question(asked_common_questions)
                 asked_common_questions.append(question)
@@ -318,23 +373,39 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                 
                 for i, state in enumerate(candidate_states):
                     log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                    answer = applicant.generate(
+                    answer, token_info = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
                     log_message(f"学生 (API): {answer}")
-                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                    state["conversation_log"].append({
+                        "turn": current_round, 
+                        "question": question, 
+                        "answer": answer,
+                        "token_info": token_info
+                    })
 
             elif question_type == 1: # 個別質問
-                log_message("--- 個別質問フェーズ ---")
+                # 個別質問は1人につき1ラウンド
                 for i, state in enumerate(candidate_states):
-                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    current_round += 1
+                    log_message(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---")
+                    log_message(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
                     question, _ = interviewer.ask_question(state["conversation_log"])
                     log_message(f"面接官 ({interviewer_model_type}): {question}")
-                    answer = applicant.generate(
+                    answer, token_info = applicant.generate(
                         state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                     )
                     log_message(f"学生 (API): {answer}")
-                    state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                    state["conversation_log"].append({
+                        "turn": current_round, 
+                        "question": question, 
+                        "answer": answer,
+                        "token_info": token_info
+                    })
+        
+        total_rounds = current_round
 
     # --- 4. 最終評価 ---
     log_message("--- 最終評価フェーズ ---")
@@ -345,6 +416,10 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     
     # --- 5. 精度指標の計算 ---
     accuracy_metrics = calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_eval, knowledge_gap_eval)
+    
+    # 実行時間を計算
+    end_time = time.time()
+    execution_time = end_time - start_time
     
     # --- 6. 結果の整理 ---
     result = {
@@ -376,7 +451,8 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
             "knowledge_gaps": knowledge_gap_eval
         },
         "knowledge_gaps_detailed": accuracy_metrics.get('knowledge_gaps_detailed') if accuracy_metrics else None,
-        "accuracy_metrics": accuracy_metrics
+        "accuracy_metrics": accuracy_metrics,
+        "execution_time_seconds": execution_time
     }
     
     log_message(f"=== シミュレーション {simulation_num} 完了 ===")
@@ -447,6 +523,24 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                 individual_filename = f"simulation_{sim_num}_results_{timestamp_str}.json"
                 with open(RESULTS_DIR / individual_filename, 'w', encoding='utf-8') as f:
                     json.dump(result, f, ensure_ascii=False, indent=4)
+                
+                # JSONファイル名を結果に追加
+                result['json_filename'] = individual_filename
+                
+                # スプレッドシートに個別結果を記録
+                try:
+                    spreadsheet_integration = get_spreadsheet_integration()
+                    if spreadsheet_integration:
+                        log_message(f"スプレッドシートにシミュレーション {sim_num} の結果を記録中...")
+                        individual_result = spreadsheet_integration.record_experiment_result(result)
+                        if individual_result.get('success'):
+                            log_message(f"シミュレーション {sim_num} のスプレッドシート記録が完了しました")
+                        else:
+                            log_message(f"シミュレーション {sim_num} のスプレッドシート記録エラー: {individual_result.get('message')}")
+                    else:
+                        log_message("スプレッドシート連携が設定されていません")
+                except Exception as e:
+                    log_message(f"シミュレーション {sim_num} のスプレッドシート記録中にエラーが発生しました: {e}")
         
         # 全体結果の集計
         if all_results:
@@ -456,6 +550,20 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             precision_scores = [r['accuracy_metrics']['precision'] for r in all_results if r['accuracy_metrics']]
             recall_scores = [r['accuracy_metrics']['recall'] for r in all_results if r['accuracy_metrics']]
             correct_predictions = sum(1 for r in all_results if r['accuracy_metrics'] and r['accuracy_metrics']['is_correct'])
+            
+            # Token数の集計
+            total_tokens = []
+            prompt_tokens = []
+            completion_tokens = []
+            
+            for result in all_results:
+                for transcript in result.get('interview_transcripts', []):
+                    for conversation in transcript.get('conversation_log', []):
+                        if 'token_info' in conversation:
+                            token_info = conversation['token_info']
+                            total_tokens.append(token_info.get('total_tokens', 0))
+                            prompt_tokens.append(token_info.get('prompt_tokens', 0))
+                            completion_tokens.append(token_info.get('completion_tokens', 0))
             
             # 評価3（知識欠損検出）の集計
             knowledge_gaps_metrics = []
@@ -480,6 +588,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
                 'overall_recall': np.mean(recall_scores) if recall_scores else 0,
                 'accuracy_std': np.std(accuracy_scores) if accuracy_scores else 0,
                 'f1_std': np.std(f1_scores) if f1_scores else 0,
+                # Token数の集計指標
+                'token_usage_metrics': {
+                    'total_api_calls': len(total_tokens),
+                    'total_tokens_used': sum(total_tokens) if total_tokens else 0,
+                    'avg_tokens_per_call': np.mean(total_tokens) if total_tokens else 0,
+                    'avg_prompt_tokens': np.mean(prompt_tokens) if prompt_tokens else 0,
+                    'avg_completion_tokens': np.mean(completion_tokens) if completion_tokens else 0,
+                    'total_prompt_tokens': sum(prompt_tokens) if prompt_tokens else 0,
+                    'total_completion_tokens': sum(completion_tokens) if completion_tokens else 0,
+                    'tokens_std': np.std(total_tokens) if total_tokens else 0
+                },
                 # 評価3（知識欠損検出）の集計指標
                 'knowledge_gaps_metrics': {
                     'total_simulations_with_kg_data': len(knowledge_gaps_metrics),
@@ -511,6 +630,9 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             with open(RESULTS_DIR / filename, 'w', encoding='utf-8') as f:
                 json.dump(final_output, f, ensure_ascii=False, indent=4)
             
+            # スプレッドシート記録は個別結果で既に完了しているため、ここでは何もしない
+            log_message("全シミュレーションのスプレッドシート記録が完了しました")
+            
             experiment_status['results'] = final_output
             update_progress(100, "全シミュレーション完了")
             
@@ -521,6 +643,17 @@ def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer
             log_message(f"正解予測数: {correct_predictions}/{num_simulations}")
             log_message(f"全体正解率: {aggregated_metrics['overall_accuracy']:.3f} ± {aggregated_metrics['accuracy_std']:.3f}")
             log_message(f"全体F1スコア: {aggregated_metrics['overall_f1_score']:.3f} ± {aggregated_metrics['f1_std']:.3f}")
+            
+            # Token数統計の表示
+            token_metrics = aggregated_metrics['token_usage_metrics']
+            log_message(f"\n--- Token数統計 ---")
+            log_message(f"総API呼び出し回数: {token_metrics['total_api_calls']}")
+            log_message(f"総使用Token数: {token_metrics['total_tokens_used']:,}")
+            log_message(f"平均Token数/呼び出し: {token_metrics['avg_tokens_per_call']:.1f} ± {token_metrics['tokens_std']:.1f}")
+            log_message(f"総プロンプトToken数: {token_metrics['total_prompt_tokens']:,}")
+            log_message(f"総回答Token数: {token_metrics['total_completion_tokens']:,}")
+            log_message(f"平均プロンプトToken数: {token_metrics['avg_prompt_tokens']:.1f}")
+            log_message(f"平均回答Token数: {token_metrics['avg_completion_tokens']:.1f}")
             
             # 評価3（知識欠損検出）の結果表示
             kg_metrics = aggregated_metrics['knowledge_gaps_metrics']
@@ -666,6 +799,183 @@ def get_result_detail(filename):
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': f'ファイルの読み込みに失敗: {e}'}), 500
+
+@app.route('/api/models/status')
+def get_models_status():
+    """ローカルモデルの状態を取得"""
+    try:
+        models_status = {}
+        for model_key in model_manager.list_available_models():
+            model_info = model_manager.get_model_info(model_key)
+            models_status[model_key] = {
+                'model_id': model_info['model_id'],
+                'description': model_info['description'],
+                'size_gb': model_info['size_gb'],
+                'recommended_gpu': model_info['recommended_gpu'],
+                'downloaded': model_manager.is_model_downloaded(model_key)
+            }
+        
+        disk_usage = model_manager.get_disk_usage()
+        hf_cli_installed = model_manager.check_hf_cli_installed()
+        
+        return jsonify({
+            'models': models_status,
+            'disk_usage': disk_usage,
+            'hf_cli_installed': hf_cli_installed
+        })
+    except Exception as e:
+        return jsonify({'error': f'モデル状態の取得に失敗: {e}'}), 500
+
+@app.route('/api/models/download', methods=['POST'])
+def download_model():
+    """モデルをダウンロード"""
+    if experiment_status['is_running']:
+        return jsonify({'error': '実験実行中はモデルのダウンロードはできません'}), 400
+    
+    data = request.get_json()
+    model_key = data.get('model_key')
+    
+    if not model_key:
+        return jsonify({'error': 'model_keyが必要です'}), 400
+    
+    try:
+        log_message(f"モデル {model_key} のダウンロードを開始...")
+        success = model_manager.download_model(model_key)
+        
+        if success:
+            log_message(f"モデル {model_key} のダウンロードが完了しました")
+            return jsonify({'message': f'モデル {model_key} のダウンロードが完了しました'})
+        else:
+            log_message(f"モデル {model_key} のダウンロードに失敗しました")
+            return jsonify({'error': f'モデル {model_key} のダウンロードに失敗しました'}), 500
+            
+    except Exception as e:
+        log_message(f"モデルダウンロード中にエラー: {e}")
+        return jsonify({'error': f'ダウンロード中にエラーが発生: {e}'}), 500
+
+@app.route('/api/models/cleanup', methods=['POST'])
+def cleanup_model():
+    """モデルを削除"""
+    if experiment_status['is_running']:
+        return jsonify({'error': '実験実行中はモデルの削除はできません'}), 400
+    
+    data = request.get_json()
+    model_key = data.get('model_key')
+    
+    if not model_key:
+        return jsonify({'error': 'model_keyが必要です'}), 400
+    
+    try:
+        log_message(f"モデル {model_key} を削除中...")
+        success = model_manager.cleanup_model(model_key)
+        
+        if success:
+            log_message(f"モデル {model_key} を削除しました")
+            return jsonify({'message': f'モデル {model_key} を削除しました'})
+        else:
+            log_message(f"モデル {model_key} の削除に失敗しました")
+            return jsonify({'error': f'モデル {model_key} の削除に失敗しました'}), 500
+            
+    except Exception as e:
+        log_message(f"モデル削除中にエラー: {e}")
+        return jsonify({'error': f'削除中にエラーが発生: {e}'}), 500
+
+@app.route('/api/spreadsheet/status')
+def get_spreadsheet_status():
+    """スプレッドシート連携の状態を取得"""
+    try:
+        spreadsheet_integration = get_spreadsheet_integration()
+        if not spreadsheet_integration:
+            return jsonify({
+                'enabled': False,
+                'message': 'スプレッドシート連携が設定されていません'
+            })
+        
+        # 接続テスト
+        result = spreadsheet_integration.test_connection()
+        if result.get('success'):
+            # 統計情報も取得
+            stats = spreadsheet_integration.get_spreadsheet_stats()
+            return jsonify({
+                'enabled': True,
+                'connected': True,
+                'message': 'スプレッドシート連携が正常に動作しています',
+                'stats': stats.get('stats', {})
+            })
+        else:
+            return jsonify({
+                'enabled': True,
+                'connected': False,
+                'message': f'スプレッドシート接続エラー: {result.get("message")}'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'enabled': False,
+            'connected': False,
+            'message': f'スプレッドシート連携エラー: {e}'
+        }), 500
+
+@app.route('/api/spreadsheet/initialize', methods=['POST'])
+def initialize_spreadsheet():
+    """スプレッドシートを初期化"""
+    try:
+        spreadsheet_integration = get_spreadsheet_integration()
+        if not spreadsheet_integration:
+            return jsonify({'error': 'スプレッドシート連携が設定されていません'}), 400
+        
+        result = spreadsheet_integration.initialize_spreadsheet()
+        if result.get('success'):
+            log_message("スプレッドシートの初期化が完了しました")
+            return jsonify({'message': result.get('message')})
+        else:
+            return jsonify({'error': result.get('message')}), 500
+            
+    except Exception as e:
+        log_message(f"スプレッドシート初期化エラー: {e}")
+        return jsonify({'error': f'初期化エラー: {e}'}), 500
+
+@app.route('/api/spreadsheet/record', methods=['POST'])
+def record_to_spreadsheet():
+    """実験結果をスプレッドシートに記録"""
+    try:
+        spreadsheet_integration = get_spreadsheet_integration()
+        if not spreadsheet_integration:
+            return jsonify({'error': 'スプレッドシート連携が設定されていません'}), 400
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'データが必要です'}), 400
+        
+        result = spreadsheet_integration.record_experiment_result(data)
+        if result.get('success'):
+            log_message(f"スプレッドシートへの記録が完了しました (行: {result.get('row', 'N/A')})")
+            return jsonify({'message': result.get('message')})
+        else:
+            return jsonify({'error': result.get('message')}), 500
+            
+    except Exception as e:
+        log_message(f"スプレッドシート記録エラー: {e}")
+        return jsonify({'error': f'記録エラー: {e}'}), 500
+
+@app.route('/api/spreadsheet/clear', methods=['POST'])
+def clear_spreadsheet():
+    """スプレッドシートのデータをクリア"""
+    try:
+        spreadsheet_integration = get_spreadsheet_integration()
+        if not spreadsheet_integration:
+            return jsonify({'error': 'スプレッドシート連携が設定されていません'}), 400
+        
+        result = spreadsheet_integration.clear_spreadsheet_data()
+        if result.get('success'):
+            log_message("スプレッドシートのデータをクリアしました")
+            return jsonify({'message': result.get('message')})
+        else:
+            return jsonify({'error': result.get('message')}), 500
+            
+    except Exception as e:
+        log_message(f"スプレッドシートクリアエラー: {e}")
+        return jsonify({'error': f'クリアエラー: {e}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

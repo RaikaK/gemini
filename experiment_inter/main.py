@@ -87,10 +87,11 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
     asked_common_questions = []
 
     # --- 3. 面接フローの実行 ---
-    for round_num, question_type in enumerate(config.INTERVIEW_FLOW):
-        print(f"\n{'='*80}\n--- 面接ラウンド {round_num + 1}/{len(config.INTERVIEW_FLOW)} ---\n{'='*80}")
-
+    current_round = 0
+    for question_type in config.INTERVIEW_FLOW:
         if question_type == 0: # 全体質問
+            current_round += 1
+            print(f"\n{'='*80}\n--- 面接ラウンド {current_round} (全体質問) ---\n{'='*80}")
             print("--- 全体質問フェーズ ---")
             print(f"  面接官 ({model_type}) が全体質問を生成中...")
             question, _ = interviewer.ask_common_question(asked_common_questions)
@@ -100,25 +101,39 @@ def run_experiment(local_interviewer_model=None, local_interviewer_tokenizer=Non
             for i, state in enumerate(candidate_states):
                 print(f"\n -> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
                 print("  学生 (API) が応答を生成中...")
-                answer = applicant.generate(
+                answer, token_info = applicant.generate(
                     state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                 )
                 print(f"  学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                print(f"  Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                state["conversation_log"].append({
+                    "turn": current_round, 
+                    "question": question, 
+                    "answer": answer,
+                    "token_info": token_info
+                })
 
         elif question_type == 1: # 個別質問
-            print("--- 個別質問フェーズ ---")
+            # 個別質問は1人につき1ラウンド
             for i, state in enumerate(candidate_states):
-                print(f"\n -> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                current_round += 1
+                print(f"\n{'='*80}\n--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---\n{'='*80}")
+                print(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
                 print(f"  面接官 ({model_type}) が質問を生成中...")
                 question, _ = interviewer.ask_question(state["conversation_log"])
                 print(f"  面接官 ({model_type}): {question}")
                 print("  学生 (API) が応答を生成中...")
-                answer = applicant.generate(
+                answer, token_info = applicant.generate(
                     state["profile"], state["knowledge_tuple"], state["conversation_log"], question
                 )
                 print(f"  学生 (API): {answer}")
-                state["conversation_log"].append({"turn": round_num + 1, "question": question, "answer": answer})
+                print(f"  Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
+                state["conversation_log"].append({
+                    "turn": current_round, 
+                    "question": question, 
+                    "answer": answer,
+                    "token_info": token_info
+                })
 
     # --- 4. 最終評価 ---
     print(f"\n{'='*80}\n--- 最終評価フェーズ ---\n{'='*80}")
