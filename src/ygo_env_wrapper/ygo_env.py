@@ -58,11 +58,7 @@ class YgoEnv:
             reward: float = self.reward_func.eval(action_data=action_data)
         
         # コマンドを要求されるか、デュエルが終了するまで次状態は返さない
-        is_cmd_required: bool = False
-        is_duel_end: bool = False
-        
-        while (not is_cmd_required) or is_duel_end:
-            time.sleep(0.001)
+        while True:
             try:
                 if not self.udi_io.input():
                     pass
@@ -98,7 +94,14 @@ class YgoEnv:
                 print("Duel Start")
             if is_duel_end:
                 print("Duel End")
-                print(state["duel_end_data"])
+                print(duel_end_data)
+                break
+            
+            if is_cmd_required:
+                break
+            
+            time.sleep(0.001)
+
         # print(f"is_cmd_required: {self.udi_io.is_command_required()}, current_phase: {state.general_data.current_phase}")
 
         return result_dict

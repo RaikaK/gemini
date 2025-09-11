@@ -62,9 +62,6 @@ if __name__ == "__main__":
 
     
     while True:
-        if state["is_cmd_required"] is False:
-            raise ValueError("env is broken...")
-
         action_data = agent.select_action(state)
         
         state = env.step(action_data)
