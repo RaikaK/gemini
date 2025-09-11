@@ -7,22 +7,21 @@ import torch
 from src.agents.dqn_agent.simple_tensors.simple_tensor import simple_dataclass_tensor
 
 from ygo.models.duel_state_data import DuelStateData
-from ygo.models.command_request import CommandRequest
 from ygo.models.duel_card import DuelCard
 from ygo.models.general_data import GeneralData
 from ygo.models.chain_data import ChainData
 
-NUM_DUEL_CARD_TABLE = 40  # 最大200らしい (by vendor/UDI/samples/basic/duel_data_sample.ipynb) 今回はブルーアイズデッキ飲みなので、40とする
+NUM_DUEL_CARD_TABLE = 80  # 最大200らしい (by vendor/UDI/samples/basic/duel_data_sample.ipynb) 今回はブルーアイズデッキ飲みなので、40*2=80とする
 
 DIM_DUEL_CARD = len(DuelCard.__dataclass_fields__)
-DIM_GENERAL_DATA = len(GeneralData.__dataclass_fields__)
+DIM_GENERAL_DATA = len(GeneralData.__dataclass_fields__) + 2 # lpとsummon_numが長さ2の配列のため
 DIM_CHAIN_DATA = len(ChainData.__dataclass_fields__)
 MAX_CHAIN_TARGET = (5 + 5) * 2  # モンスター5+魔法トラップゾーン5 * 自分と相手2
 MAX_CHAIN_STACK = 20  # 最大20より大きくならないことを祈る
 
 # 最終的なDuelStateDataのテンソルの次元数
 DIM_DUEL_STATE_DATA = (
-    DIM_DUEL_CARD * NUM_DUEL_CARD_TABLE * 2
+    DIM_DUEL_CARD * NUM_DUEL_CARD_TABLE
     + DIM_GENERAL_DATA
     + (DIM_CHAIN_DATA + MAX_CHAIN_TARGET) * MAX_CHAIN_STACK
 )
@@ -92,8 +91,9 @@ def simple_chain_stack_tensor(
             torch.zeros(dim_chain_data, dtype=dtype)
             for i in range(max_chain_stack - len(chain_stack_tensor_list))
         ]
-        chain_stack_tensor_list.extend(zero_tensors)[:max_chain_stack]
-        return torch.cat(chain_stack_tensor_list, dim=0)
+        chain_stack_tensor_list.extend(zero_tensors)
+        
+        return torch.cat(chain_stack_tensor_list[:max_chain_stack], dim=0)
     return torch.cat(chain_stack_tensor_list, dim=0)
 
 
@@ -108,7 +108,7 @@ def simple_duel_card_table_tensor(
         if isinstance(duel_card, DuelCard)
     ]
     duel_card_table_tensor = torch.cat(
-        duel_card_tensor_list[:NUM_DUEL_CARD_TABLE]
-        + duel_card_tensor_list[100 : 100 + NUM_DUEL_CARD_TABLE :]
+        duel_card_tensor_list[:int(NUM_DUEL_CARD_TABLE/2)]
+        + duel_card_tensor_list[100 : 100 + int(NUM_DUEL_CARD_TABLE/2) :]
     )
     return duel_card_table_tensor

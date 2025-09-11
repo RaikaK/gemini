@@ -60,22 +60,14 @@ if __name__ == "__main__":
     action_data: ActionData = None
     state = env.reset()
 
+    
     while True:
-        if state["is_duel_start"]:
-            print("Duel Start")
-        elif state["is_duel_end"]:
-            print("Duel End")
-            print(state["duel_end_data"])
+        if state["is_cmd_required"] is False:
+            raise ValueError("env is broken...")
 
-        if state["is_cmd_required"]:
-            action_data = agent.select_action(state)
-
+        action_data = agent.select_action(state)
+        
         state = env.step(action_data)
 
         # エージェントの学習
-        agent.update(action_data=action_data, next_state=state)
-
-        # アクションデータの初期化
-        action_data = None
-                
-        time.sleep(WAITING_TIME)
+        agent.update(state=state, action_data=action_data, next_state=state)

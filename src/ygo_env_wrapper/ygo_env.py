@@ -4,6 +4,7 @@ sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
 
 import argparse
 from pprint import pprint
+import time
 
 from ygo.udi_io import UdiIO
 from ygo.util.text import TextUtil
@@ -55,37 +56,49 @@ class YgoEnv:
         if action_data is not None:
             self.execute_command(action_data=action_data)
             reward: float = self.reward_func.eval(action_data=action_data)
+        
+        # コマンドを要求されるか、デュエルが終了するまで次状態は返さない
+        is_cmd_required: bool = False
+        is_duel_end: bool = False
+        
+        while (not is_cmd_required) or is_duel_end:
+            time.sleep(0.001)
+            try:
+                if not self.udi_io.input():
+                    pass
+                elif self.udi_io.duel_data != {}:
+                    state: DuelStateData = self.udi_io.get_duel_state_data()  # 次状態
+                    command_request: CommandRequest = (
+                        self.udi_io.get_command_request()
+                    )  # 選択可能なコマンドリストなどの情報
 
-        try:
-            if not self.udi_io.input():
-                pass
-            elif self.udi_io.duel_data != {}:
-                state: DuelStateData = self.udi_io.get_duel_state_data()  # 次状態
-                command_request: CommandRequest = (
-                    self.udi_io.get_command_request()
-                )  # 選択可能なコマンドリストなどの情報
+            except Exception as e:
+                print(e)
+                sys.exit()
 
-        except Exception as e:
-            print(e)
-            sys.exit()
+            # set each flags
+            is_duel_start = self.udi_io.is_duel_start()
+            is_duel_end = self.udi_io.is_duel_end()
+            is_cmd_required = self.udi_io.is_command_required()
+            duel_end_data: DuelEndData = (
+                self.udi_io.get_duel_end_data() if is_duel_end else None
+            )
 
-        # set each flags
-        is_duel_start: bool = self.udi_io.is_duel_start()
-        is_duel_end: bool = self.udi_io.is_duel_end()
-        is_cmd_required: bool = self.udi_io.is_command_required()
-        duel_end_data: DuelEndData = (
-            self.udi_io.get_duel_end_data() if is_duel_end else None
-        )
+            result_dict = {
+                "is_duel_start": is_duel_start,
+                "is_duel_end": is_duel_end,
+                "is_cmd_required": is_cmd_required,
+                "duel_end_data": duel_end_data,
+                "state": state,
+                "command_request": command_request,
+                "reward": reward,
+            }
 
-        result_dict = {
-            "is_duel_start": is_duel_start,
-            "is_duel_end": is_duel_end,
-            "is_cmd_required": is_cmd_required,
-            "duel_end_data": duel_end_data,
-            "state": state,
-            "command_request": command_request,
-            "reward": reward,
-        }
+            if is_duel_start:
+                print("Duel Start")
+            if is_duel_end:
+                print("Duel End")
+                print(state["duel_end_data"])
         # print(f"is_cmd_required: {self.udi_io.is_command_required()}, current_phase: {state.general_data.current_phase}")
 
         return result_dict
@@ -176,6 +189,7 @@ if __name__ == "__main__":
             print(result["duel_end_data"])
 
         action_data = None
+        breakpoint()
         if result["is_cmd_required"]:
             # 行動選択
             action_data = cli_player(result=result)

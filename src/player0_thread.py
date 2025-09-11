@@ -11,6 +11,7 @@ from ygo.udi_io import UdiIO
 from src.ygo_env_wrapper.action_data import ActionData
 from src.ygo_env_wrapper.ygo_env import YgoEnv
 from src.agents.random_agent.random_agent import RandomAgent
+from src.agents.dqn_agent.dqn_agent import DQNAgent
 
 # Instance-1でのDuelSimulatorの起動コマンド
 # DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
@@ -52,7 +53,8 @@ if __name__ == "__main__":
     udi_io.log_response_history = False
 
     # エージェントの用意
-    agent = RandomAgent()
+    # agent = RandomAgent()
+    agent = DQNAgent()
 
     # 環境ラッパーの起動
     env = YgoEnv(udi_io=udi_io)
@@ -60,21 +62,12 @@ if __name__ == "__main__":
     state = env.reset()
 
     while True:
-        if state["is_duel_start"]:
-            print("Duel Start")
-        elif state["is_duel_end"]:
-            print("Duel End")
-            print(state["duel_end_data"])
+        if state["is_cmd_required"] is False:
+            raise ValueError("env is broken...")
 
-        if state["is_cmd_required"]:
-            action_data = agent.select_action(state)
+        action_data = agent.select_action(state)
         
         state = env.step(action_data)
 
         # エージェントの学習
-        agent.update(action_data=action_data, next_state=state)
-
-        # アクションデータの初期化
-        action_data = None
-
-        time.sleep(WAITING_TIME)
+        agent.update(state=state, action_data=action_data, next_state=state)
