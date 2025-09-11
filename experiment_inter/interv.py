@@ -628,7 +628,7 @@ class Interviewer:
                     "note": "LLM output for this candidate was not found or failed to parse."}
         return evaluation_results
 
-    def detect_knowledge_gaps(self, all_states):
+    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval):
         """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う（情報欠損分析統合）"""
         print("--- 最終評価(3/3): 知識欠損の分析と精度評価を開始 ---")
         
@@ -648,6 +648,12 @@ class Interviewer:
 
         # 各候補者の面接記録
         {conversation_summary}
+
+        # あなたが以前予測した最も志願度が低い候補者について
+        {least_motivated_eval}
+
+        # あなたが以前予測した志願度が低い候補者順のランキングについて
+        {ranking_eval}
         
         【情報欠損分析の活用】
         - 情報欠損度が高い候補者は、企業研究が不十分で知識の欠如が予想される
@@ -659,6 +665,7 @@ class Interviewer:
         1. **思考**: 候補者の各回答を検証します。「この質問に対して、この企業情報（例：'recent_news'）に触れるのが自然だったか？」「回答が具体的か、それとも一般論に終始しているか？」「誤った情報はないか？」といった観点で、知識が欠けていると判断できる「根拠」を探します。
         2. **分析**: 上記の思考に基づき、知識が不足していると判断した理由を簡潔に記述します。情報欠損分析結果も考慮してください。
         3. **キーの列挙**: 知識不足の根拠があると判断した情報の「キー」のみをJSONのリスト形式で列挙してください。根拠がなければ、空のリスト `[]` を返してください。
+        4. なお、候補者の中には知識不足がない場合もあることを考慮してください。
 
         厳格な出力形式:
         - {all_states[0]['profile']['name']}:

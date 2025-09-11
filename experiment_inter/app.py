@@ -379,7 +379,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     
     least_motivated_eval = interviewer.select_least_motivated_candidate(candidate_states)
     ranking_eval = interviewer.rank_candidates_by_motivation(candidate_states)
-    knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states)
+    knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
     
     # --- 5. 精度指標の計算 ---
     accuracy_metrics = calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_eval, knowledge_gap_eval)
