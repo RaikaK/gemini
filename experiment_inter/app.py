@@ -361,11 +361,11 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         
     else:
         # 従来の固定面接フロー
-        total_rounds = len(interview_flow)
-        for round_num, question_type in enumerate(interview_flow):
-            log_message(f"--- 面接ラウンド {round_num + 1}/{total_rounds} ---")
-
+        current_round = 0
+        for question_type in interview_flow:
             if question_type == 0: # 全体質問
+                current_round += 1
+                log_message(f"--- 面接ラウンド {current_round} (全体質問) ---")
                 log_message("--- 全体質問フェーズ ---")
                 question, _ = interviewer.ask_common_question(asked_common_questions)
                 asked_common_questions.append(question)
@@ -379,16 +379,18 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                     log_message(f"学生 (API): {answer}")
                     log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
                     state["conversation_log"].append({
-                        "turn": round_num + 1, 
+                        "turn": current_round, 
                         "question": question, 
                         "answer": answer,
                         "token_info": token_info
                     })
 
             elif question_type == 1: # 個別質問
-                log_message("--- 個別質問フェーズ ---")
+                # 個別質問は1人につき1ラウンド
                 for i, state in enumerate(candidate_states):
-                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                    current_round += 1
+                    log_message(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---")
+                    log_message(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
                     question, _ = interviewer.ask_question(state["conversation_log"])
                     log_message(f"面接官 ({interviewer_model_type}): {question}")
                     answer, token_info = applicant.generate(
@@ -397,11 +399,13 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
                     log_message(f"学生 (API): {answer}")
                     log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
                     state["conversation_log"].append({
-                        "turn": round_num + 1, 
+                        "turn": current_round, 
                         "question": question, 
                         "answer": answer,
                         "token_info": token_info
                     })
+        
+        total_rounds = current_round
 
     # --- 4. 最終評価 ---
     log_message("--- 最終評価フェーズ ---")

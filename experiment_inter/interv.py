@@ -393,8 +393,6 @@ class Interviewer:
             elif question_type == "individual":
                 # 個別質問フェーズ（情報欠損検出機能統合）
                 print("--- 個別質問フェーズを実行 ---")
-                actual_interview_flow.append(1)  # 1 = 個別質問
-                any_continued = False
                 
                 # 情報欠損候補者に集中すべきか判断
                 should_focus, focus_reason, focus_indices = self._should_focus_on_deficient_candidates(candidate_states, individual_question_counts)
@@ -410,21 +408,28 @@ class Interviewer:
                     question_targets = list(range(len(candidate_states)))
                     print("--- 全候補者に個別質問 ---")
                 
+                # 個別質問は1人につき1ラウンド
+                any_continued = False
                 for i in question_targets:
-                    state = candidate_states[i]
-                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} への個別面接判断")
-                    
                     # 個別質問の継続判断（質問回数制限を考慮しない）
                     should_continue, reason = self.should_continue_individual_interview(
-                        state['conversation_log'], current_round, max_rounds, individual_question_counts[i]
+                        candidate_states[i]['conversation_log'], current_round, max_rounds, individual_question_counts[i]
                     )
                     
                     if should_continue:
                         any_continued = True
+                        current_round += 1
+                        actual_interview_flow.append(1)  # 1 = 個別質問
+                        print(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---")
+                        
+                        state = candidate_states[i]
+                        print(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
+                        
                         individual_question_counts[i] += 1
                         question, _ = self.ask_question(state['conversation_log'])
                         print(f"面接官 ({self.model_type}): {question}")
                         print(f"候補者 {i+1} の個別質問回数: {individual_question_counts[i]}回目")
+                        
                         # 学生の回答を生成
                         answer, token_info = applicant.generate(
                             state["profile"], state["knowledge_tuple"], state["conversation_log"], question
@@ -437,6 +442,11 @@ class Interviewer:
                             "answer": answer,
                             "token_info": token_info
                         })
+                        
+                        # 最大ラウンド数に達した場合は終了
+                        if current_round >= max_rounds:
+                            print(f"--- 最大ラウンド数({max_rounds})に達したため面接終了 ---")
+                            break
                     else:
                         print(f"候補者 {i+1} の個別面接終了: {reason}")
                 
