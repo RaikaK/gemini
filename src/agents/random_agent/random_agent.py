@@ -22,19 +22,15 @@ class RandomAgent(BaseYgoAgent):
         command_request = state["command_request"]
         selectable_commands: list[CommandEntry] = command_request.commands
         duel_state = state["state"]
-        is_cmd_required: bool = state["is_cmd_required"]
-        if is_cmd_required and len(selectable_commands) > 0:
-            selected_command_entry: CommandEntry = random.choice(selectable_commands)
-            action_data = ActionData(
-                state=duel_state,
-                command_request=command_request,
-                command_entry=selected_command_entry,
-            )
-            print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
-            return action_data
-
-        print("No command selected")
-        return None
+        
+        selected_command_entry: CommandEntry = random.choice(selectable_commands)
+        action_data = ActionData(
+            state=duel_state,
+            command_request=command_request,
+            command_entry=selected_command_entry,
+        )
+        # print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
+        return action_data
 
     def update(self, state:dict, action_data: ActionData, next_state: dict):
         # print("RandomAgent does not learn")

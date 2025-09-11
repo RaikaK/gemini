@@ -92,6 +92,7 @@ class YgoEnv:
 
             if is_duel_start:
                 print("Duel Start")
+            
             if is_duel_end:
                 print("Duel End")
                 print(duel_end_data)
