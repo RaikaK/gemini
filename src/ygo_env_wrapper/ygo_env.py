@@ -107,7 +107,7 @@ class YgoEnv:
         return result_dict
 
 
-def cli_player(result: dict) -> ActionData:
+def cli_player(state: dict) -> ActionData:
     """CLIからコマンドインデックスう入力できるテスト用のプレイヤー"""
     # コマンドCLI入力
     can_send = False
@@ -115,25 +115,25 @@ def cli_player(result: dict) -> ActionData:
 
     while not can_send:
         print(
-            f"select your action: [0 - {len(result['command_request'].commands) - 1}]"
+            f"select your action: [0 - {len(state['command_request'].commands) - 1}]"
         )
-        for i, cmd_entry in enumerate(result["command_request"].commands):
+        for i, cmd_entry in enumerate(state["command_request"].commands):
             print(f"command {i}: {text_util.get_command_entry_text(cmd_entry)}")
 
         try:
             cmd_index = int(input())
-            if 0 <= cmd_index < len(result["command_request"].commands):
+            if 0 <= cmd_index < len(state["command_request"].commands):
                 can_send = True
 
         except Exception as e:
             can_send = False
             print(
-                f"Invalid command index. Select cmd_index in 0-{len(result['command_request'].commands) - 1}"
+                f"Invalid command index. Select cmd_index in 0-{len(state['command_request'].commands) - 1}"
             )
 
     # コマンド生成
-    state = result["state"]
-    cmd_request = result["command_request"]
+    state = state["state"]
+    cmd_request = state["command_request"]
     cmd_entry = cmd_request.commands[cmd_index]
     action_data = ActionData(
         state=state, command_request=cmd_request, command_entry=cmd_entry
@@ -181,22 +181,10 @@ if __name__ == "__main__":
     print("finish initialized")
 
     action_data = None
-    result = env.reset()  # 初期化
+    state = env.reset()  # 初期化
 
     while True:
-        # デュエルの開始 or 終了
-        if result["is_duel_start"]:
-            print("Duel Start")
-        elif result["is_duel_end"]:
-            print("Duel End")
-            print(result["duel_end_data"])
+        action_data = cli_player(state=state)
 
-        action_data = None
-        breakpoint()
-        if result["is_cmd_required"]:
-            # 行動選択
-            action_data = cli_player(result=result)
+        state = env.step(action_data=action_data)
 
-        result = env.step(action_data=action_data)
-
-        action_data = None
