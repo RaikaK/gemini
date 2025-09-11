@@ -172,7 +172,7 @@ class DQNAgent(BaseYgoAgent):
         * next_state["command_request"].commandsは1つ以上のコマンドを有する
         """
         if done:
-            return reward
+            return torch.tensor(reward, dtype=torch.float32)
         # 次状態における最適アクションを推論する
         next_q = self.calc_next_q_from_target_net(next_state=next_state)
 
