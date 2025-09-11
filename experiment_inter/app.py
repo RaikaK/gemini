@@ -10,7 +10,10 @@ import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
-
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 # 既存のモジュールをインポート
 import config
 import data_generators
@@ -354,7 +357,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     # --- 3. 面接フローの実行 ---
     actual_interview_flow = interview_flow  # デフォルトは指定されたフロー
     
-    if use_dynamic_flow or config.USE_INTELLIGENT_DYNAMIC_FLOW:
+    if use_dynamic_flow :
         log_message("--- 智的動的面接フローを開始 ---")
         total_rounds, actual_interview_flow = interviewer.conduct_dynamic_interview(candidate_states, applicant, max_rounds=config.MAX_DYNAMIC_ROUNDS)
         log_message(f"--- 実際に実行された面接フロー: {actual_interview_flow} ---")
@@ -363,47 +366,9 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         # 従来の固定面接フロー
         current_round = 0
         for question_type in interview_flow:
-            if question_type == 0: # 全体質問
-                current_round += 1
-                log_message(f"--- 面接ラウンド {current_round} (全体質問) ---")
-                log_message("--- 全体質問フェーズ ---")
-                question, _ = interviewer.ask_common_question(asked_common_questions)
-                asked_common_questions.append(question)
-                log_message(f"--- 生成された全体質問: 「{question}」 ---")
-                
-                for i, state in enumerate(candidate_states):
-                    log_message(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                    answer, token_info = applicant.generate(
-                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                    )
-                    log_message(f"学生 (API): {answer}")
-                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
-                    state["conversation_log"].append({
-                        "turn": current_round, 
-                        "question": question, 
-                        "answer": answer,
-                        "token_info": token_info
-                    })
-
-            elif question_type == 1: # 個別質問
-                # 個別質問は1人につき1ラウンド
-                for i, state in enumerate(candidate_states):
-                    current_round += 1
-                    log_message(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---")
-                    log_message(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
-                    question, _ = interviewer.ask_question(state["conversation_log"])
-                    log_message(f"面接官 ({interviewer_model_type}): {question}")
-                    answer, token_info = applicant.generate(
-                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                    )
-                    log_message(f"学生 (API): {answer}")
-                    log_message(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
-                    state["conversation_log"].append({
-                        "turn": current_round, 
-                        "question": question, 
-                        "answer": answer,
-                        "token_info": token_info
-                    })
+            current_round = interviewer.run_interview_round(
+                question_type, candidate_states, applicant, asked_common_questions, current_round, log_fn=log_message
+            )
         
         total_rounds = current_round
 

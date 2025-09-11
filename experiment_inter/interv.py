@@ -148,154 +148,6 @@ class Interviewer:
         thought = "未言及の項目から戦略的に質問を生成しました。"
         return question, thought
 
-    def should_continue_interview(self, conversation_history, current_round, max_rounds=5):
-        """面接を続けるべきかどうかを判断する"""
-        if current_round >= max_rounds:
-            return False, "最大ラウンド数に達しました"
-        
-        if not conversation_history:
-            return True, "初回のため継続"
-        
-        # 最近の回答を分析して自信度を判定
-        recent_answers = conversation_history[-2:] if len(conversation_history) >= 2 else conversation_history
-        
-        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in recent_answers])
-        
-        # 企業情報の項目リストを取得
-        company_keys = list(self.company.keys())
-        company_keys_str = ", ".join(company_keys)
-        
-        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
-        現在の面接ラウンド: {current_round}/{max_rounds}
-        
-        以下の最近の会話履歴を分析し、候補者の志望度について十分な情報が得られているか判断してください。
-        
-        会話履歴:
-        {history_str}
-        
-        企業情報の項目リスト:
-        {company_keys_str}
-        
-        【具体的な終了条件チェックリスト】
-        以下の全ての項目について確認し、足りない項目がないことを確認してください：
-        
-        1. 志望度判定に必要な情報の充足度
-           - 候補者の志望動機が明確に把握できているか
-           - 企業への理解度（準備レベル）が判断できるか
-           - 他の候補者との比較が可能な材料が揃っているか
-        
-        2. 企業知識の網羅性
-           - 重要な企業情報項目について言及されているか
-           - 候補者の知識の欠損箇所が特定できているか
-           - 誤った情報や曖昧な回答がないか
-        
-        3. 追加質問の必要性
-           - 残りの質問で新たな洞察が得られる可能性があるか
-           - 現在の情報で志望度の判定が可能か
-           - 他の候補者との差別化に必要な情報が不足していないか
-        
-        【終了判定基準】
-        上記のチェックリストで「足りない項目がない」と判断できる場合のみ終了してください。
-        一つでも不十分な項目がある場合は継続してください。
-        
-        回答形式:
-        - 継続する場合: "CONTINUE"
-        - 終了する場合: "STOP"
-        - 理由: [具体的にどの項目が不足しているか、または十分であるかを明記]
-        
-        回答:"""
-        
-        response = self._generate_response(prompt, max_tokens=300)
-        
-        # レスポンスを解析
-        if "CONTINUE" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "追加情報が必要"
-            return True, reason
-        elif "STOP" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "十分な情報が得られた"
-            return False, reason
-        else:
-            # デフォルトは継続（安全側）
-            return True, "判断できないため継続"
-
-    def decide_next_question_type(self, candidate_states, asked_common_questions, current_round, max_rounds=5):
-        """次の質問タイプ（全体質問 vs 個別質問）を智的に決定する"""
-        
-        # 基本的な条件チェック
-        if current_round == 1:
-            return "common", "初回は全体質問から開始"
-        
-        if len(asked_common_questions) == 0:
-            return "common", "まだ全体質問を行っていない"
-        
-        # 全候補者の回答状況を分析
-        all_responses_count = sum(len(state['conversation_log']) for state in candidate_states)
-        avg_responses_per_candidate = all_responses_count / len(candidate_states) if candidate_states else 0
-        
-        # 最新の全体質問からの経過ラウンド数を計算
-        last_common_round = 0
-        for state in candidate_states:
-            for turn in state['conversation_log']:
-                # 全候補者が同じ質問を受けているかチェック（全体質問の特徴）
-                if turn['turn'] > last_common_round:
-                    # 他の候補者も同じ質問を受けているかチェック
-                    same_question_count = sum(1 for other_state in candidate_states 
-                                            if any(other_turn['question'] == turn['question'] 
-                                                  for other_turn in other_state['conversation_log']))
-                    if same_question_count == len(candidate_states):
-                        last_common_round = turn['turn']
-        
-        rounds_since_common = current_round - last_common_round
-        
-        # LLMによる状況分析
-        situation_summary = self._analyze_interview_situation(candidate_states, asked_common_questions, current_round)
-        
-        prompt = f"""あなたは、{self.company.get('name')}の面接戦略エキスパートです。
-        現在の面接状況を分析し、次に行うべき質問タイプを決定してください。
-
-        # 現在の状況
-        - 現在のラウンド: {current_round}/{max_rounds}
-        - 実施済み全体質問数: {len(asked_common_questions)}
-        - 候補者あたり平均回答数: {avg_responses_per_candidate:.1f}
-        - 最後の全体質問からの経過ラウンド: {rounds_since_common}
-        
-        # 状況分析
-        {situation_summary}
-        
-        # 判断基準
-        【全体質問を選ぶべき場合】
-        - 候補者間の比較材料が不足している
-        - 特定の重要なトピックについて全員の見解が必要
-        - 個別質問で深掘りする前に基盤となる情報が必要
-        - 最後の全体質問から時間が経ちすぎている（3ラウンド以上）
-        
-        【個別質問を選ぶべき場合】
-        - 特定の候補者の回答をより深く探る必要がある
-        - 候補者ごとに異なる角度からの質問が効果的
-        - 志望度の判定に必要な個人的な動機を探る必要がある
-        - 十分な全体質問が既に実施されている
-        
-        回答形式:
-        決定: COMMON または INDIVIDUAL
-        理由: [詳細な理由を100字程度で]
-        
-        回答:"""
-        
-        response = self._generate_response(prompt, max_tokens=300)
-        
-        # レスポンスを解析
-        if "COMMON" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "全体質問が適切"
-            return "common", reason
-        elif "INDIVIDUAL" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "個別質問が適切"
-            return "individual", reason
-        else:
-            # デフォルトの判断ロジック
-            if rounds_since_common >= 3 or len(asked_common_questions) < 2:
-                return "common", "バランスを保つため全体質問を選択"
-            else:
-                return "individual", "深掘りのため個別質問を選択"
 
     def _analyze_interview_situation(self, candidate_states, asked_common_questions, current_round):
         """現在の面接状況を分析して要約を作成"""
@@ -334,9 +186,88 @@ class Interviewer:
         """
         
         return situation.strip()
+    
+    def _select_candidate_with_llm(self, candidate_states):
+            """LLMに候補者会話ログを渡して、最も理解が浅い候補者を選ばせる"""
+            conversation_summary = self._format_all_conversations(candidate_states)
+
+            prompt = f"""あなたは採用面接官です。
+        以下に複数候補者の会話履歴があります。誰が最も企業理解が浅いかを判断してください。
+
+        # 候補者の会話ログ
+        {conversation_summary}
+
+        出力形式は必ず次のJSONで返してください:
+        {{
+          "weakest_candidate_index": 数値,  # 0始まりのインデックス
+          "reason": "簡潔な理由"
+        }}"""
+
+            response = self._generate_response(prompt, max_tokens=800)
+            try:
+                data = json.loads(response)
+                return data.get("weakest_candidate_index", 0), data.get("reason", "")
+            except Exception:
+                # JSONパース失敗時は0番候補者にフォールバック
+                return 0, "LLM出力を解釈できなかったためフォールバック"
+
+    # interv.py の Interviewer クラスに追加
+    def run_interview_round(self, question_type, candidate_states, applicant, 
+                            asked_common_questions, current_round, log_fn=print):
+        """
+        1ラウンド分の面接を実施する共通処理
+        Args:
+            question_type: 0 = 全体質問, 1 = 個別質問
+            candidate_states: 各候補者の状態リスト
+            applicant: 学生モデル
+            asked_common_questions: 既に出た全体質問リスト
+            current_round: 現在のラウンド番号
+            log_fn: ログ出力用関数 (デフォルトprint、app.pyではlog_messageを渡す)
+        Returns:
+            current_round: 更新後のラウンド番号
+        """
+        if question_type == 0:
+            # 全体質問
+            current_round += 1
+            log_fn(f"--- 面接ラウンド {current_round} (全体質問) ---")
+            question, _ = self.ask_common_question(asked_common_questions)
+            asked_common_questions.append(question)
+            log_fn(f"--- 生成された全体質問: 「{question}」 ---")
+
+            for i, state in enumerate(candidate_states):
+                log_fn(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
+                answer, token_info = applicant.generate(
+                    state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+                )
+                log_fn(f"学生: {answer}")
+                state["conversation_log"].append({
+                    "turn": current_round, "question": question,
+                    "answer": answer, "token_info": token_info
+                })
+
+        elif question_type == 1:
+            # 個別質問（ランダム1人のみ）
+            target_index, reason = self._select_candidate_with_llm(candidate_states)
+            state = candidate_states[target_index]
+            current_round += 1
+            log_fn(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {target_index+1}) ---")
+            question, _ = self.ask_question(state["conversation_log"])
+            log_fn(f"面接官: {question}")
+            answer, token_info = applicant.generate(
+                state["profile"], state["knowledge_tuple"], state["conversation_log"], question
+            )
+            log_fn(f"学生: {answer}")
+            state["conversation_log"].append({
+                "turn": current_round, "question": question,
+                "answer": answer, "token_info": token_info
+            })
+
+        return current_round
+
 
     def conduct_dynamic_interview(self, candidate_states, applicant, max_rounds=10):
-        """智的な動的面接フローを実行する（質問回数上限を撤廃）"""
+        """智的な動的面接フローを実行する（個別質問はランダムに1人だけ対象）"""
+        import random
         print(f"--- 智的動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
         
         asked_common_questions = []
@@ -350,7 +281,7 @@ class Interviewer:
             current_round += 1
             print(f"--- 面接ラウンド {current_round}/{max_rounds} ---")
             
-            # 次の質問タイプを智的に決定（質問回数制限を考慮しない）
+            # 次の質問タイプを智的に決定
             question_type, reason = self.decide_next_question_type_enhanced(
                 candidate_states, asked_common_questions, current_round, max_rounds, individual_question_counts
             )
@@ -359,104 +290,19 @@ class Interviewer:
             print(f"--- 選択理由: {reason} ---")
             
             if question_type == "common":
-                # 全体質問フェーズ
-                print("--- 全体質問フェーズを実行 ---")
-                actual_interview_flow.append(0)  # 0 = 全体質問
-                question, _ = self.ask_common_question(asked_common_questions)
-                asked_common_questions.append(question)
-                print(f"--- 生成された全体質問: 「{question}」 ---")
-                
-                for i, state in enumerate(candidate_states):
-                    print(f"-> 候補者 {i+1}: {state['profile'].get('name', 'N/A')} へ質問")
-                    # 学生の回答を生成
-                    answer, token_info = applicant.generate(
-                        state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                    )
-                    print(f"学生 (API): {answer}")
-                    print(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
-                    state["conversation_log"].append({
-                        "turn": current_round, 
-                        "question": question, 
-                        "answer": answer,
-                        "token_info": token_info
-                    })
-                
-                # 全体質問後の継続判断
-                overall_responses = [state['conversation_log'][-1] for state in candidate_states if state['conversation_log']]
-                should_continue, continue_reason = self.should_continue_interview(
-                    overall_responses, current_round, max_rounds
+                current_round = self.run_interview_round(
+                    0, candidate_states, applicant, asked_common_questions, current_round, log_fn=print
                 )
-                print(f"全体質問後の継続判断: {'継続' if should_continue else '終了'} - {continue_reason}")
-                if not should_continue:
-                    break
-                    
+                actual_interview_flow.append(0)
+
             elif question_type == "individual":
-                # 個別質問フェーズ（情報欠損検出機能統合）
-                print("--- 個別質問フェーズを実行 ---")
-                
-                # 情報欠損候補者に集中すべきか判断
-                should_focus, focus_reason, focus_indices = self._should_focus_on_deficient_candidates(candidate_states, individual_question_counts)
-                print(f"--- 情報欠損分析: {focus_reason} ---")
-                
-                # 質問対象の候補者を決定
-                if should_focus and focus_indices:
-                    # 情報欠損候補者に集中
-                    question_targets = focus_indices
-                    print(f"--- 情報欠損候補者に集中: {[f'候補者{i+1}' for i in focus_indices]} ---")
-                else:
-                    # 全候補者に質問
-                    question_targets = list(range(len(candidate_states)))
-                    print("--- 全候補者に個別質問 ---")
-                
-                # 個別質問は1人につき1ラウンド
-                any_continued = False
-                for i in question_targets:
-                    # 個別質問の継続判断（質問回数制限を考慮しない）
-                    should_continue, reason = self.should_continue_individual_interview(
-                        candidate_states[i]['conversation_log'], current_round, max_rounds, individual_question_counts[i]
-                    )
-                    
-                    if should_continue:
-                        any_continued = True
-                        current_round += 1
-                        actual_interview_flow.append(1)  # 1 = 個別質問
-                        print(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {i+1}) ---")
-                        
-                        state = candidate_states[i]
-                        print(f"--- 個別質問フェーズ - 候補者 {i+1}: {state['profile'].get('name', 'N/A')} ---")
-                        
-                        individual_question_counts[i] += 1
-                        question, _ = self.ask_question(state['conversation_log'])
-                        print(f"面接官 ({self.model_type}): {question}")
-                        print(f"候補者 {i+1} の個別質問回数: {individual_question_counts[i]}回目")
-                        
-                        # 学生の回答を生成
-                        answer, token_info = applicant.generate(
-                            state["profile"], state["knowledge_tuple"], state["conversation_log"], question
-                        )
-                        print(f"学生 (API): {answer}")
-                        print(f"Token数: {token_info['total_tokens']} (プロンプト: {token_info['prompt_tokens']}, 回答: {token_info['completion_tokens']})")
-                        state["conversation_log"].append({
-                            "turn": current_round, 
-                            "question": question, 
-                            "answer": answer,
-                            "token_info": token_info
-                        })
-                        
-                        # 最大ラウンド数に達した場合は終了
-                        if current_round >= max_rounds:
-                            print(f"--- 最大ラウンド数({max_rounds})に達したため面接終了 ---")
-                            break
-                    else:
-                        print(f"候補者 {i+1} の個別面接終了: {reason}")
-                
-                # 誰も継続しない場合は面接終了
-                if not any_continued:
-                    print("--- 全候補者の個別面接が完了したため面接終了 ---")
-                    break
+                current_round = self.run_interview_round(
+                    1, candidate_states, applicant, asked_common_questions, current_round, log_fn=print
+                )
+                actual_interview_flow.append(1)
             
-            # 面接全体の進捗評価
-            if current_round >= 3:  # 最低3ラウンド後に全体評価
+            # 面接全体の進捗評価（最低3ラウンド後に実施）
+            if current_round >= 3:
                 overall_should_continue, overall_reason = self._evaluate_overall_progress(
                     candidate_states, current_round, max_rounds
                 )
@@ -527,76 +373,6 @@ class Interviewer:
             # デフォルトは継続（安全側）
             return True, "判断不明のため継続"
 
-    def should_continue_individual_interview(self, conversation_history, current_round, max_rounds, individual_question_count):
-        """個別面接の継続判断（質問回数制限なし）"""
-        if current_round >= max_rounds:
-            return False, "最大ラウンド数に達しました"
-        
-        if not conversation_history:
-            return True, "初回のため継続"
-        
-        # 最近の回答を分析
-        recent_answers = conversation_history[-2:] if len(conversation_history) >= 2 else conversation_history
-        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in recent_answers])
-        
-        # 企業情報の項目リストを取得
-        company_keys = list(self.company.keys())
-        company_keys_str = ", ".join(company_keys)
-        
-        prompt = f"""あなたは、{self.company.get('name')}の採用面接官です。
-        現在の面接ラウンド: {current_round}/{max_rounds}
-        この候補者への個別質問回数: {individual_question_count}回
-        
-        以下の最近の会話履歴を分析し、この候補者の志望度について十分な情報が得られているか判断してください。
-        
-        会話履歴:
-        {history_str}
-        
-        企業情報の項目リスト:
-        {company_keys_str}
-        
-        【個別面接の具体的な終了条件チェックリスト】
-        以下の全ての項目について確認し、足りない項目がないことを確認してください：
-        
-        1. 志望度判定に必要な情報の充足度
-           - この候補者の志望動機が明確に把握できているか
-           - 企業への理解度（準備レベル）が判断できるか
-           - 他の候補者との比較が可能な材料が揃っているか
-        
-        2. 企業知識の網羅性
-           - 重要な企業情報項目について言及されているか
-           - この候補者の知識の欠損箇所が特定できているか
-           - 誤った情報や曖昧な回答がないか
-        
-        3. 個別質問の効果性
-           - 個別質問で新たな洞察が得られる可能性があるか
-           - 現在の情報で志望度の判定が可能か
-           - この候補者の特徴的な回答パターンが把握できているか
-        
-        【終了判定基準】
-        上記のチェックリストで「足りない項目がない」と判断できる場合のみ終了してください。
-        一つでも不十分な項目がある場合は継続してください。
-        
-        回答形式:
-        - 継続する場合: "CONTINUE"
-        - 終了する場合: "STOP"
-        - 理由: [具体的にどの項目が不足しているか、または十分であるかを明記]
-        
-        回答:"""
-        
-        response = self._generate_response(prompt, max_tokens=300)
-        
-        # レスポンスを解析
-        if "CONTINUE" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "追加情報が必要"
-            return True, reason
-        elif "STOP" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "十分な情報が得られた"
-            return False, reason
-        else:
-            # デフォルトは継続（安全側）
-            return True, "判断不明のため継続"
-
     def decide_next_question_type_enhanced(self, candidate_states, asked_common_questions, current_round, max_rounds, individual_question_counts):
         """次の質問タイプを智的に決定する（質問回数制限を考慮しない拡張版）"""
         
@@ -630,15 +406,11 @@ class Interviewer:
         
         rounds_since_common = current_round - last_common_round
         
-        # 情報欠損候補者の分析
-        should_focus, focus_reason, focus_indices = self._should_focus_on_deficient_candidates(candidate_states, individual_question_counts)
-        deficient_candidates = self._identify_deficient_candidates(candidate_states)
-        
         # LLMによる状況分析
         situation_summary = self._analyze_interview_situation_enhanced(candidate_states, asked_common_questions, current_round, individual_question_counts)
         
         # 欠損候補者の詳細情報
-        deficiency_info = "\n".join([f"- {c['name']}: 欠損度{c['deficiency_score']:.2f} ({c['reason']})" for c in deficient_candidates])
+        # deficiency_info = "\n".join([f"- {c['name']}: 欠損度{c['deficiency_score']:.2f} ({c['reason']})" for c in deficient_candidates])
         
         prompt = f"""あなたは、{self.company.get('name')}の面接戦略エキスパートです。
         現在の面接状況を分析し、次に行うべき質問タイプを決定してください。
@@ -651,10 +423,7 @@ class Interviewer:
         - 最後の全体質問からの経過ラウンド: {rounds_since_common}
         
         # 情報欠損分析
-        欠損候補者の分析: {should_focus}
-        集中対象: {focus_reason}
-        欠損候補者詳細:
-        {deficiency_info}
+
         
         # 状況分析
         {situation_summary}
@@ -754,89 +523,6 @@ class Interviewer:
         
         return situation.strip()
 
-    def _evaluate_candidate_information_deficiency(self, candidate_state, company_keys):
-        """候補者の情報欠損度を評価する"""
-        conversation_log = candidate_state['conversation_log']
-        if not conversation_log:
-            return 1.0, "会話履歴なし"  # 最大の欠損度
-        
-        # 回答の長さと内容の豊富さを分析
-        total_answer_length = sum(len(turn['answer']) for turn in conversation_log)
-        avg_answer_length = total_answer_length / len(conversation_log)
-        
-        # 企業情報項目の言及度を分析
-        mentioned_keys = set()
-        for turn in conversation_log:
-            answer = turn['answer'].lower()
-            for key in company_keys:
-                if key.lower() in answer:
-                    mentioned_keys.add(key)
-        
-        mention_ratio = len(mentioned_keys) / len(company_keys) if company_keys else 0
-        
-        # 回答の詳細度を評価
-        detail_score = min(avg_answer_length / 100, 1.0)  # 100文字を基準とした詳細度
-        
-        # 総合的な欠損度を計算（0-1の範囲、1が最大の欠損）
-        deficiency_score = 1.0 - (mention_ratio * 0.6 + detail_score * 0.4)
-        
-        # 欠損度の説明
-        if deficiency_score > 0.8:
-            deficiency_level = "高い"
-        elif deficiency_score > 0.5:
-            deficiency_level = "中程度"
-        else:
-            deficiency_level = "低い"
-        
-        reason = f"言及率{mention_ratio:.2f}, 詳細度{detail_score:.2f}, 欠損度{deficiency_level}"
-        
-        return deficiency_score, reason
-
-    def _identify_deficient_candidates(self, candidate_states):
-        """情報欠損が疑われる候補者を特定する"""
-        company_keys = list(self.company.keys())
-        candidate_deficiencies = []
-        
-        for i, state in enumerate(candidate_states):
-            deficiency_score, reason = self._evaluate_candidate_information_deficiency(state, company_keys)
-            candidate_deficiencies.append({
-                'index': i,
-                'name': state['profile'].get('name', f'候補者{i+1}'),
-                'deficiency_score': deficiency_score,
-                'reason': reason
-            })
-        
-        # 欠損度でソート（高い順）
-        candidate_deficiencies.sort(key=lambda x: x['deficiency_score'], reverse=True)
-        
-        return candidate_deficiencies
-
-    def _should_focus_on_deficient_candidates(self, candidate_states, individual_question_counts):
-        """情報欠損が疑われる候補者に個別質問を集中すべきか判断する"""
-        deficient_candidates = self._identify_deficient_candidates(candidate_states)
-        
-        # 最も欠損度の高い候補者を特定
-        most_deficient = deficient_candidates[0] if deficient_candidates else None
-        
-        if not most_deficient:
-            return False, "欠損候補者なし", []
-        
-        # 欠損度が高い候補者の個別質問回数を確認
-        most_deficient_index = most_deficient['index']
-        individual_count = individual_question_counts.get(most_deficient_index, 0)
-        
-        # 欠損度が高く、まだ個別質問が少ない場合は集中すべき
-        if most_deficient['deficiency_score'] > 0.6 and individual_count < 3:
-            return True, f"候補者{most_deficient_index+1}({most_deficient['name']})に集中", [most_deficient_index]
-        
-        # 複数の候補者が欠損している場合は、上位2-3名に集中
-        high_deficiency_candidates = [c for c in deficient_candidates if c['deficiency_score'] > 0.5]
-        if len(high_deficiency_candidates) >= 2:
-            focus_indices = [c['index'] for c in high_deficiency_candidates[:3]]
-            return True, f"複数の欠損候補者に集中", focus_indices
-        
-        return False, "個別質問集中の必要なし", []
-
     def _format_all_conversations(self, all_states):
         """最終評価のために、全候補者の会話ログを整形するヘルパー"""
         full_log = ""
@@ -852,23 +538,10 @@ class Interviewer:
         print("--- 最終評価(1/3): 最も意欲の低い候補者の選定を開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         
-        # 情報欠損分析を実行
-        company_keys = list(self.company.keys())
-        deficiency_analysis = []
-        for i, state in enumerate(all_states):
-            deficiency_score, reason = self._evaluate_candidate_information_deficiency(state, company_keys)
-            name = state['profile'].get('name', f'候補者{i+1}')
-            deficiency_analysis.append(f"- {name}: 情報欠損度 {deficiency_score:.2f} ({reason})")
-        
-        deficiency_summary = "\n".join(deficiency_analysis)
-        
         prompt = f"""あなたは最終決定権を持つ面接官です。全候補者の記録と情報欠損分析を確認し、「最も意欲が低い、あるいは準備不足と思われる候補者」を1名だけ選び、名前とその理由を簡潔に述べてください。
 
         # 全候補者の面接記録
         {conversation_summary}
-
-        # 情報欠損分析結果
-        {deficiency_summary}
 
         【評価基準】
         以下の観点から総合的に判断してください：
@@ -896,23 +569,10 @@ class Interviewer:
         print("--- 最終評価(2/3): 意欲順ランキングを開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         
-        # 情報欠損分析を実行
-        company_keys = list(self.company.keys())
-        deficiency_analysis = []
-        for i, state in enumerate(all_states):
-            deficiency_score, reason = self._evaluate_candidate_information_deficiency(state, company_keys)
-            name = state['profile'].get('name', f'候補者{i+1}')
-            deficiency_analysis.append(f"- {name}: 情報欠損度 {deficiency_score:.2f} ({reason})")
-        
-        deficiency_summary = "\n".join(deficiency_analysis)
-        
         prompt = f"""あなたは最終決定権を持つ面接官です。全候補者の記録と情報欠損分析を確認し、企業への意欲が高い順にランキング付けし、各順位の理由を簡潔に述べてください。
 
         # 全候補者の面接記録
         {conversation_summary}
-
-        # 情報欠損分析結果
-        {deficiency_summary}
 
         【ランキング基準】
         以下の観点から総合的に判断してください：
@@ -1004,16 +664,6 @@ class Interviewer:
         conversation_summary = self._format_all_conversations(all_states)
         full_company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
         
-        # 情報欠損分析を実行
-        company_keys = list(self.company.keys())
-        deficiency_analysis = []
-        for i, state in enumerate(all_states):
-            deficiency_score, reason = self._evaluate_candidate_information_deficiency(state, company_keys)
-            name = state['profile'].get('name', f'候補者{i+1}')
-            deficiency_analysis.append(f"- {name}: 情報欠損度 {deficiency_score:.2f} ({reason})")
-        
-        deficiency_summary = "\n".join(deficiency_analysis)
-        
         prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
         以下の「正解の企業情報」、「各候補者の面接記録」、「情報欠損分析結果」を比較し、候補者の知識の穴を特定してください。
 
@@ -1027,9 +677,6 @@ class Interviewer:
 
         # 各候補者の面接記録
         {conversation_summary}
-
-        # 情報欠損分析結果
-        {deficiency_summary}
         
         【情報欠損分析の活用】
         - 情報欠損度が高い候補者は、企業研究が不十分で知識の欠如が予想される
