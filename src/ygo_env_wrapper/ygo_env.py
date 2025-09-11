@@ -19,15 +19,18 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 class YgoEnv:
     """udiから取得するygo環境のラッパー"""
+
     def __init__(self, udi_io: UdiIO):
         self.udi_io = udi_io  # MDクライアントの情報参照
 
-        self.reward_func = NormalRewardFunction(udi_io, is_normalized=True) # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
-    
+        self.reward_func = NormalRewardFunction(
+            udi_io, is_normalized=True
+        )  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
+
     def reset(self):
         return self.step(None)
-    
-    def execute_command(self, action_data:ActionData):
+
+    def execute_command(self, action_data: ActionData):
         if action_data is not None:
             # print("send cmd")
             cmd_index = action_data.command_index
@@ -35,7 +38,8 @@ class YgoEnv:
             self.udi_io.output_command(cmd_index)
 
     def step(
-        self, action_data: ActionData, 
+        self,
+        action_data: ActionData,
     ) -> dict:
         """
         コマンド(cmd_index)を実行し、次状態を返す
@@ -53,25 +57,26 @@ class YgoEnv:
             reward: float = self.reward_func.eval(action_data=action_data)
 
         try:
-            if (not self.udi_io.input()):
+            if not self.udi_io.input():
                 pass
-            elif (self.udi_io.duel_data != {}):
+            elif self.udi_io.duel_data != {}:
                 state: DuelStateData = self.udi_io.get_duel_state_data()  # 次状態
-                command_request: CommandRequest = self.udi_io.get_command_request()  # 選択可能なコマンドリストなどの情報
-                
+                command_request: CommandRequest = (
+                    self.udi_io.get_command_request()
+                )  # 選択可能なコマンドリストなどの情報
 
-                
         except Exception as e:
             print(e)
             sys.exit()
-        
-    
+
         # set each flags
         is_duel_start: bool = self.udi_io.is_duel_start()
         is_duel_end: bool = self.udi_io.is_duel_end()
         is_cmd_required: bool = self.udi_io.is_command_required()
-        duel_end_data: DuelEndData = self.udi_io.get_duel_end_data() if is_duel_end else None
-        
+        duel_end_data: DuelEndData = (
+            self.udi_io.get_duel_end_data() if is_duel_end else None
+        )
+
         result_dict = {
             "is_duel_start": is_duel_start,
             "is_duel_end": is_duel_end,
@@ -82,18 +87,20 @@ class YgoEnv:
             "reward": reward,
         }
         # print(f"is_cmd_required: {self.udi_io.is_command_required()}, current_phase: {state.general_data.current_phase}")
-        
+
         return result_dict
 
 
-def cli_player(result:dict) -> ActionData:
+def cli_player(result: dict) -> ActionData:
     """CLIからコマンドインデックスう入力できるテスト用のプレイヤー"""
     # コマンドCLI入力
     can_send = False
     cmd_index = -1
 
     while not can_send:
-        print(f"select your action: [0 - {len(result["command_request"].commands)-1}]")
+        print(
+            f"select your action: [0 - {len(result['command_request'].commands) - 1}]"
+        )
         for i, cmd_entry in enumerate(result["command_request"].commands):
             print(f"command {i}: {text_util.get_command_entry_text(cmd_entry)}")
 
@@ -104,14 +111,19 @@ def cli_player(result:dict) -> ActionData:
 
         except Exception as e:
             can_send = False
-            print(f"Invalid command index. Select cmd_index in 0-{len(result["command_request"].commands)-1}")
-    
+            print(
+                f"Invalid command index. Select cmd_index in 0-{len(result['command_request'].commands) - 1}"
+            )
+
     # コマンド生成
     state = result["state"]
     cmd_request = result["command_request"]
     cmd_entry = cmd_request.commands[cmd_index]
-    action_data = ActionData(state=state, command_request=cmd_request, command_entry=cmd_entry)
+    action_data = ActionData(
+        state=state, command_request=cmd_request, command_entry=cmd_entry
+    )
     return action_data
+
 
 if __name__ == "__main__":
     print("起動コマンド（通常）")
@@ -125,12 +137,14 @@ if __name__ == "__main__":
     print("起動テスト完了")
     print("引数を読み込みます。")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tcpport',        type=int, default=52010)
-    parser.add_argument('--tcphost',        type=str, default="10.95.102.79")
-    parser.add_argument("-g", "--gRPC",     action="store_true", help="using gRPC")
-    parser.add_argument('--RandomPlayer',   type=int, default=0, help='0:AI 1:RandomPalyer')
-    parser.add_argument('--LoadWeightName', type=str, default=None)
-    parser.add_argument('-x',               type=int, default=0, help='Dummy')
+    parser.add_argument("--tcpport", type=int, default=52010)
+    parser.add_argument("--tcphost", type=str, default="10.95.102.79")
+    parser.add_argument("-g", "--gRPC", action="store_true", help="using gRPC")
+    parser.add_argument(
+        "--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer"
+    )
+    parser.add_argument("--LoadWeightName", type=str, default=None)
+    parser.add_argument("-x", type=int, default=0, help="Dummy")
     args = parser.parse_args()
     RandomPlayerFlag = args.RandomPlayer
 
@@ -139,9 +153,11 @@ if __name__ == "__main__":
     if args.gRPC:
         connect = UdiIO.Connect.GRPC
 
-    #UDIの初期化
-    udi_io = UdiIO(tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1)
-    #UDIのログは大量に出るため、出力しないようにする
+    # UDIの初期化
+    udi_io = UdiIO(
+        tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1
+    )
+    # UDIのログは大量に出るため、出力しないようにする
     udi_io.log_response_history = False
     text_util = TextUtil()
 
@@ -149,7 +165,7 @@ if __name__ == "__main__":
     print("finish initialized")
 
     action_data = None
-    result = env.reset() # 初期化
+    result = env.reset()  # 初期化
 
     while True:
         # デュエルの開始 or 終了
@@ -158,13 +174,12 @@ if __name__ == "__main__":
         elif result["is_duel_end"]:
             print("Duel End")
             print(result["duel_end_data"])
-        
+
         action_data = None
         if result["is_cmd_required"]:
-            
             # 行動選択
             action_data = cli_player(result=result)
-        
+
         result = env.step(action_data=action_data)
 
         action_data = None
