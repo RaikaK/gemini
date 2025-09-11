@@ -373,6 +373,79 @@ class Interviewer:
             # デフォルトは継続（安全側）
             return True, "判断不明のため継続"
 
+    def decide_next_question_type_balanced(
+        self,
+        round_num: int,
+        max_rounds: int,
+        last_common_round: int,
+        candidate_states: list,
+        company_profile: dict,
+        individual_question_counts: list
+    ):
+        """
+        バランス指標に基づき、次の質問タイプを決定する
+        - 全体質問スコア: 直近全体質問からの経過ラウンド、比較材料不足
+        - 個別質問スコア: 欠損度が高い候補者、質問回数の偏り
+        - ラウンド進行度で重み調整: 序盤=全体質問寄り, 終盤=個別寄り
+        """
+    
+        # 進行度 (0.0=序盤, 1.0=終盤)
+        progress = round_num / max_rounds
+    
+        # -------------------------
+        # 全体質問スコア
+        # -------------------------
+        gap_since_common = round_num - last_common_round
+        common_score = 0.5 + 0.1 * gap_since_common  # 最近全体質問していないほどスコア↑
+    
+        # （比較材料不足をチェック：候補者回答数のばらつきが小さい場合）
+        answer_counts = [len(state["conversation_log"]) for state in candidate_states]
+        if len(set(answer_counts)) <= 1:  # 全員ほぼ同じ回答数
+            common_score += 0.2
+    
+        # -------------------------
+        # 個別質問スコア
+        # -------------------------
+        # 欠損度計算
+        total_keys = len(company_profile.keys())
+        deficiency_scores = []
+        for state in candidate_states:
+            # detect_knowledge_gaps の結果から欠損キーを取得する想定
+            missing_keys = self._detect_missing_keys(state, company_profile)
+            deficiency_scores.append(len(missing_keys) / total_keys)
+        max_deficiency = max(deficiency_scores)
+        individual_score = 0.5 + max_deficiency  # 欠損度が高い候補者がいればスコア↑
+    
+        # 特定候補者への質問回数が少ない場合もスコア↑
+        min_questions = min(individual_question_counts)
+        if min_questions == 0:
+            individual_score += 0.2
+    
+        # -------------------------
+        # 進行度による重み付け
+        # -------------------------
+        weighted_common = common_score * (1 - progress)
+        weighted_individual = individual_score * progress
+    
+        # -------------------------
+        # 判定
+        # -------------------------
+        if weighted_common >= weighted_individual:
+            return "common", {
+                "common_score": common_score,
+                "individual_score": individual_score,
+                "progress": progress,
+                "reason": "全体質問優先（比較材料不足や直近全体質問が少ないため）"
+            }
+        else:
+            return "individual", {
+                "common_score": common_score,
+                "individual_score": individual_score,
+                "progress": progress,
+                "reason": "個別質問優先（欠損度や質問回数の偏りを考慮）"
+            }
+
+
     def decide_next_question_type_enhanced(self, candidate_states, asked_common_questions, current_round, max_rounds, individual_question_counts):
         """次の質問タイプを智的に決定する（質問回数制限を考慮しない拡張版）"""
         
