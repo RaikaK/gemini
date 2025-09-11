@@ -144,11 +144,13 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
                 'llm_qualitative_analysis': knowledge_gaps_eval.get('llm_qualitative_analysis', ''),
                 'quantitative_performance_metrics': knowledge_gaps_eval.get('quantitative_performance_metrics', {})
             }
+
         
         return {
             'is_correct': is_correct,
             'true_least_motivated': true_least_motivated,
             'predicted_least_motivated': predicted_least_motivated,
+            # 'predicted_missing_key_num': ,
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,

@@ -606,6 +606,7 @@ class Interviewer:
 
             result = {
                 "metrics": {
+                    "predicted_missing_key_num": len(detected_missing_keys),
                     "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
                     "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
                 },
@@ -622,7 +623,7 @@ class Interviewer:
             if state['profile']['name'] not in evaluation_results:
                 actual_missing_keys = {key for key, value in state['knowledge_tuple'][0].items() if not value}
                 evaluation_results[state['profile']['name']] = {
-                     "metrics": {"precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
+                     "metrics": {"missing_key_num": 0.0, "precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
                     "details": {"correctly_detected_gaps (TP)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
                     "note": "LLM output for this candidate was not found or failed to parse."}
         return evaluation_results
