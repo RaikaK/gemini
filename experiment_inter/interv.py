@@ -147,45 +147,6 @@ class Interviewer:
         question = self._generate_response(prompt, max_tokens=8192)
         thought = "未言及の項目から戦略的に質問を生成しました。"
         return question, thought
-
-
-    def _analyze_interview_situation(self, candidate_states, asked_common_questions, current_round):
-        """現在の面接状況を分析して要約を作成"""
-        
-        # 各候補者の回答の特徴を分析
-        candidate_analysis = []
-        for i, state in enumerate(candidate_states):
-            name = state['profile'].get('name', f'候補者{i+1}')
-            response_count = len(state['conversation_log'])
-            
-            # 最新の回答の長さと内容の傾向を分析
-            if state['conversation_log']:
-                recent_answers = [turn['answer'] for turn in state['conversation_log'][-2:]]
-                avg_answer_length = sum(len(answer) for answer in recent_answers) / len(recent_answers)
-                
-                # 回答の詳細度を簡易評価
-                detail_level = "高い" if avg_answer_length > 100 else "中程度" if avg_answer_length > 50 else "低い"
-                candidate_analysis.append(f"- {name}: 回答数{response_count}, 詳細度{detail_level}")
-            else:
-                candidate_analysis.append(f"- {name}: 未回答")
-        
-        # 質問のバランス分析
-        common_questions_str = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(asked_common_questions))
-        
-        situation = f"""
-候補者別の回答状況:
-{chr(10).join(candidate_analysis)}
-
-実施済み全体質問:
-{common_questions_str if common_questions_str else "  なし"}
-
-現在の課題:
-- 候補者間の比較材料の充実度
-- 各候補者の志望度判定に必要な情報の蓄積状況
-- 面接の残り時間と効率性のバランス
-        """
-        
-        return situation.strip()
     
     def _select_candidate_with_llm(self, candidate_states):
             """LLMに候補者会話ログを渡して、最も理解が浅い候補者を選ばせる"""
@@ -228,7 +189,7 @@ class Interviewer:
         """
         if question_type == 0:
             # 全体質問
-            current_round += 1
+            # current_round += 1
             log_fn(f"--- 面接ラウンド {current_round} (全体質問) ---")
             question, _ = self.ask_common_question(asked_common_questions)
             asked_common_questions.append(question)
@@ -249,7 +210,7 @@ class Interviewer:
             # 個別質問（ランダム1人のみ）
             target_index, reason = self._select_candidate_with_llm(candidate_states)
             state = candidate_states[target_index]
-            current_round += 1
+            # current_round += 1
             log_fn(f"--- 面接ラウンド {current_round} (個別質問 - 候補者 {target_index+1}) ---")
             question, _ = self.ask_question(state["conversation_log"])
             log_fn(f"面接官: {question}")
@@ -267,28 +228,26 @@ class Interviewer:
 
     def conduct_dynamic_interview(self, candidate_states, applicant, max_rounds=10):
         """智的な動的面接フローを実行する（個別質問はランダムに1人だけ対象）"""
-        import random
         print(f"--- 智的動的面接フロー開始 (最大{max_rounds}ラウンド) ---")
-        
+
         asked_common_questions = []
         current_round = 0
         actual_interview_flow = []  # 実際に実行された面接フローを記録
-        
-        # 各候補者の個別質問回数を追跡
+
+        # 各候補者の個別質問回数を追跡（元の形式を維持：dict で管理）
         individual_question_counts = {i: 0 for i in range(len(candidate_states))}
-        
+
         while current_round < max_rounds:
             current_round += 1
             print(f"--- 面接ラウンド {current_round}/{max_rounds} ---")
-            
-            # 次の質問タイプを智的に決定
-            question_type, reason = self.decide_next_question_type_enhanced(
+
+            question_type, reason = self.decide_next_question_type_balanced(
                 candidate_states, asked_common_questions, current_round, max_rounds, individual_question_counts
             )
-            
+
             print(f"--- 選択された質問タイプ: {question_type} ---")
             print(f"--- 選択理由: {reason} ---")
-            
+
             if question_type == "common":
                 current_round = self.run_interview_round(
                     0, candidate_states, applicant, asked_common_questions, current_round, log_fn=print
@@ -299,8 +258,11 @@ class Interviewer:
                 current_round = self.run_interview_round(
                     1, candidate_states, applicant, asked_common_questions, current_round, log_fn=print
                 )
+                # ※ run_interview_round 内で誰に聞いたかは元の実装に従います
+                #   もし個別ターゲットのカウントを正確に取りたい場合は、
+                #   run_interview_round 側で対象indexを返すようにする必要あり
                 actual_interview_flow.append(1)
-            
+
             # 面接全体の進捗評価（最低3ラウンド後に実施）
             if current_round >= 3:
                 overall_should_continue, overall_reason = self._evaluate_overall_progress(
@@ -309,292 +271,229 @@ class Interviewer:
                 print(f"面接全体の進捗評価: {'継続' if overall_should_continue else '終了'} - {overall_reason}")
                 if not overall_should_continue:
                     break
-        
+                
         print(f"--- 智的動的面接フロー完了 (実行ラウンド数: {current_round}) ---")
         print(f"--- 実際の面接フロー: {actual_interview_flow} ---")
         print(f"--- 各候補者の個別質問回数: {individual_question_counts} ---")
         return current_round, actual_interview_flow
 
-    def _evaluate_overall_progress(self, candidate_states, current_round, max_rounds):
-        """面接全体の進捗を評価し、継続の必要性を判断"""
-        
-        # 各候補者の情報収集状況を分析
+    def _evaluate_overall_progress(self, candidate_states, current_round, max_rounds, threshold: float = 0.3):
+        """
+        面接全体の進捗を評価し、継続の必要性を判断する（定量基準版）
+
+        - 各候補者について未質問キーを検出
+        - 未質問率 = 未質問キー数 / 企業キー総数
+        - 全候補者の未質問率の最小値が threshold 未満なら STOP
+        """
+        total_keys = len(self.company.keys())
         candidate_info_summary = []
+        max_unasked_ratio = 1.0
+
         for i, state in enumerate(candidate_states):
             name = state['profile'].get('name', f'候補者{i+1}')
-            response_count = len(state['conversation_log'])
-            
-            if state['conversation_log']:
-                total_answer_length = sum(len(turn['answer']) for turn in state['conversation_log'])
-                avg_answer_length = total_answer_length / response_count
-                info_richness = "豊富" if avg_answer_length > 120 else "標準" if avg_answer_length > 60 else "限定的"
-            else:
-                info_richness = "なし"
-            
-            candidate_info_summary.append(f"- {name}: {response_count}回答, 情報量{info_richness}")
-        
+
+            # 未質問キーを検出
+            missing_keys = self._detect_unasked_keys(state["conversation_log"], self.company)
+            unasked_ratio = len(missing_keys) / total_keys if total_keys > 0 else 0.0
+
+            max_unasked_ratio = max(max_unasked_ratio, unasked_ratio)
+            candidate_info_summary.append(f"- {name}: 未質問率 {unasked_ratio:.2f} ({len(missing_keys)}/{total_keys})")
+
         summary_text = "\n".join(candidate_info_summary)
-        
-        prompt = f"""あなたは、{self.company.get('name')}の面接効率化エキスパートです。
-        現在の面接の進捗状況を評価し、志望度の低い候補者を特定するのに十分な情報が得られているか判断してください。
 
-        # 現在の状況
-        - 現在のラウンド: {current_round}/{max_rounds}
-        - 各候補者の情報収集状況:
-        {summary_text}
-
-        # 判断基準
-        1. 各候補者の志望度を判断するのに十分な回答が得られているか
-        2. 候補者間の比較が可能な材料が揃っているか
-        3. 残りのラウンドで得られる追加情報の価値
-        4. 面接の効率性（時間対効果）
-
-        # 終了条件
-        - 全候補者から志望度判定に必要な情報が得られた
-        - 候補者間の差が明確になった
-        - 追加の質問をしても新たな洞察が得られそうにない
-
-        回答形式:
-        判定: CONTINUE または STOP
-        理由: [判断の根拠を100字程度で]
-
-        回答:"""
-        
-        response = self._generate_response(prompt, max_tokens=300)
-        
-        # レスポンスを解析
-        if "CONTINUE" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "さらなる情報収集が必要"
-            return True, reason
-        elif "STOP" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "十分な情報が収集された"
-            return False, reason
+        # 判定ロジック
+        if max_unasked_ratio <= threshold:
+            reason = f"最小未質問率 {max_unasked_ratio:.2f} が閾値 {threshold} を下回ったため、十分な情報が収集されたと判断"
+            return False, reason + "\n" + summary_text
         else:
-            # デフォルトは継続（安全側）
-            return True, "判断不明のため継続"
+            reason = f"最小未質問率 {max_unasked_ratio:.2f} が閾値 {threshold} を上回っているため、さらなる質問が必要"
+            return True, reason + "\n" + summary_text
 
     def decide_next_question_type_balanced(
         self,
-        round_num: int,
-        max_rounds: int,
-        last_common_round: int,
-        candidate_states: list,
-        company_profile: dict,
-        individual_question_counts: list
+        candidate_states,
+        asked_common_questions,
+        current_round,
+        max_rounds,
+        individual_question_counts
     ):
         """
         バランス指標に基づき、次の質問タイプを決定する
-        - 全体質問スコア: 直近全体質問からの経過ラウンド、比較材料不足
-        - 個別質問スコア: 欠損度が高い候補者、質問回数の偏り
-        - ラウンド進行度で重み調整: 序盤=全体質問寄り, 終盤=個別寄り
+        - 全体質問スコア: 最近全体質問が少ない/比較材料が不足している
+        - 個別質問スコア: まだ質問をしていない項目数/質問回数の偏り
+        - ラウンド進行度で重み調整（序盤=全体寄り, 終盤=個別寄り）
+        戻り値: ( "common" or "individual", 理由文字列 )
         """
-    
+        # --- 前処理 ---
+        num_candidates = len(candidate_states)
+        total_company_keys = len(self.company.keys()) if hasattr(self, "company") else 0
+        total_company_keys = max(1, total_company_keys)  # 0割防止
+
         # 進行度 (0.0=序盤, 1.0=終盤)
-        progress = round_num / max_rounds
-    
+        progress = current_round / max_rounds if max_rounds > 0 else 1.0
+
+        # -------------------------
+        # 欠損度（候補者ごと）
+        # -------------------------
+        deficiency_scores = []  # 各候補者: 欠損キー数/全キー数
+        for state in candidate_states:
+            missing_keys = self._detect_missing_keys(state["conversation_log"], self.company)
+            deficiency_scores.append(len(missing_keys) / total_company_keys)
+
+        max_deficiency = max(deficiency_scores) if deficiency_scores else 0.0
+
         # -------------------------
         # 全体質問スコア
         # -------------------------
-        gap_since_common = round_num - last_common_round
-        common_score = 0.5 + 0.1 * gap_since_common  # 最近全体質問していないほどスコア↑
-    
-        # （比較材料不足をチェック：候補者回答数のばらつきが小さい場合）
-        answer_counts = [len(state["conversation_log"]) for state in candidate_states]
-        if len(set(answer_counts)) <= 1:  # 全員ほぼ同じ回答数
+        common_score = 0.5
+
+        # (a) 最近、全体質問が少なければスコア↑
+        #     直近の頻度を見る代替として「ここまでに実施した共通質問の割合」を使用
+        prev_rounds = max(1, current_round - 1)
+        common_ratio_so_far = len(asked_common_questions) / prev_rounds
+        if len(asked_common_questions) == 0:
+            common_score += 0.25  # まだ一度も共通質問していない → 強めにブースト
+        elif common_ratio_so_far < 0.3:
+            common_score += 0.15  # 共通質問の比率が低い
+
+        # (b) 比較材料不足（全員の回答ターン数がほぼ同じ）ならスコア↑
+        answer_counts = [len(state["conversation_log"]) for state in candidate_states] or [0]
+        if len(set(answer_counts)) <= 1:
             common_score += 0.2
-    
+
         # -------------------------
         # 個別質問スコア
         # -------------------------
-        # 欠損度計算
-        total_keys = len(company_profile.keys())
-        deficiency_scores = []
-        for state in candidate_states:
-            # detect_knowledge_gaps の結果から欠損キーを取得する想定
-            missing_keys = self._detect_missing_keys(state, company_profile)
-            deficiency_scores.append(len(missing_keys) / total_keys)
-        max_deficiency = max(deficiency_scores)
-        individual_score = 0.5 + max_deficiency  # 欠損度が高い候補者がいればスコア↑
-    
-        # 特定候補者への質問回数が少ない場合もスコア↑
-        min_questions = min(individual_question_counts)
-        if min_questions == 0:
-            individual_score += 0.2
-    
+        individual_score = 0.5
+
+        # (a) 欠損度が高い候補者がいるほどスコア↑
+        individual_score += 0.6 * max_deficiency  # 欠損度をやや強めに反映
+
+        # (b) フェアネス（個別質問回数の少ない候補者がいる場合）でスコア↑
+        if isinstance(individual_question_counts, dict) and individual_question_counts:
+            counts = list(individual_question_counts.values())
+            min_q = min(counts)
+            max_q = max(counts)
+            if min_q == 0:
+                individual_score += 0.15  # まだ個別を当てられていない人がいる
+            elif (max_q - min_q) >= 2:
+                individual_score += 0.10  # 偏りが大きい
+
         # -------------------------
         # 進行度による重み付け
         # -------------------------
         weighted_common = common_score * (1 - progress)
         weighted_individual = individual_score * progress
-    
+
         # -------------------------
         # 判定
         # -------------------------
         if weighted_common >= weighted_individual:
-            return "common", {
-                "common_score": common_score,
-                "individual_score": individual_score,
-                "progress": progress,
-                "reason": "全体質問優先（比較材料不足や直近全体質問が少ないため）"
-            }
-        else:
-            return "individual", {
-                "common_score": common_score,
-                "individual_score": individual_score,
-                "progress": progress,
-                "reason": "個別質問優先（欠損度や質問回数の偏りを考慮）"
-            }
-
-
-    def decide_next_question_type_enhanced(self, candidate_states, asked_common_questions, current_round, max_rounds, individual_question_counts):
-        """次の質問タイプを智的に決定する（質問回数制限を考慮しない拡張版）"""
-        
-        # 基本的な条件チェック
-        if current_round == 1:
-            return "common", "初回は全体質問から開始"
-        
-        if len(asked_common_questions) == 0:
-            return "common", "まだ全体質問を行っていない"
-        
-        # 全候補者の回答状況を分析
-        all_responses_count = sum(len(state['conversation_log']) for state in candidate_states)
-        avg_responses_per_candidate = all_responses_count / len(candidate_states) if candidate_states else 0
-        
-        # 個別質問回数の統計
-        total_individual_questions = sum(individual_question_counts.values())
-        avg_individual_questions = total_individual_questions / len(candidate_states) if candidate_states else 0
-        
-        # 最新の全体質問からの経過ラウンド数を計算
-        last_common_round = 0
-        for state in candidate_states:
-            for turn in state['conversation_log']:
-                # 全候補者が同じ質問を受けているかチェック（全体質問の特徴）
-                if turn['turn'] > last_common_round:
-                    # 他の候補者も同じ質問を受けているかチェック
-                    same_question_count = sum(1 for other_state in candidate_states 
-                                            if any(other_turn['question'] == turn['question'] 
-                                                  for other_turn in other_state['conversation_log']))
-                    if same_question_count == len(candidate_states):
-                        last_common_round = turn['turn']
-        
-        rounds_since_common = current_round - last_common_round
-        
-        # LLMによる状況分析
-        situation_summary = self._analyze_interview_situation_enhanced(candidate_states, asked_common_questions, current_round, individual_question_counts)
-        
-        # 欠損候補者の詳細情報
-        # deficiency_info = "\n".join([f"- {c['name']}: 欠損度{c['deficiency_score']:.2f} ({c['reason']})" for c in deficient_candidates])
-        
-        prompt = f"""あなたは、{self.company.get('name')}の面接戦略エキスパートです。
-        現在の面接状況を分析し、次に行うべき質問タイプを決定してください。
-
-        # 現在の状況
-        - 現在のラウンド: {current_round}/{max_rounds}
-        - 実施済み全体質問数: {len(asked_common_questions)}
-        - 候補者あたり平均回答数: {avg_responses_per_candidate:.1f}
-        - 候補者あたり平均個別質問数: {avg_individual_questions:.1f}
-        - 最後の全体質問からの経過ラウンド: {rounds_since_common}
-        
-        # 情報欠損分析
-
-        
-        # 状況分析
-        {situation_summary}
-        
-        # 判断基準（情報欠損検出機能統合）
-        【全体質問を選ぶべき場合】
-        - 候補者間の比較材料が不足している
-        - 特定の重要なトピックについて全員の見解が必要
-        - 個別質問で深掘りする前に基盤となる情報が必要
-        - 最後の全体質問から時間が経ちすぎている（3ラウンド以上）
-        - 全候補者の知識レベルを均等に把握する必要がある
-        - 情報欠損候補者への個別質問が効果的でない場合
-        
-        【個別質問を選ぶべき場合】
-        - 特定の候補者の回答をより深く探る必要がある
-        - 候補者ごとに異なる角度からの質問が効果的
-        - 志望度の判定に必要な個人的な動機を探る必要がある
-        - 十分な全体質問が既に実施されている
-        - 情報が不足している候補者が特定されている（欠損度>0.6）
-        - 個別質問の効果が期待できる状況
-        - 情報欠損候補者に集中すべき場合
-        
-        【情報欠損に基づく判断】
-        - 欠損度が高い候補者がいる場合は個別質問を優先
-        - 個別質問で改善が見られない場合は全体質問に切り替え
-        - 複数の候補者が欠損している場合は効率的な全体質問を検討
-        
-        回答形式:
-        決定: COMMON または INDIVIDUAL
-        理由: [詳細な理由を100字程度で]
-        
-        回答:"""
-        
-        response = self._generate_response(prompt, max_tokens=300)
-        
-        # レスポンスを解析
-        if "COMMON" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "全体質問が適切"
+            reason = (
+                f"common選択: progress={progress:.2f}, common_score={common_score:.2f}, "
+                f"individual_score={individual_score:.2f}, max_def={max_deficiency:.2f} "
+                f"(共通比率={common_ratio_so_far:.2f}, 比較材料不足={'Yes' if len(set(answer_counts))<=1 else 'No'})"
+            )
             return "common", reason
-        elif "INDIVIDUAL" in response.upper():
-            reason = response.split("理由:")[-1].strip() if "理由:" in response else "個別質問が適切"
-            return "individual", reason
         else:
-            # デフォルトの判断ロジック
-            if rounds_since_common >= 3 or len(asked_common_questions) < 2:
-                return "common", "バランスを保つため全体質問を選択"
-            else:
-                return "individual", "深掘りのため個別質問を選択"
-
-    def _analyze_interview_situation_enhanced(self, candidate_states, asked_common_questions, current_round, individual_question_counts):
-        """現在の面接状況を分析して要約を作成（質問回数制限を考慮しない拡張版）"""
+            reason = (
+                f"individual選択: progress={progress:.2f}, common_score={common_score:.2f}, "
+                f"individual_score={individual_score:.2f}, max_def={max_deficiency:.2f} "
+                f"(共通比率={common_ratio_so_far:.2f}, 比較材料不足={'Yes' if len(set(answer_counts))<=1 else 'No'})"
+            )
+            return "individual", reason
         
-        # 各候補者の回答の特徴を分析
-        candidate_analysis = []
-        for i, state in enumerate(candidate_states):
-            name = state['profile'].get('name', f'候補者{i+1}')
-            response_count = len(state['conversation_log'])
-            individual_count = individual_question_counts.get(i, 0)
-            
-            # 最新の回答の長さと内容の傾向を分析
-            if state['conversation_log']:
-                recent_answers = [turn['answer'] for turn in state['conversation_log'][-2:]]
-                avg_answer_length = sum(len(answer) for answer in recent_answers) / len(recent_answers)
-                
-                # 回答の詳細度を簡易評価
-                detail_level = "高い" if avg_answer_length > 100 else "中程度" if avg_answer_length > 50 else "低い"
-                
-                # 情報の充実度を評価
-                info_richness = "豊富" if response_count >= 4 and avg_answer_length > 80 else "標準" if response_count >= 2 else "限定的"
-                
-                candidate_analysis.append(f"- {name}: 回答数{response_count}, 個別質問{individual_count}回, 詳細度{detail_level}, 情報量{info_richness}")
-            else:
-                candidate_analysis.append(f"- {name}: 未回答")
-        
-        # 質問のバランス分析
-        common_questions_str = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(asked_common_questions))
-        
-        # 個別質問の分布分析
-        individual_distribution = f"個別質問回数分布: {dict(individual_question_counts)}"
-        
-        situation = f"""
-候補者別の回答状況:
-{chr(10).join(candidate_analysis)}
 
-実施済み全体質問:
-{common_questions_str if common_questions_str else "  なし"}
-
-{individual_distribution}
-
-現在の課題:
-- 候補者間の比較材料の充実度
-- 各候補者の志望度判定に必要な情報の蓄積状況
-- 個別質問の効果性と情報収集の効率性
-- 面接の残り時間と効率性のバランス
-- 情報が不足している候補者の特定
+    def _detect_unasked_keys(self, conversation_log, company_profile):
         """
-        
-        return situation.strip()
+        LLMを使って候補者にまだ質問していない企業プロフィールキーを検出する関数
+        - conversation_log: 候補者との会話ログ（リスト, 質問と回答の両方を含む）
+        - company_profile: 企業情報（dict, keyが評価対象）
+        - return: 未質問のキーリスト
+        """
+
+        # 面接官が質問した内容をまとめる
+        asked_questions_text = "\n".join(
+            [f"- {entry['question']}" for entry in conversation_log if "question" in entry]
+        )
+
+        # 企業情報キー一覧
+        company_keys = list(company_profile.keys())
+
+        # プロンプト作成
+        prompt = f"""
+    あなたは面接官です。
+    以下の面接官の質問ログと企業プロフィールを参照し、
+    まだ質問に使われていない企業プロフィールのキーを特定してください。
+
+    企業プロフィールのキー一覧:
+    {company_keys}
+
+    面接官の質問ログ:
+    {asked_questions_text}
+
+    出力フォーマットは必ずJSONのみ:
+    {{
+      "unasked_keys": ["キー1", "キー2", ...]
+    }}
+        """
+
+        # LLM呼び出し
+        response = self._generate_response(prompt, max_tokens=512)
+
+        # JSONとしてパース
+        try:
+            result = json.loads(response)
+            unasked_keys = result.get("unasked_keys", [])
+        except Exception:
+            unasked_keys = []
+
+        return unasked_keys
+    
+    def _detect_missing_keys(self, conversation_log, company_profile):
+        """
+        LLMを使って候補者がまだ言及していない企業プロフィールのキーを検出する
+        - conversation_log: 会話ログ（候補者の回答を含む）
+        - company_profile: dict（企業情報, keyが評価対象）
+        - return: 欠損キーのリスト
+        """
+
+        # 候補者の回答をまとめる
+        answers_text = "\n".join(
+            [f"- {entry.get('answer','')}" for entry in conversation_log if "answer" in entry]
+        )
+
+        company_keys = list(company_profile.keys())
+
+        # プロンプト
+        prompt = f"""
+あなたは面接官です。
+以下の候補者の回答ログと企業プロフィールを参照し、
+候補者が本来触れるべきだったのに言及していないキーを特定してください。
+
+企業プロフィールのキー一覧:
+{company_keys}
+
+候補者の回答ログ:
+{answers_text}
+
+出力フォーマットは必ずJSONのみ:
+{{
+  "missing_keys": ["キー1", "キー2", ...]
+}}
+        """
+
+        # LLM呼び出し
+        response = self._generate_response(
+            prompt, max_tokens=1024
+        )
+
+        # JSONをパースしてリストだけ返す
+        try:
+            result = json.loads(response)
+            return result.get("missing_keys", [])
+        except Exception:
+            return []
 
     def _format_all_conversations(self, all_states):
         """最終評価のために、全候補者の会話ログを整形するヘルパー"""
