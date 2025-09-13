@@ -32,6 +32,6 @@ class RandomAgent(BaseYgoAgent):
         # print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
         return action_data
 
-    def update(self, state:dict, action_data: ActionData, next_state: dict):
+    def update(self, state:dict, action_data: ActionData, next_state: dict) -> any:
         # print("RandomAgent does not learn")
-        return
+        return None

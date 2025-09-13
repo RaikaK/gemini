@@ -57,7 +57,6 @@ if __name__ == "__main__":
 
     # 環境ラッパーの起動
     env = YgoEnv(udi_io=udi_io)
-    done = False
 
     episode = 0
     state = env.reset()
@@ -69,9 +68,7 @@ if __name__ == "__main__":
         # エージェントの学習
         agent.update(state=state, action_data=action_data, next_state=state)
 
-        done = state["is_duel_end"]
-
-        if done:
+        if state["is_duel_end"]:
             print(f"episode: {episode} | result: {state["duel_end_data"]}")
             episode += 1
             state = env.reset()

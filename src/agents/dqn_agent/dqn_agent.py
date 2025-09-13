@@ -1,4 +1,5 @@
 import sys
+import os
 
 sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
 
@@ -6,13 +7,13 @@ import random
 import numpy as np
 import torch
 import copy
+import datetime
 
 from src.agents.base_ygo_agent import BaseYgoAgent
 from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models import CommandEntry, CommandRequest
-from ygo.constants.enums import SelectionType
 
 
 # シミュレータ起動コマンド
@@ -32,7 +33,7 @@ from src.agents.dqn_agent.simple_tensors.command_entry_tensor import (
 
 class DQNAgent(BaseYgoAgent):
     def __init__(
-        self, gamma=0.9, lr=1e-5, epsilon=0.2, buffer_size=int(1e4), batch_size: int=64, sync_interval:int=50
+        self, gamma=0.9, lr=1e-5, epsilon=0.2, buffer_size=int(1e5), batch_size: int=32, sync_interval:int=100, num_learn_on_update:int=16, model_save_dir="params", model_file_name="simple_dqn_{now}.pth", save_model_interval:int= 64
     ):
         print("DQNAgent")
         self.gamma = gamma
@@ -45,10 +46,21 @@ class DQNAgent(BaseYgoAgent):
         output_size = 1 
         self.dqn = DeepQNetwork(input_size=input_size, output_size=output_size)
         self.target_net = DeepQNetwork(input_size=input_size, output_size=output_size)
+        
+        # モデルの保存ン関する設定
+        self.model_file_name = model_file_name
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.model_save_dir = os.path.join(current_dir, model_save_dir)
+        os.makedirs(self.model_save_dir, exist_ok=True)
+        self.save_model_interval = save_model_interval
+        self.cnt_save_model_interval = 0
 
+
+        # 学習に関する設定
         self.loss_func = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(params=self.dqn.parameters(), lr=self.lr)
         
+        # 経験再生
         self.replay_buffer = ReplayBuffer(
             buffer_size=buffer_size, batch_size=batch_size
         )
@@ -56,6 +68,9 @@ class DQNAgent(BaseYgoAgent):
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
         self.num_predict = 0
+
+        # 1回のUpdateで学習する回数
+        self.num_learn_on_update = num_learn_on_update
 
         # GPU設定
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -79,64 +94,74 @@ class DQNAgent(BaseYgoAgent):
         else:
             return self.predict(state=state)
             
-    def update(self, state: dict, action_data: ActionData, next_state: dict):
+    def update(self, state: dict, action_data: ActionData, next_state: dict) -> dict|None:
         if action_data is None:
-            return
+            return None
         reward = next_state["reward"]
         done = next_state["is_duel_end"]
         # 経験再生バッファーにデータを追加
         self.replay_buffer.add(state=state, action_data=action_data, reward=reward, done=done, next_state=next_state)
         batch_data = self.replay_buffer.get_batch()
         if batch_data is None:
-            return
+            return None
         
-        # dqnに入力するinpute_tensorバッチを作成する
-        input_batch = []
-        rewards = []
-        dones = []
-        next_states = []
-        for replay_data in batch_data:
-            # Replayデータから情報を抜き取る
-            state:dict = replay_data["state"]
-            action_data: ActionData = replay_data["action_data"]
-            reward: float = replay_data["reward"]
-            done: bool = replay_data["done"]
-            next_state:dict = replay_data["next_state"]
+        losses = []
+        for i in range(self.num_learn_on_update):
+
+            # dqnに入力するinpute_tensorバッチを作成する
+            input_batch = []
+            rewards = []
+            dones = []
+            next_states = []
+            for replay_data in batch_data:
+                # Replayデータから情報を抜き取る
+                state:dict = replay_data["state"]
+                action_data: ActionData = replay_data["action_data"]
+                reward: float = replay_data["reward"]
+                done: bool = replay_data["done"]
+                next_state:dict = replay_data["next_state"]
+                
+                # 状態のテンソルとアクションのテンソルを用意して、入力テンソルを生成
+                state_tensor = simple_duel_state_data_tensor(duel_state_data=state["state"])
+                cmd_entry_tensor = simple_command_entry_tenosr(command_entry=action_data.command_entry)
+                input_tensor = torch.cat([state_tensor, cmd_entry_tensor])
+                input_batch.append(input_tensor)
+
+                # rewardやdone, next_stateなども保持
+                rewards.append(reward)
+                dones.append(done)
+                next_states.append(next_state)
+            input_batch_tensor = torch.stack(input_batch).to(self.device)
             
-            # 状態のテンソルとアクションのテンソルを用意して、入力テンソルを生成
-            state_tensor = simple_duel_state_data_tensor(duel_state_data=state["state"])
-            cmd_entry_tensor = simple_command_entry_tenosr(command_entry=action_data.command_entry)
-            input_tensor = torch.cat([state_tensor, cmd_entry_tensor])
-            input_batch.append(input_tensor)
+            # targetを計算して、GPUに送信
+            targets = [
+                self.calc_target(next_state, reward, done) 
+                for next_state, reward, done in zip(next_states, rewards, dones) 
+            ] # 勾配情報なし
+            
+            targets = torch.stack(targets).to(self.device).unsqueeze(1)
 
-            # rewardやdone, next_stateなども保持
-            rewards.append(reward)
-            dones.append(done)
-            next_states.append(next_state)
-        input_batch_tensor = torch.stack(input_batch).to(self.device)
+            # 損失を計算
+            loss = self.loss_func(self.dqn(input_batch_tensor), targets)
+
+            # パラメータの更新
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            # print(f"loss: {loss}")
+
+            losses.append(loss.mean())
         
-        # targetを計算して、GPUに送信
-        targets = [
-            self.calc_target(next_state, reward, done) 
-            for next_state, reward, done in zip(next_states, rewards, dones) 
-            # if len(next_state["command_request"].commands) > 0
-        ] # 勾配情報なし
-        
-        targets = torch.stack(targets).to(self.device).unsqueeze(1)
-
-        # 損失を計算
-        loss = self.loss_func(self.dqn(input_batch_tensor), targets)
-
-        # パラメータの更新
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        loss = np.average(np.array([l.detach().cpu().numpy() for l in losses])) if len(losses) > 0 else 0
+        print(f"mean loss: {loss}")
 
         # target_netを更新
         self.sync_qnet()
+        self.save_model_params()
 
-        print(f"loss: {loss.mean()}")
-
+        log_dict = {"loss": loss}
+        return log_dict
 
     def predict(self, state: dict) -> ActionData:
         """
@@ -184,6 +209,13 @@ class DQNAgent(BaseYgoAgent):
         if self.num_predict % self.sync_interval == 0:
             self.target_net = copy.deepcopy(self.dqn)
             self.num_predict = 0
+
+    def save_model_params(self):
+        self.cnt_save_model_interval += 1
+        if self.cnt_save_model_interval % self.save_model_interval == 0:
+            now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            save_name = self.model_file_name.format(now=now)
+            torch.save(self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name))
 
     def calc_next_q_from_target_net(self, next_state:dict) -> np.float32:
         """次状態において、選択可能な行動ActionDataのうち、最大の値であるQ値を返す"""
