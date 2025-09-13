@@ -153,12 +153,15 @@ class DQNAgent(BaseYgoAgent):
             input_batch_tensor = torch.stack(input_batch).to(self.device)
 
             # targetを計算して、GPUに送信
-            targets = [
-                self.calc_target(next_state, reward, done)
-                for next_state, reward, done in zip(next_states, rewards, dones)
-            ]  # 勾配情報なし
+            # targets = [
+            #     self.calc_target(next_state, reward, done)
+            #     for next_state, reward, done in zip(next_states, rewards, dones)
+            # ]  # 勾配情報なし
 
-            targets = torch.stack(targets).to(self.device).unsqueeze(1)
+            # targets = torch.stack(targets).to(self.device).unsqueeze(1)
+            targets = self.calc_targets(
+                next_states=next_states, rewards=rewards, dones=dones
+            )
 
             # 損失を計算
             loss = self.loss_func(self.dqn(input_batch_tensor), targets)
@@ -218,6 +221,63 @@ class DQNAgent(BaseYgoAgent):
             command_entry=command_request.commands[max_qs_index],
         )
         return action_data
+
+    def calc_targets(
+        self, next_states: list[dict], rewards: list[float], dones: list[bool]
+    ) -> torch.Tensor | None:
+        """
+        1. 各次状態における選択可能なコマンドの数を保持する辞書を作成
+        - next_state_cmd_count = {index_next_state: num_command_entries}
+        2. 各cmd_entryとnext_stateの組み合わせをもとに、input_batch_tensorを作成
+        3. input_batch_tensorをまとめて、self.target_netに入力し、行動価値を出力
+        4. 1で作成した辞書をもとに、
+        {"next_state_index": max_q_value}の辞書を作成
+        5. 各次状態におけるターゲットを計算し、torch.Tensorとして返す
+        """
+        # 1.
+        next_state_cmd_count = {
+            i: len(next_state["command_request"].commands)
+            for i, next_state in enumerate(next_states)
+        }
+
+        # 2.
+        input_batch = []
+        for next_state in next_states:
+            for cmd_entry in next_state["command_request"].commands:
+                state_tensor = simple_duel_state_data_tensor(
+                    duel_state_data=next_state["state"]
+                )
+                cmd_entry_tensor = simple_command_entry_tenosr(command_entry=cmd_entry)
+                input_tensor = torch.cat([state_tensor, cmd_entry_tensor], dim=0)
+                input_batch.append(input_tensor)
+        input_batch_tensor = torch.stack(input_batch).to(self.device)
+
+        # 3.
+        with torch.no_grad():
+            next_qs = self.target_net(input_batch_tensor)
+
+        # 4.
+        next_state_max_q = {}  # 各次状態における最大のQ値を保持する辞書
+        for i, next_state in enumerate(next_states):
+            if i in next_state_cmd_count:
+                next_state_max_q[i] = (
+                    next_qs[
+                        i * next_state_cmd_count[i] : (i + 1) * next_state_cmd_count[i]
+                    ]
+                    .max()
+                    .item()
+                )
+        # 5.
+        targets = []
+        for i, (next_state, reward, done) in enumerate(
+            zip(next_states, rewards, dones)
+        ):
+            if done:
+                target = torch.tensor(reward)
+            else:
+                target = torch.tensor(reward + self.gamma * next_state_max_q[i])
+            targets.append(target)
+        return torch.stack(targets)
 
     def calc_target(self, next_state: dict, reward: float, done) -> torch.Tensor | None:
         """
