@@ -1,0 +1,120 @@
+----------------------------------------------------------------
+
+while True:
+    ret = GetNextState()
+    control = ret[0]
+    if control[0]:
+        print("DuelStart")
+        DuelStart(ret)
+    elif control[1]:
+        print("DuelEnd")
+        UpdateStatistic(control[3])
+        if RandomPlayerFlag != 1:
+            SetResult(control[3])
+
+    if control[2]:
+        commands = ret[5]
+        if RandomPlayerFlag == 1:
+            # ランダムにコマンド選択
+            index = random.randrange(len(commands))
+        else:
+            # AIによる予測
+            index = SelectAction(commands, ret)
+
+        # コマンドを送信
+        SendCommand(index)
+        # 学習
+        LearnUpdate()
+        # 統計情報表示
+        ShowStatistic()
+
+----------------------------------------------------------------
+
+OneHotTable：デッキに含まれるカードIDたち（種類分）
+TableNum：len(OneHotTable) → カードの種類数
+BoardNum：カードの種類（len(OneHotTable)）× カードの位置を表す変数の上限値 → どの種類のカードがどこにあるかのパターン数
+InforNum：2（不明） + フェーズを表す変数の上限値 + （コマンド入力のタイミングを表す変数の上限値 + 1（不明）） → いつのパターン数
+ActionNum：（行動の種類を表す変数の上限値 + 1） + （カードの種類数（TableNum） + 3（不明））
+DnnInputNum：BoardNum + InforNum + ActionNum
+ActionMemory：1エピソードの選択して行動のINDEX
+ReplayMemory：全エピソードごとの、ActionMemoryと報酬のペアデータ
+
+----------------------------------------------------------------
+
+def GetNextState()
+[
+    0（control）：[
+        0：DuelStartFlag,
+        1：DuelEndFlag,
+        2：DuelActionFlag, // コマンドを要求しているか
+        3：DuelResult
+    ],
+    1：game_data,
+    2：duel_card_table,
+    3：chain_data,
+    4：command_request, // 入力要求に関する情報（CommandRequest）→ 中身は自分で確認してね
+    5：commands // 選択可能なコマンド（CommandEntry）のリスト
+]
+
+def DuelStart(ret)
+    最初のduel_card_tableをprintしているだけ
+
+
+def UpdateStatistic(ret[0][3])
+    グローバル変数のゲーム記録（ゲーム数、勝数）を更新
+    global StatisticWin
+    global StatisticCount
+    global StatisticText
+    global EmaRate
+
+def SetResult(ret[0][3])
+    報酬を1 or 0 or -1で決めて、報酬をprint
+    これまでの行動IDリストグローバル変数ActionMemoryのそれぞれに報酬を結びつけて、グローバル変数ReplayMemoryへ保存
+
+def SelectAction(ret[5], ret)
+    SetBoardVector(ret)を実行して結果を変数へ保存
+    SetActionVector(ret)を実行して結果を変数へ保存
+    DNNへの入力変数を用意する（サイズ：選択可能なコマンドの数 × （SetBoardVectorの幅数 + SetActionVectorの幅数））
+    それぞれの選択可能なコマンドに対する価値をDNN（DnnPredict）が出力する（サイズ：選択可能なコマンドの数）
+    価値が最大になるコマンドのIDをグローバル変数ActionMemoryへ保存
+    価値が最大になるコマンドのIDを返す
+
+def SetBoardVector(ret) ← 改善の余地あり
+    ret[2]：duel_card_table // カードの盤面情報（どのカードがどこにいるか）
+    ret[1]：game_data（GeneralData） // LPなどのゲーム情報
+    ret[4]：command_request // 入力要求に関する情報（CommandRequest）
+    これらを符号化したやつリスト（サイズ：BoardNum + InforNum）をreturn
+
+    # 改善コメント
+    DuelStateDataには、ChainStackが入っているけど、この関数ではそれを反映していない
+    DuelStateData（duel_card_table、game_data、ChainStack）をいかにして符号化するのか
+    command_requestも引き続き符号化する必要がある
+    大元は、DuelStateDataとcommand_request
+
+def SetActionVector(ret) ← 改善の余地あり
+    ret[5]：commands // 選択可能なコマンド
+    これの符号化したやつマップ(サイズ： 選択可能なコマンド数 × ActionNum)をreturn
+
+    # 改善コメント
+    CommandEntryの符号化を行えば良い
+
+def SendCommand(SelectActionが返したINDEX)
+    UDIに、形勢値と選択したコマンドのINDEXを送信する
+
+def LearnUpdate()
+    エピソードの数がバッチ数より大きいなら学習を16回行う
+    各学習の中身は以下の分岐
+    1. ReplayMemoryがいっぱいの時は、バッチ数分だけReplayMemoryから削除して、削除した分を使って学習
+    2. ランダムにバッチ数分だけReplayMemoryから選んで、それを使って学習
+    学習とは？ → DnnLearn
+
+def DnnLearn(入力ベクトル, 報酬)
+    再度モデルに入力ベクトルを渡して勾配情報付きの行動価値を出力
+    上記からロスを計算（報酬のまま）
+    パラメータ更新
+    -----
+    学習回数を記録するグローバル変数を更新
+    学習回数を記録するグローバル変数が基準になったらモデルのパラメータを保存
+
+def ShowStatistic
+    ロスとか学習回数とか時間とか、StatisticTextをprint
