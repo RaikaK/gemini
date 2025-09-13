@@ -40,7 +40,7 @@ function updateDebugDisplay() {
                     </div>
                 `).join('');
                 
-                if (!isUserScrolling && wasAtBottom) {
+                if (wasAtBottom) {
                     debugContent.scrollTop = debugContent.scrollHeight;
                 }
             }

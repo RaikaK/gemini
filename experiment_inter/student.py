@@ -108,4 +108,5 @@ class GPTApplicant:
         prompt_str = self.prompt_manager.create_prompt_string(
             candidate_profile, company_knowledge_tuple, conversation_history, new_question
         )
-        return call_openai_api(self.model_name, prompt_str)
+        response_text, token_info = call_openai_api(self.model_name, prompt_str)
+        return response_text, token_info
