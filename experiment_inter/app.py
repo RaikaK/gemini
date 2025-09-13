@@ -60,6 +60,9 @@ experiment_status = {
 
 experiment_queue = queue.Queue()
 
+# 人間面接官セッション管理
+human_interview_sessions = {}
+
 # モデル管理システムの初期化
 model_manager = HuggingFaceModelManager()
 
@@ -944,5 +947,253 @@ def clear_spreadsheet():
         log_message(f"スプレッドシートクリアエラー: {e}")
         return jsonify({'error': f'クリアエラー: {e}'}), 500
 
+# ==================== 人間面接官モード API ====================
+
+@app.route('/api/human_interview/start', methods=['POST'])
+def start_human_interview():
+    """人間面接官モードの面接セッションを開始"""
+    try:
+        data = request.get_json()
+        set_index = int(data.get('set_index')) if data.get('set_index') != '' else None
+        interview_flow = data.get('interview_flow', [1])
+        use_dynamic_flow = data.get('use_dynamic_flow', False)
+        
+        # セッションIDを生成
+        session_id = f"human_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(human_interview_sessions)}"
+        
+        # データを読み込み
+        company_profile, candidate_profiles, actual_set_index = data_generators.load_company_and_candidates_from_db(set_index)
+        if company_profile is None or candidate_profiles is None:
+            return jsonify({'error': 'データの読み込みに失敗しました'}), 400
+        
+        if len(candidate_profiles) < config.NUM_CANDIDATES:
+            candidate_profiles = candidate_profiles[:config.NUM_CANDIDATES]
+        
+        # 候補者の知識を初期化
+        knowledge_manager = CompanyKnowledgeManager(company_profile)
+        candidates = []
+        for profile in candidate_profiles:
+            knowledge_tuple = knowledge_manager.get_knowledge_for_level(profile.get('preparation', 'low'))
+            candidates.append({
+                'name': profile.get('name', 'N/A'),
+                'preparation': profile.get('preparation', 'low'),
+                'knowledge_coverage': knowledge_tuple[1],
+                'profile': profile,
+                'knowledge_tuple': knowledge_tuple,
+                'conversation_log': []
+            })
+        
+        # セッション情報を保存
+        human_interview_sessions[session_id] = {
+            'session_id': session_id,
+            'company_profile': company_profile,
+            'candidates': candidates,
+            'interview_flow': interview_flow,
+            'use_dynamic_flow': use_dynamic_flow,
+            'current_round': 0,
+            'asked_common_questions': [],
+            'start_time': datetime.datetime.now(),
+            'conversation_log': []
+        }
+        
+        return jsonify({
+            'session': {
+                'session_id': session_id,
+                'company_profile': company_profile,
+                'candidates': [{'name': c['name'], 'preparation': c['preparation'], 'knowledge_coverage': c['knowledge_coverage']} for c in candidates]
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'面接セッションの開始に失敗しました: {e}'}), 500
+
+@app.route('/api/human_interview/ask_common_question', methods=['POST'])
+def ask_common_question():
+    """全体質問を生成"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if session_id not in human_interview_sessions:
+            return jsonify({'error': 'セッションが見つかりません'}), 404
+        
+        session = human_interview_sessions[session_id]
+        
+        # 面接官インスタンスを作成（質問生成のみ）
+        interviewer = Interviewer(
+            company_profile=session['company_profile'],
+            model_type='api'
+        )
+        
+        # 全体質問を生成
+        question, _ = interviewer.ask_common_question(session['asked_common_questions'])
+        session['asked_common_questions'].append(question)
+        
+        return jsonify({'question': question})
+        
+    except Exception as e:
+        return jsonify({'error': f'質問の生成に失敗しました: {e}'}), 500
+
+@app.route('/api/human_interview/ask_individual_question', methods=['POST'])
+def ask_individual_question():
+    """個別質問を生成"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if session_id not in human_interview_sessions:
+            return jsonify({'error': 'セッションが見つかりません'}), 404
+        
+        session = human_interview_sessions[session_id]
+        
+        # 面接官インスタンスを作成（質問生成のみ）
+        interviewer = Interviewer(
+            company_profile=session['company_profile'],
+            model_type='api'
+        )
+        
+        # 最も理解が浅い候補者を選択
+        target_index, reason = interviewer._select_candidate_with_llm(session['candidates'])
+        target_candidate = session['candidates'][target_index]
+        
+        # 個別質問を生成
+        question, _ = interviewer.ask_question(target_candidate['conversation_log'])
+        
+        return jsonify({
+            'question': question,
+            'target_candidate': target_candidate['name'],
+            'target_index': target_index
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'質問の生成に失敗しました: {e}'}), 500
+
+@app.route('/api/human_interview/get_student_answer', methods=['POST'])
+def get_student_answer():
+    """学生の回答を取得"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        question = data.get('question')
+        question_type = data.get('question_type')
+        
+        if session_id not in human_interview_sessions:
+            return jsonify({'error': 'セッションが見つかりません'}), 404
+        
+        session = human_interview_sessions[session_id]
+        
+        # 学生モデルを初期化
+        applicant = GPTApplicant(config.APPLICANT_API_MODEL)
+        
+        answers = []
+        
+        if question_type == '全体質問':
+            # 全候補者に質問
+            for candidate in session['candidates']:
+                answer, token_info = applicant.generate(
+                    candidate['profile'], 
+                    candidate['knowledge_tuple'], 
+                    candidate['conversation_log'], 
+                    question
+                )
+                candidate['conversation_log'].append({
+                    'turn': session['current_round'] + 1,
+                    'question': question,
+                    'answer': answer,
+                    'token_info': token_info
+                })
+                answers.append({
+                    'candidate_name': candidate['name'],
+                    'answer': answer
+                })
+        else:
+            # 個別質問の場合、最も理解が浅い候補者に質問
+            interviewer = Interviewer(
+                company_profile=session['company_profile'],
+                model_type='api'
+            )
+            target_index, reason = interviewer._select_candidate_with_llm(session['candidates'])
+            target_candidate = session['candidates'][target_index]
+            
+            answer, token_info = applicant.generate(
+                target_candidate['profile'], 
+                target_candidate['knowledge_tuple'], 
+                target_candidate['conversation_log'], 
+                question
+            )
+            target_candidate['conversation_log'].append({
+                'turn': session['current_round'] + 1,
+                'question': question,
+                'answer': answer,
+                'token_info': token_info
+            })
+            answers.append({
+                'candidate_name': target_candidate['name'],
+                'answer': answer
+            })
+        
+        session['current_round'] += 1
+        
+        return jsonify({'answers': answers})
+        
+    except Exception as e:
+        return jsonify({'error': f'回答の取得に失敗しました: {e}'}), 500
+
+@app.route('/api/human_interview/end', methods=['POST'])
+def end_human_interview():
+    """人間面接官モードの面接を終了し、評価を実行"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if session_id not in human_interview_sessions:
+            return jsonify({'error': 'セッションが見つかりません'}), 404
+        
+        session = human_interview_sessions[session_id]
+        
+        # 面接官インスタンスを作成（評価用）
+        interviewer = Interviewer(
+            company_profile=session['company_profile'],
+            model_type='api'
+        )
+        
+        # 候補者状態を準備
+        candidate_states = []
+        for candidate in session['candidates']:
+            candidate_states.append({
+                'profile': candidate['profile'],
+                'knowledge_tuple': candidate['knowledge_tuple'],
+                'conversation_log': candidate['conversation_log']
+            })
+        
+        # 最終評価を実行
+        least_motivated_eval = interviewer.select_least_motivated_candidate(candidate_states)
+        ranking_eval = interviewer.rank_candidates_by_motivation(candidate_states)
+        knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+        
+        # 面接統計を計算
+        total_questions = session['current_round']
+        common_questions = len(session['asked_common_questions'])
+        individual_questions = total_questions - common_questions
+        duration = (datetime.datetime.now() - session['start_time']).total_seconds()
+        
+        evaluation = {
+            'least_motivated_candidate': least_motivated_eval,
+            'motivation_ranking': ranking_eval,
+            'knowledge_gaps': knowledge_gap_eval,
+            'total_questions': total_questions,
+            'common_questions': common_questions,
+            'individual_questions': individual_questions,
+            'duration': f"{int(duration // 60)}分{int(duration % 60)}秒"
+        }
+        
+        # セッションをクリーンアップ
+        del human_interview_sessions[session_id]
+        
+        return jsonify({'evaluation': evaluation})
+        
+    except Exception as e:
+        return jsonify({'error': f'面接の終了に失敗しました: {e}'}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

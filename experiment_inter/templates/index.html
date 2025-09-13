@@ -276,6 +276,11 @@
                                 <i class="fas fa-table"></i> スプレッドシート連携
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="human-interviewer-tab" data-bs-toggle="tab" data-bs-target="#human-interviewer" type="button" role="tab">
+                                <i class="fas fa-user-tie"></i> 人間面接官モード
+                            </button>
+                        </li>
 
                     </ul>
 
@@ -357,6 +362,125 @@
                             </div>
                         </div>
 
+                        <!-- 人間面接官モード -->
+                        <div class="tab-pane fade" id="human-interviewer" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-user-tie"></i> 人間面接官モード</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>面接セッション設定</h6>
+                                            <div class="mb-3">
+                                                <label for="humanSetIndex" class="form-label">データセットインデックス（空欄でランダム）</label>
+                                                <input type="number" class="form-control" id="humanSetIndex" placeholder="例: 0, 1, 2...">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="humanInterviewFlow" class="form-label">面接フロー設定</label>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="humanInterviewFlowType" id="humanFixedFlow" value="fixed" checked>
+                                                    <label class="form-check-label" for="humanFixedFlow">
+                                                        固定フロー（手動設定）
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="humanInterviewFlowType" id="humanDynamicFlow" value="dynamic">
+                                                    <label class="form-check-label" for="humanDynamicFlow">
+                                                        智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大10ラウンド）
+                                                    </label>
+                                                </div>
+                                                
+                                                <div id="humanFixedFlowSettings" class="mt-3">
+                                                    <div class="form-text mb-2">面接の流れを設定（0: 全体質問, 1: 個別質問）</div>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addHumanQuestionType(0)">全体質問追加</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addHumanQuestionType(1)">個別質問追加</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearHumanInterviewFlow()">クリア</button>
+                                                    </div>
+                                                    <div id="humanInterviewFlowDisplay" class="bg-light p-2 rounded">
+                                                        <span class="badge bg-primary me-1">1</span>
+                                                    </div>
+                                                    <input type="hidden" id="humanInterviewFlow" value="1">
+                                                </div>
+                                            </div>
+                                            <button id="startHumanInterviewBtn" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-play"></i> 人間面接を開始
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <span class="status-indicator" id="humanStatusIndicator"></span>
+                                                <span id="humanStatusText">待機中</span>
+                                            </div>
+                                            <div class="progress mb-3">
+                                                <div class="progress-bar" id="humanProgressBar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <div id="humanCurrentStep" class="text-muted small"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 面接セッション表示エリア -->
+                            <div id="humanInterviewSession" class="card" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-comments"></i> 面接セッション</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div id="humanInterviewLog" class="log-container" style="max-height: 500px;">
+                                                <!-- 面接ログがここに表示されます -->
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6>候補者情報</h6>
+                                            <div id="humanCandidatesInfo">
+                                                <!-- 候補者情報がここに表示されます -->
+                                            </div>
+                                            
+                                            <h6 class="mt-3">次の質問</h6>
+                                            <div class="mb-3">
+                                                <button id="askCommonQuestionBtn" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                                                    <i class="fas fa-users"></i> 全体質問を生成
+                                                </button>
+                                                <button id="askIndividualQuestionBtn" class="btn btn-outline-success btn-sm w-100 mb-2">
+                                                    <i class="fas fa-user"></i> 個別質問を生成
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="humanQuestionInput" class="form-label">カスタム質問</label>
+                                                <textarea class="form-control" id="humanQuestionInput" rows="3" placeholder="質問を入力してください..."></textarea>
+                                                <button id="askCustomQuestionBtn" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                                                    <i class="fas fa-paper-plane"></i> 質問を送信
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <button id="endInterviewBtn" class="btn btn-danger w-100">
+                                                    <i class="fas fa-stop"></i> 面接を終了
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 評価結果表示エリア -->
+                            <div id="humanEvaluationResults" class="card" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-line"></i> 評価結果</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="humanEvaluationContent">
+                                        <!-- 評価結果がここに表示されます -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -383,6 +507,8 @@
         let statusUpdateInterval;
         let results = [];
         let interviewFlow = [1]; // デフォルトは個別質問1回
+        let humanInterviewFlow = [1]; // 人間面接官用のフロー
+        let humanInterviewSession = null; // 人間面接セッション情報
 
         // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', function() {
@@ -391,6 +517,7 @@
             loadModelsStatus();
             loadSpreadsheetStatus();
             updateLocalModelStatus(); // ローカルモデル状態を初期化
+            initializeHumanInterviewer(); // 人間面接官モードの初期化
             statusUpdateInterval = setInterval(updateStatus, 1000);
         });
 
@@ -1505,6 +1632,362 @@
                 console.error('Error:', error);
                 alert('データクリアに失敗しました');
             });
+        }
+
+        // ==================== 人間面接官モード機能 ====================
+        
+        // 人間面接官モードの初期化
+        function initializeHumanInterviewer() {
+            updateHumanInterviewFlowDisplay();
+            
+            // 面接フロータイプのラジオボタンの変更イベントを設定
+            document.querySelectorAll('input[name="humanInterviewFlowType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const fixedFlowSettings = document.getElementById('humanFixedFlowSettings');
+                    if (this.value === 'fixed') {
+                        fixedFlowSettings.style.display = 'block';
+                    } else {
+                        fixedFlowSettings.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 人間面接開始ボタンのイベントリスナー
+            document.getElementById('startHumanInterviewBtn').addEventListener('click', startHumanInterview);
+            
+            // 質問ボタンのイベントリスナー
+            document.getElementById('askCommonQuestionBtn').addEventListener('click', askCommonQuestion);
+            document.getElementById('askIndividualQuestionBtn').addEventListener('click', askIndividualQuestion);
+            document.getElementById('askCustomQuestionBtn').addEventListener('click', askCustomQuestion);
+            document.getElementById('endInterviewBtn').addEventListener('click', endHumanInterview);
+        }
+
+        // 人間面接フロー設定の関数
+        function addHumanQuestionType(type) {
+            humanInterviewFlow.push(type);
+            updateHumanInterviewFlowDisplay();
+        }
+
+        function clearHumanInterviewFlow() {
+            humanInterviewFlow = [];
+            updateHumanInterviewFlowDisplay();
+        }
+
+        function updateHumanInterviewFlowDisplay() {
+            const display = document.getElementById('humanInterviewFlowDisplay');
+            const hiddenInput = document.getElementById('humanInterviewFlow');
+            
+            display.innerHTML = humanInterviewFlow.map((type, index) => {
+                const badgeClass = type === 0 ? 'bg-success' : 'bg-primary';
+                const text = type === 0 ? '全体' : '個別';
+                return `<span class="badge ${badgeClass} me-1" title="質問${index + 1}">${text}</span>`;
+            }).join('');
+            
+            hiddenInput.value = JSON.stringify(humanInterviewFlow);
+        }
+
+        // 人間面接を開始
+        function startHumanInterview() {
+            const setIndex = document.getElementById('humanSetIndex').value;
+            const interviewFlowType = document.querySelector('input[name="humanInterviewFlowType"]:checked').value;
+            
+            let interviewFlow = null;
+            let useDynamicFlow = false;
+            
+            if (interviewFlowType === 'fixed') {
+                interviewFlow = JSON.parse(document.getElementById('humanInterviewFlow').value);
+                useDynamicFlow = false;
+            } else if (interviewFlowType === 'dynamic') {
+                interviewFlow = null;
+                useDynamicFlow = true;
+            }
+            
+            fetch('/api/human_interview/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    set_index: setIndex || null,
+                    interview_flow: interviewFlow,
+                    use_dynamic_flow: useDynamicFlow
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    humanInterviewSession = data.session;
+                    displayHumanInterviewSession(data);
+                    updateHumanStatus('running', '面接中', 0, '面接セッションを開始しました');
+                    document.getElementById('humanInterviewSession').style.display = 'block';
+                    document.getElementById('startHumanInterviewBtn').disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('人間面接の開始に失敗しました');
+            });
+        }
+
+        // 人間面接セッションの表示
+        function displayHumanInterviewSession(data) {
+            const candidatesInfo = document.getElementById('humanCandidatesInfo');
+            const interviewLog = document.getElementById('humanInterviewLog');
+            
+            // 候補者情報の表示
+            candidatesInfo.innerHTML = data.candidates.map((candidate, index) => `
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <h6 class="mb-1">候補者 ${index + 1}: ${candidate.name}</h6>
+                        <small class="text-muted">
+                            準備レベル: ${candidate.preparation}<br>
+                            知識カバレッジ: ${candidate.knowledge_coverage}
+                        </small>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 面接ログの初期化
+            interviewLog.innerHTML = '<div class="text-muted text-center">面接を開始してください</div>';
+        }
+
+        // 全体質問を生成
+        function askCommonQuestion() {
+            if (!humanInterviewSession) return;
+            
+            fetch('/api/human_interview/ask_common_question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayQuestion(data.question, '全体質問');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('質問の生成に失敗しました');
+            });
+        }
+
+        // 個別質問を生成
+        function askIndividualQuestion() {
+            if (!humanInterviewSession) return;
+            
+            fetch('/api/human_interview/ask_individual_question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayQuestion(data.question, '個別質問');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('質問の生成に失敗しました');
+            });
+        }
+
+        // カスタム質問を送信
+        function askCustomQuestion() {
+            const question = document.getElementById('humanQuestionInput').value.trim();
+            if (!question) {
+                alert('質問を入力してください');
+                return;
+            }
+            
+            if (!humanInterviewSession) return;
+            
+            displayQuestion(question, 'カスタム質問');
+            document.getElementById('humanQuestionInput').value = '';
+        }
+
+        // 質問を表示
+        function displayQuestion(question, questionType) {
+            const interviewLog = document.getElementById('humanInterviewLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const questionElement = document.createElement('div');
+            questionElement.className = 'log-entry mb-3';
+            questionElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge ${questionType === '全体質問' ? 'bg-success' : questionType === '個別質問' ? 'bg-primary' : 'bg-secondary'}">${questionType}</span>
+                    <small class="text-muted">${timestamp}</small>
+                </div>
+                <div class="bg-light p-3 rounded">
+                    <strong>面接官:</strong> ${question}
+                </div>
+                <div class="mt-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="getStudentAnswer('${question.replace(/'/g, "\\'")}', '${questionType}')">
+                        <i class="fas fa-reply"></i> 学生の回答を取得
+                    </button>
+                </div>
+            `;
+            
+            interviewLog.appendChild(questionElement);
+            interviewLog.scrollTop = interviewLog.scrollHeight;
+        }
+
+        // 学生の回答を取得
+        function getStudentAnswer(question, questionType) {
+            if (!humanInterviewSession) return;
+            
+            fetch('/api/human_interview/get_student_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id,
+                    question: question,
+                    question_type: questionType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayStudentAnswer(data.answers);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('回答の取得に失敗しました');
+            });
+        }
+
+        // 学生の回答を表示
+        function displayStudentAnswer(answers) {
+            const interviewLog = document.getElementById('humanInterviewLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            answers.forEach((answer, index) => {
+                const answerElement = document.createElement('div');
+                answerElement.className = 'log-entry mb-3';
+                answerElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-info">候補者 ${index + 1} の回答</span>
+                        <small class="text-muted">${timestamp}</small>
+                    </div>
+                    <div class="bg-light p-3 rounded">
+                        <strong>${answer.candidate_name}:</strong> ${answer.answer}
+                    </div>
+                `;
+                
+                interviewLog.appendChild(answerElement);
+            });
+            
+            interviewLog.scrollTop = interviewLog.scrollHeight;
+        }
+
+        // 人間面接を終了
+        function endHumanInterview() {
+            if (!humanInterviewSession) return;
+            
+            if (!confirm('面接を終了しますか？')) return;
+            
+            fetch('/api/human_interview/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayHumanEvaluationResults(data.evaluation);
+                    updateHumanStatus('completed', '完了', 100, '面接が完了しました');
+                    document.getElementById('humanEvaluationResults').style.display = 'block';
+                    document.getElementById('endInterviewBtn').disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('面接の終了に失敗しました');
+            });
+        }
+
+        // 人間面接の評価結果を表示
+        function displayHumanEvaluationResults(evaluation) {
+            const evaluationContent = document.getElementById('humanEvaluationContent');
+            
+            evaluationContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>評価結果</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>最も志望度が低い候補者</h6>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    ${evaluation.least_motivated_candidate}
+                                </div>
+                                
+                                <h6>候補者ランキング（志望度が低い順）</h6>
+                                <div class="bg-light p-2 rounded">
+                                    ${evaluation.motivation_ranking}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>面接統計</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><strong>総質問数:</strong> ${evaluation.total_questions || 'N/A'}</li>
+                                    <li><strong>全体質問数:</strong> ${evaluation.common_questions || 'N/A'}</li>
+                                    <li><strong>個別質問数:</strong> ${evaluation.individual_questions || 'N/A'}</li>
+                                    <li><strong>面接時間:</strong> ${evaluation.duration || 'N/A'}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 人間面接のステータス更新
+        function updateHumanStatus(status, text, progress, step) {
+            const statusIndicator = document.getElementById('humanStatusIndicator');
+            const statusText = document.getElementById('humanStatusText');
+            const progressBar = document.getElementById('humanProgressBar');
+            const currentStep = document.getElementById('humanCurrentStep');
+            
+            if (status === 'running') {
+                statusIndicator.className = 'status-indicator status-running';
+            } else {
+                statusIndicator.className = 'status-indicator status-idle';
+            }
+            
+            statusText.textContent = text;
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            currentStep.textContent = step;
         }
 
     </script>
