@@ -252,21 +252,21 @@ class DQNAgent(BaseYgoAgent):
                 input_batch.append(input_tensor)
         input_batch_tensor = torch.stack(input_batch).to(self.device)
 
+        # breakpoint()
+
         # 3.
         with torch.no_grad():
             next_qs = self.target_net(input_batch_tensor)
 
         # 4.
         next_state_max_q = {}  # 各次状態における最大のQ値を保持する辞書
-        for i, next_state in enumerate(next_states):
-            if i in next_state_cmd_count:
-                next_state_max_q[i] = (
-                    next_qs[
-                        i * next_state_cmd_count[i] : (i + 1) * next_state_cmd_count[i]
-                    ]
-                    .max()
-                    .item()
-                )
+        counts = list(next_state_cmd_count.values())
+        start_index = 0
+        for i, c in enumerate(counts):
+            end_index = start_index + c
+            next_state_max_q[i] = next_qs[start_index:end_index].max().item()
+            start_index = end_index
+
         # 5.
         targets = []
         for i, (next_state, reward, done) in enumerate(
