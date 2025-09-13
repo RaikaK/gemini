@@ -21,11 +21,10 @@ class RandomAgent(BaseYgoAgent):
     def select_action(self, state) -> ActionData:
         command_request = state["command_request"]
         selectable_commands: list[CommandEntry] = command_request.commands
-        duel_state = state["state"]
 
         selected_command_entry: CommandEntry = random.choice(selectable_commands)
         action_data = ActionData(
-            state=duel_state,
+            state=state,
             command_entry=selected_command_entry,
         )
         # print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
