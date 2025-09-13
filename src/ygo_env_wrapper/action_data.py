@@ -9,13 +9,12 @@ from ygo.models.command_request import CommandRequest, CommandEntry
 class ActionData:
     def __init__(
         self,
-        state: DuelStateData,
-        command_request: CommandRequest,
+        state: dict,
         command_entry: CommandEntry,
     ):
-        """ある状態sと行動aをまとめたデータ"""
-        self.state: DuelStateData = state
-        self.command_request: CommandRequest = command_request
+        """action_data:はある状態sの時の行動cmd_entryを含む"""
+        self.state: dict = state
+        self.command_request: CommandRequest = state["command_request"]
         self.command_entry: CommandEntry = command_entry
         self.command_index: int = self.get_command_index()
 

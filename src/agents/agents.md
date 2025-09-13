@@ -44,8 +44,8 @@ state: dict = {
 
 # 現在の状態"state"の時の行動データActionをデータとして管理したいので、このようなつくりにしてます。
 action_data = ActionData(
-    state: DuelStateData,
-    # state["state"]をそのまま引数としてください
+    state: dict,
+    # state: dict をそのまま引数としてください
     command_request: CommandRequest, 
     # state["state"]時、要求されているコマンドリストなどを含むデータ
     # どのようなコマンドが可能な時に、何を選んだかを反映させるために、引数として求めています。

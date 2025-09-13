@@ -23,9 +23,8 @@ class YgoEnv:
 
     def __init__(self, udi_io: UdiIO):
         self.udi_io = udi_io  # MDクライアントの情報参照
-
-        self.reward_func = NormalRewardFunction(
-            udi_io, is_normalized=True
+        self.reward_func = (
+            NormalRewardFunction()
         )  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
 
     def reset(self):
@@ -56,7 +55,7 @@ class YgoEnv:
         if action_data is not None:
             self.execute_command(action_data=action_data)
             reward: float = self.reward_func.eval(action_data=action_data)
-        
+
         # コマンドを要求されるか、デュエルが終了するまで次状態は返さない
         while True:
             try:
@@ -92,15 +91,15 @@ class YgoEnv:
 
             if is_duel_start:
                 print("Duel Start")
-            
+
             if is_duel_end:
                 print("Duel End")
                 print(duel_end_data)
                 break
-            
+
             if is_cmd_required:
                 break
-            
+
             time.sleep(0.001)
 
         # print(f"is_cmd_required: {self.udi_io.is_command_required()}, current_phase: {state.general_data.current_phase}")
@@ -115,9 +114,7 @@ def cli_player(state: dict) -> ActionData:
     cmd_index = -1
 
     while not can_send:
-        print(
-            f"select your action: [0 - {len(state['command_request'].commands) - 1}]"
-        )
+        print(f"select your action: [0 - {len(state['command_request'].commands) - 1}]")
         for i, cmd_entry in enumerate(state["command_request"].commands):
             print(f"command {i}: {text_util.get_command_entry_text(cmd_entry)}")
 
@@ -133,12 +130,9 @@ def cli_player(state: dict) -> ActionData:
             )
 
     # コマンド生成
-    state = state["state"]
     cmd_request = state["command_request"]
     cmd_entry = cmd_request.commands[cmd_index]
-    action_data = ActionData(
-        state=state, command_request=cmd_request, command_entry=cmd_entry
-    )
+    action_data = ActionData(state=state, command_entry=cmd_entry)
     return action_data
 
 
@@ -188,4 +182,3 @@ if __name__ == "__main__":
         action_data = cli_player(state=state)
 
         state = env.step(action_data=action_data)
-
