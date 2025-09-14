@@ -31,15 +31,11 @@ def load_company_and_candidates_from_db(set_index=None):
         company_profile = selected_set['company']
         candidate_profiles = selected_set['students']
         
-        # 学生プロフィールにpreparationフィールドを追加（aspiration_levelに基づいて設定）
+        # 学生プロフィールにpreparationフィールドをランダムに追加
+        preparation_levels = ['low', 'medium', 'high']
         for i, profile in enumerate(candidate_profiles):
-            aspiration_level = profile.get('aspiration_level', 'medium_70_percent')
-            if 'high_90_percent' in aspiration_level:
-                profile['preparation'] = 'high'
-            elif 'medium_70_percent' in aspiration_level:
-                profile['preparation'] = 'medium'
-            else:
-                profile['preparation'] = 'low'
+            # ランダムにpreparationレベルを割り当て
+            profile['preparation'] = random.choice(preparation_levels)
         
         print(f"--- セット {set_index + 1} を選択しました ---")
         print(f"--- 企業: {company_profile.get('name', 'N/A')} ---")
@@ -140,11 +136,8 @@ def generate_candidate_profiles(company_profile, num_candidates):
     - 具体的で説得力のあるガクチカエピソード
     - 異なる強みや興味分野を持つ学生
     - リアルな日本の就活生として設定
-    - 各候補の "preparation" フィールドは以下の順序で必ず出力してください。
-      1人目: "low"
-      2人目: "medium"
-      3人目: "high"
-      この順序以外は絶対に許されません。
+    - 各候補の "preparation" フィールドはランダムに "low", "medium", "high" のいずれかを割り当ててください。
+      固定順序ではなく、各候補者にランダムに割り当てる必要があります。
     """
     response = call_openai_api(GENERATOR_MODEL_NAME, prompt)
     data = parse_json_from_response(response)
