@@ -38,9 +38,9 @@ class DQNAgent(BaseYgoAgent):
         lr=1e-5,
         epsilon=0.2,
         buffer_size=int(1e5),
-        batch_size: int = 32,
+        batch_size: int = 128,
         sync_interval: int = 100,
-        num_learn_on_update: int = 16,
+        epochs_on_update: int = 16,
         model_save_dir="params",
         model_file_name="simple_dqn_{now}.pth",
         save_model_interval: int = 64,
@@ -73,13 +73,16 @@ class DQNAgent(BaseYgoAgent):
         self.replay_buffer = ReplayBuffer(
             buffer_size=buffer_size, batch_size=batch_size
         )
+        
+        # 1episode分のデータを管理して毎回クリアする
+        self.replay_short_memory = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
 
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
-        self.num_predict = 0
+        self.num_update = 0
 
         # 1回のUpdateで学習する回数
-        self.num_learn_on_update = num_learn_on_update
+        self.epochs_on_update = epochs_on_update
 
         # GPU設定
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -109,20 +112,23 @@ class DQNAgent(BaseYgoAgent):
             return None
         reward = next_state["reward"]
         done = next_state["is_duel_end"]
-        # 経験再生バッファーにデータを追加
-        self.replay_buffer.add(
-            state=state,
-            action_data=action_data,
-            reward=reward,
-            done=done,
-            next_state=next_state,
-        )
+
+        self.replay_short_memory.add(state=state, action_data=action_data, reward=reward, done=done, next_state=next_state)
+
+        if not done:
+            return None
+        # episode終了時に学習を行う
+        self.replay_short_memory.update_all_reward(reward=reward) # ゲーム終了時に報酬を更新
+        self.replay_buffer.extend(self.replay_short_memory.buffer) # おおもとの経験再生に1Episode分の経験データをすべて追加
+        self.replay_short_memory.clear() # 小メモリはクリアする
+        
         batch_data = self.replay_buffer.get_batch()
         if batch_data is None:
             return None
-
+        
+        self.dqn.train() # nn.Moduleの学習モード設定
         losses = []
-        for i in range(self.num_learn_on_update):
+        for _ in range(self.epochs_on_update):
             # dqnに入力するinpute_tensorバッチを作成する
             input_batch = []
             rewards = []
@@ -152,16 +158,12 @@ class DQNAgent(BaseYgoAgent):
                 next_states.append(next_state)
             input_batch_tensor = torch.stack(input_batch).to(self.device)
 
-            # targetを計算して、GPUに送信
-            # targets = [
-            #     self.calc_target(next_state, reward, done)
-            #     for next_state, reward, done in zip(next_states, rewards, dones)
-            # ]  # 勾配情報なし
+            # targets = self.calc_targets(
+            #     next_states=next_states, rewards=rewards, dones=dones
+            # )
+            # targets = targets.to(self.device).unsqueeze(1)
+            targets = torch.stack([torch.tensor(reward, dtype=torch.float32) for reward in rewards]).to(self.device).unsqueeze(1)
 
-            # targets = torch.stack(targets).to(self.device).unsqueeze(1)
-            targets = self.calc_targets(
-                next_states=next_states, rewards=rewards, dones=dones
-            )
 
             # 損失を計算
             loss = self.loss_func(self.dqn(input_batch_tensor), targets)
@@ -170,8 +172,6 @@ class DQNAgent(BaseYgoAgent):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-
-            # print(f"loss: {loss}")
 
             losses.append(loss.mean())
 
@@ -194,8 +194,6 @@ class DQNAgent(BaseYgoAgent):
         stateとCommandEntryのテンソルをconcatし、Q値を出力し、最大のQ値であるCommandEntryとなるActionDataを返す
         self.dqnからの出力
         """
-        # print("dqn agent predict ...")
-        self.num_predict += 1
         # DuelStateData Tensor
         duel_state_data: DuelStateData = state["state"]
         duel_state_data_tensor = simple_duel_state_data_tensor(
@@ -212,6 +210,7 @@ class DQNAgent(BaseYgoAgent):
         # breakpoint()
         input_batch_tensor = torch.stack(input_batch).to(self.device)
 
+        self.dqn.eval()
         qs: torch.Tensor = self.dqn(input_batch_tensor)
 
         max_qs_index = np.argmax(qs.cpu().detach().numpy())
@@ -279,24 +278,11 @@ class DQNAgent(BaseYgoAgent):
             targets.append(target)
         return torch.stack(targets)
 
-    def calc_target(self, next_state: dict, reward: float, done) -> torch.Tensor | None:
-        """
-        DQNでのターゲットとなる目的値(収益)を計算
-        * next_state["command_request"].commandsは1つ以上のコマンドを有する
-        """
-        if done:
-            return torch.tensor(reward, dtype=torch.float32)
-        # 次状態における最適アクションを推論する
-        next_q = self.calc_next_q_from_target_net(next_state=next_state)
-
-        # 収益を算出(もしdone=Trueならばh、Rewardのみを返す)
-        ret = reward + self.gamma * next_q * (1 - done)
-        return torch.tensor(ret, dtype=torch.float32)
-
     def sync_qnet(self):
-        if self.num_predict % self.sync_interval == 0:
+        self.num_update += 1
+        if self.num_update % self.sync_interval == 0:
             self.target_net = copy.deepcopy(self.dqn)
-            self.num_predict = 0
+            self.num_update = 0
 
     def save_model_params(self):
         self.cnt_save_model_interval += 1
@@ -306,27 +292,3 @@ class DQNAgent(BaseYgoAgent):
             torch.save(
                 self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name)
             )
-
-    def calc_next_q_from_target_net(self, next_state: dict) -> np.float32:
-        """次状態において、選択可能な行動ActionDataのうち、最大の値であるQ値を返す"""
-        # 次状態のDuelStateDataをテンソルに変換
-        next_duel_state_data: DuelStateData = next_state["state"]
-        next_duel_state_tensor = simple_duel_state_data_tensor(
-            duel_state_data=next_duel_state_data
-        )
-
-        # CommandRequestに含まれる選択可能なCmdEntryのうち、最大のQ値を計算
-        next_cmd_request: CommandRequest = next_state["command_request"]
-
-        input_batch = []  # Batch処理するための空のリスト
-        for cmd_entry in next_cmd_request.commands:
-            # 各CmdEntryをテンソル化し、入力テンソルを作成
-            cmd_entry_tensor = simple_command_entry_tenosr(command_entry=cmd_entry)
-            input_tensor = torch.cat([next_duel_state_tensor, cmd_entry_tensor])
-            input_batch.append(input_tensor)
-        # breakpoint()
-        input_batch_tensor = torch.stack(input_batch).to(self.device)
-        with torch.no_grad():
-            next_qs = self.target_net(input_batch_tensor)
-
-        return np.max(next_qs.cpu().detach().numpy())
