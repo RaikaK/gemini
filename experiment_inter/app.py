@@ -674,6 +674,36 @@ def get_experiment_results():
             except Exception as e:
                 print(f"結果ファイル {file_path} の読み込みに失敗: {e}")
         
+        # 人間面接官の結果
+        for file_path in RESULTS_DIR.glob('human_interview_comparison_*.json'):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    results.append({
+                        'filename': file_path.name,
+                        'type': 'human_interview',
+                        'timestamp': data['timestamp'],
+                        'simulation_num': 1,
+                        'dataset_index': 'human_interview',
+                        'dataset_name': 'Human Interview Session',
+                        'interviewer_type': 'human',
+                        'interviewer_model_name': 'Human Interviewer',
+                        'company_name': data['session_info']['company_profile'].get('name', 'N/A'),
+                        'num_candidates': len(data['session_info']['candidates']),
+                        'accuracy': data['scores']['human_score'] / 100,  # パーセンテージを0-1に変換
+                        'f1_score': data['scores']['human_score'] / 100,
+                        'is_correct': data['scores']['human_score'] == 100,  # 100%正解かどうか
+                        'human_score': data['scores']['human_score'],
+                        'ai_score': data['scores']['ai_score'],
+                        'total_questions': data['session_info']['total_questions'],
+                        'duration_seconds': data['session_info']['duration'],
+                        'knowledge_gaps_available': False,
+                        'knowledge_gaps_accuracy': 'N/A',
+                        'knowledge_gaps_f1': 'N/A'
+                    })
+            except Exception as e:
+                print(f"人間面接官結果ファイル {file_path} の読み込みに失敗: {e}")
+        
         # 実験サマリー結果
         for file_path in RESULTS_DIR.glob('experiment_summary_*.json'):
             try:
@@ -1369,20 +1399,68 @@ def submit_human_ranking():
         try:
             spreadsheet_integration = get_spreadsheet_integration()
             if spreadsheet_integration:
+                # 人間面接官の結果をスプレッドシート用の形式に変換
                 spreadsheet_data = {
                     'experiment_type': 'human_interview_comparison',
-                    'session_id': session_id,
-                    'company_name': session['company_profile'].get('name', 'N/A'),
-                    'human_score': human_score,
-                    'ai_score': ai_score,
-                    'total_questions': session['current_round'],
-                    'duration_seconds': result_data['session_info']['duration'],
-                    'json_filename': filename,
-                    'timestamp': result_data['timestamp']
+                    'simulation_num': 1,  # 人間面接官は単一セッション
+                    'experiment_info': {
+                        'dataset_index': 'human_interview',
+                        'dataset_name': 'Human Interview Session',
+                        'interviewer_type': 'human',
+                        'interviewer_model_name': 'Human Interviewer',
+                        'interview_flow': session.get('interview_flow', []),
+                        'use_dynamic_flow': session.get('use_dynamic_flow', False),
+                        'total_rounds': session['current_round'],
+                        'timestamp': result_data['timestamp'],
+                        'set_index': None
+                    },
+                    'company_profile': session['company_profile'],
+                    'interview_transcripts': [
+                        {
+                            'candidate_info': candidate['profile'],
+                            'possessed_company_knowledge': candidate['knowledge_tuple'][0],
+                            'knowledge_coverage_info': candidate['knowledge_tuple'][1],
+                            'conversation_log': candidate['conversation_log']
+                        }
+                        for candidate in session['candidates']
+                    ],
+                    'final_evaluations': {
+                        'least_motivated_candidate': least_motivated_eval,
+                        'motivation_ranking': ranking_eval,
+                        'knowledge_gaps': None  # 人間面接官では知識欠損検出は行わない
+                    },
+                    'human_evaluation': {
+                        'human_ranking': human_ranking,
+                        'human_score': human_score,
+                        'ai_score': ai_score,
+                        'comparison_results': comparison_results
+                    },
+                    'accuracy_metrics': {
+                        'is_correct': human_correct_count == len(candidate_states),  # 全問正解かどうか
+                        'accuracy': human_score / 100,  # 0-1の範囲に変換
+                        'precision': human_score / 100,
+                        'recall': human_score / 100,
+                        'f1_score': human_score / 100,
+                        'human_vs_ai_comparison': {
+                            'human_score': human_score,
+                            'ai_score': ai_score,
+                            'human_correct_count': human_correct_count,
+                            'ai_correct_count': ai_correct_count,
+                            'total_candidates': len(candidate_states)
+                        }
+                    },
+                    'execution_time_seconds': result_data['session_info']['duration'],
+                    'json_filename': filename
                 }
-                spreadsheet_integration.record_experiment_result(spreadsheet_data)
+                
+                log_message(f"人間面接官の結果をスプレッドシートに記録中...")
+                result = spreadsheet_integration.record_experiment_result(spreadsheet_data)
+                if result.get('success'):
+                    log_message(f"人間面接官の結果のスプレッドシート記録が完了しました (行: {result.get('row', 'N/A')})")
+                else:
+                    log_message(f"人間面接官の結果のスプレッドシート記録エラー: {result.get('message')}")
         except Exception as e:
-            print(f"スプレッドシート記録エラー: {e}")
+            log_message(f"人間面接官の結果のスプレッドシート記録中にエラーが発生しました: {e}")
         
         # セッションをクリーンアップ
         del human_interview_sessions[session_id]
@@ -1398,4 +1476,4 @@ def submit_human_ranking():
         return jsonify({'error': f'ランキングの送信に失敗しました: {e}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

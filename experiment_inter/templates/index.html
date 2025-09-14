@@ -2198,6 +2198,12 @@
                 candidate_name: item.querySelector('.candidate-name').textContent
             }));
             
+            // ボタンをローディング状態に変更
+            const submitBtn = document.getElementById('submitHumanRankingBtn');
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>生成中...';
+            
             // バックエンドに送信
             fetch('/api/human_interview/submit_ranking', {
                 method: 'POST',
@@ -2220,6 +2226,11 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('ランキングの送信に失敗しました');
+            })
+            .finally(() => {
+                // ローディング状態を解除
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalContent;
             });
         }
 
