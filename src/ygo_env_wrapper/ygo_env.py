@@ -54,7 +54,6 @@ class YgoEnv:
         reward = 0.0
         if action_data is not None:
             self.execute_command(action_data=action_data)
-            reward: float = self.reward_func.eval(action_data=action_data)
 
         # コマンドを要求されるか、デュエルが終了するまで次状態は返さない
         while True:
@@ -78,6 +77,7 @@ class YgoEnv:
             duel_end_data: DuelEndData = (
                 self.udi_io.get_duel_end_data() if is_duel_end else None
             )
+            reward: float = self.reward_func.eval(action_data=action_data, duel_state_data=state, is_duel_end=is_duel_end, duel_end_data=duel_end_data)
 
             result_dict = {
                 "is_duel_start": is_duel_start,
