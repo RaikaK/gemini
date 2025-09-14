@@ -1,0 +1,32 @@
+import sys
+
+sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+
+import torch
+
+from ygo.models.duel_state_data import DuelStateData
+from ygo.models.command_request import CommandRequest
+
+
+class DeepQNetwork(torch.nn.Module):
+    def __init__(self, input_size, output_size, r_dropout=0.2):
+        super().__init__()
+        self.sequence = torch.nn.Sequential(
+            torch.nn.Linear(input_size, 1024),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(r_dropout),
+            torch.nn.Linear(1024, 512),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(r_dropout),
+            torch.nn.Linear(512, 512),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(r_dropout),
+            torch.nn.Linear(512, 256),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(r_dropout),
+            torch.nn.Linear(256, output_size),
+        )
+
+    def forward(self, input_tensor):
+        output_tensor = self.sequence(input_tensor)
+        return output_tensor
