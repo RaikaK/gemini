@@ -144,11 +144,13 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
                 'llm_qualitative_analysis': knowledge_gaps_eval.get('llm_qualitative_analysis', ''),
                 'quantitative_performance_metrics': knowledge_gaps_eval.get('quantitative_performance_metrics', {})
             }
+
         
         return {
             'is_correct': is_correct,
             'true_least_motivated': true_least_motivated,
             'predicted_least_motivated': predicted_least_motivated,
+            # 'predicted_missing_key_num': ,
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
@@ -377,7 +379,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     
     least_motivated_eval = interviewer.select_least_motivated_candidate(candidate_states)
     ranking_eval = interviewer.rank_candidates_by_motivation(candidate_states)
-    knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states)
+    knowledge_gap_eval = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
     
     # --- 5. 精度指標の計算 ---
     accuracy_metrics = calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_eval, knowledge_gap_eval)
@@ -706,7 +708,7 @@ def start_experiment():
         return jsonify({'error': '実験が既に実行中です'}), 400
     
     data = request.get_json()
-    set_index = data.get('set_index') if data.get('set_index') != '' else None
+    set_index = int(data.get('set_index')) if data.get('set_index') != '' else None
     num_simulations = int(data.get('num_simulations', 1))
     interview_flow = data.get('interview_flow', config.INTERVIEW_FLOW)
     use_dynamic_flow = data.get('use_dynamic_flow', False)

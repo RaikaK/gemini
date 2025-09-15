@@ -541,26 +541,24 @@ class Interviewer:
         return response
 
     def rank_candidates_by_motivation(self, all_states):
-        """評価タスク2: 候補者を意欲順にランキング付けする（情報欠損分析統合）"""
-        print("--- 最終評価(2/3): 意欲順ランキングを開始 ---")
+        """評価タスク2: 候補者を意欲の低い順にランキング付けする（情報欠損分析統合）"""
+        print("--- 最終評価(2/3): 意欲低い順ランキングを開始 ---")
         conversation_summary = self._format_all_conversations(all_states)
         
-        prompt = f"""あなたは最終決定権を持つ面接官です。全候補者の記録と情報欠損分析を確認し、企業への意欲が高い順にランキング付けし、各順位の理由を簡潔に述べてください。
+        prompt = f"""あなたは最終決定権を持つ面接官です。全候補者の記録と情報欠損分析を確認し、企業への志願度が低い、あるいは準備不足だと思われる順にランキング付けし、各順位の理由を簡潔に述べてください。
 
         # 全候補者の面接記録
         {conversation_summary}
 
-        【ランキング基準】
+        【志願度が低いランキング基準】
         以下の観点から総合的に判断してください：
-        1. **志望動機の強さ**: 企業への志望理由の具体性と説得力
-        2. **企業研究の充実度**: 企業情報の理解度と準備の深さ
-        3. **回答の質**: 質問に対する回答の具体性、詳細度、一貫性
-        4. **情報欠損度**: 重要な企業情報の理解不足（欠損度が低いほど高評価）
-        5. **熱意の表現**: 企業への関心と意欲の表現度
+        1. **志望動機の弱さ**: 企業への志望理由の具体性と説得力の無さ
+        2. **企業研究の非充実度**: 企業情報の理解度が低く、準備が浅いか
+        3. **回答の質の低さ**: 質問に対する回答の具体性、詳細度、一貫性の無さ
+        4. **情報欠損度**: 重要な企業情報の理解不足（欠損度が高いほど低評価で）
 
         【情報欠損度の考慮】
-        - 情報欠損度が低い候補者は、企業研究が充実しており志望度が高い可能性が高い
-        - ただし、情報は豊富でも志望動機が不明確な候補者は順位を下げる
+        - 情報欠損度が高い候補者は、企業研究が充実しておらず、志望度が低い可能性が高い
         - 情報欠損度と志望動機の両方を総合的に評価する
 
         出力形式:
@@ -632,8 +630,9 @@ class Interviewer:
 
             result = {
                 "metrics": {
-                    "precision": round(precision, 3), "recall": round(recall, 3), "accuracy": round(accuracy, 3), "f1_score": round(f1_score, 3),
-                    "true_positives": tp_count, "true_negatives": tn_count, "false_positives": fp_count, "false_negatives": fn_count,
+                    "predicted_missing_key_num": len(detected_missing_keys),
+                    "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
+                    "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
                 },
                 "details": {
                     "correctly_detected_gaps (TP)": list(true_positives),
@@ -649,12 +648,12 @@ class Interviewer:
             if state['profile']['name'] not in evaluation_results:
                 actual_missing_keys = {key for key, value in state['knowledge_tuple'][0].items() if not value}
                 evaluation_results[state['profile']['name']] = {
-                    "metrics": {"precision": 0.0, "recall": 0.0, "accuracy":0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
-                    "details": {"correctly_detected_gaps (TP)": [], "correctly_detected_knowns (TN)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
+                     "metrics": {"missing_key_num": 0.0, "precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
+                    "details": {"correctly_detected_gaps (TP)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
                     "note": "LLM output for this candidate was not found or failed to parse."}
         return evaluation_results
 
-    def detect_knowledge_gaps(self, all_states):
+    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval):
         """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う（情報欠損分析統合）"""
         print("--- 最終評価(3/3): 知識欠損の分析と精度評価を開始 ---")
         
@@ -674,6 +673,12 @@ class Interviewer:
 
         # 各候補者の面接記録
         {conversation_summary}
+
+        # あなたが以前予測した最も志願度が低い候補者について
+        {least_motivated_eval}
+
+        # あなたが以前予測した志願度が低い候補者順のランキングについて
+        {ranking_eval}
         
         【情報欠損分析の活用】
         - 情報欠損度が高い候補者は、企業研究が不十分で知識の欠如が予想される
@@ -685,6 +690,7 @@ class Interviewer:
         1. **思考**: 候補者の各回答を検証します。「この質問に対して、この企業情報（例：'recent_news'）に触れるのが自然だったか？」「回答が具体的か、それとも一般論に終始しているか？」「誤った情報はないか？」といった観点で、知識が欠けていると判断できる「根拠」を探します。
         2. **分析**: 上記の思考に基づき、知識が不足していると判断した理由を簡潔に記述します。情報欠損分析結果も考慮してください。
         3. **キーの列挙**: 知識不足の根拠があると判断した情報の「キー」のみをJSONのリスト形式で列挙してください。根拠がなければ、空のリスト `[]` を返してください。
+        4. なお、候補者の中には知識不足がない場合もあることを考慮してください。
 
         厳格な出力形式:
         - {all_states[0]['profile']['name']}:

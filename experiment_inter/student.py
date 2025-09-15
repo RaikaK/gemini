@@ -11,7 +11,7 @@ class CompanyKnowledgeManager:
         self.full_profile = full_company_profile
         self.all_keys = list(full_company_profile.keys())
         # 必須で知っておくべき項目を定義
-        self.essential_keys = ["name", "business", "products", "vision"]
+        self.essential_keys = ["name", "id", "business", "products", "vision"]
 
     def get_knowledge_for_level(self, level='high'):
         """
