@@ -447,6 +447,9 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
 
 def run_experiment_web(local_interviewer_model=None, local_interviewer_tokenizer=None, set_index=None, num_simulations=1, interview_flow=None, use_dynamic_flow=False, interviewer_model_type=None, interviewer_model_name=None):
     """Web用の面接シミュレーション実行関数（複数回対応）"""
+    import random
+
+    random.seed(0)
     try:
         experiment_status['is_running'] = True
         experiment_status['logs'] = []

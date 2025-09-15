@@ -32,11 +32,18 @@ def load_company_and_candidates_from_db(set_index=None):
         candidate_profiles = selected_set['students']
         
         # 学生プロフィールにpreparationフィールドをランダムに追加
-        preparation_levels = ['low', 'medium', 'high']
+        # preparation_levels = ['low', 'medium', 'high']
         for i, profile in enumerate(candidate_profiles):
             # ランダムにpreparationレベルを割り当て
-            profile['preparation'] = random.choice(preparation_levels)
-        
+            aspiration_level = profile.get('aspiration_level', 'medium_70_percent')
+            if 'high_90_percent' in aspiration_level:
+                profile['preparation'] = 'high'
+            elif 'medium_70_percent' in aspiration_level:
+                profile['preparation'] = 'medium'
+            else:
+                profile['preparation'] = 'low'
+
+        random.shuffle(candidate_profiles)
         print(f"--- セット {set_index + 1} を選択しました ---")
         print(f"--- 企業: {company_profile.get('name', 'N/A')} ---")
         print(f"--- 学生数: {len(candidate_profiles)}人 ---")
