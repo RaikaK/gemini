@@ -741,7 +741,7 @@ def start_experiment():
         return jsonify({'error': '実験が既に実行中です'}), 400
     
     data = request.get_json()
-    set_index = int(data.get('set_index')) if data.get('set_index') != '' else None
+    set_index = int(data.get('set_index')) if data.get('set_index') != None else None
     num_simulations = int(data.get('num_simulations', 1))
     interview_flow = data.get('interview_flow', config.INTERVIEW_FLOW)
     use_dynamic_flow = data.get('use_dynamic_flow', False)

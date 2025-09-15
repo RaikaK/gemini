@@ -64,8 +64,8 @@ INTERVIEW_FLOW = [1,1,1,1,1]  # 全体質問1回 + 個別質問3回
 # --- 智的動的面接フローの設定 ---
 # 智的動的フローを使用するかどうか
 USE_INTELLIGENT_DYNAMIC_FLOW = True  # True: 智的動的フロー, False: 固定フロー
-MAX_DYNAMIC_ROUNDS = 20  # 動的フローでの最大ラウンド数（質問回数制限撤廃に対応）
+MAX_DYNAMIC_ROUNDS = 10  # 動的フローでの最大ラウンド数（質問回数制限撤廃に対応）
 
 # --- 対話設定 ---
-MAX_CONVERSATION_TURNS = 20  # 1回の面接での最大対話回数
+MAX_CONVERSATION_TURNS = 10  # 1回の面接での最大対話回数
 MIN_CONVERSATION_TURNS = 1   # 1回の面接での最小対話回数

@@ -566,6 +566,67 @@ class Interviewer:
         print("--- 最終評価(2/3): ランキングを完了 ---")
         return response
 
+    # def _calculate_detection_metrics(self, llm_output_text, all_states):
+    #     """LLMの出力と正解データを比較し、TP/FP/FNなどの性能メトリクスを計算する"""
+    #     evaluation_results = {}
+    #     candidate_states_map = {s['profile']['name']: s for s in all_states}
+    #     sections = re.split(r'(?=- [^\n]+:)', llm_output_text)
+        
+    #     for section in sections:
+    #         section = section.strip()
+    #         if not section or ':' not in section: continue
+
+    #         first_line = section.split('\n', 1)[0]
+    #         candidate_name = first_line.replace('-', '').strip().split(':', 1)[0].strip()
+    #         if candidate_name not in candidate_states_map: continue
+            
+    #         state = candidate_states_map[candidate_name]
+    #         note = None
+    #         detected_missing_keys = set()
+            
+    #         key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", section)
+    #         if key_line_match:
+    #             try:
+    #                 keys_str = key_line_match.group(1)
+    #                 detected_missing_keys = set(json.loads(keys_str))
+    #             except json.JSONDecodeError:
+    #                 note = "Detected '欠損項目キー' but failed to parse JSON."
+    #         else:
+    #             note = "Candidate block found, but '欠損項目キー' line is missing."
+
+    #         possessed_knowledge = state['knowledge_tuple'][0]
+    #         actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
+    #         true_positives = actual_missing_keys.intersection(detected_missing_keys)
+    #         false_positives = detected_missing_keys.difference(actual_missing_keys)
+    #         false_negatives = actual_missing_keys.difference(detected_missing_keys)
+    #         tp_count, fp_count, fn_count = len(true_positives), len(false_positives), len(false_negatives)
+    #         precision = tp_count / (tp_count + fp_count) if (tp_count + fp_count) > 0 else 0.0
+    #         recall = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0.0
+    #         f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+
+    #         result = {
+    #             "metrics": {
+    #                 "predicted_missing_key_num": len(detected_missing_keys),
+    #                 "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
+    #                 "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
+    #             },
+    #             "details": {
+    #                 "correctly_detected_gaps (TP)": list(true_positives),
+    #                 "incorrectly_detected_gaps (FP)": list(false_positives),
+    #                 "missed_gaps (FN)": list(false_negatives),
+    #             }
+    #         }
+    #         if note: result["note"] = note
+    #         evaluation_results[candidate_name] = result
+
+    #     for state in all_states:
+    #         if state['profile']['name'] not in evaluation_results:
+    #             actual_missing_keys = {key for key, value in state['knowledge_tuple'][0].items() if not value}
+    #             evaluation_results[state['profile']['name']] = {
+    #                  "metrics": {"missing_key_num": 0.0, "precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
+    #                 "details": {"correctly_detected_gaps (TP)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
+    #                 "note": "LLM output for this candidate was not found or failed to parse."}
+    #     return evaluation_results
     def _calculate_detection_metrics(self, llm_output_text, all_states):
         """LLMの出力と正解データを比較し、TP/FP/FNなどの性能メトリクスを計算する"""
         evaluation_results = {}
@@ -596,22 +657,28 @@ class Interviewer:
 
             possessed_knowledge = state['knowledge_tuple'][0]
             actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
+            actual_possessed_keys = {key for key, value in possessed_knowledge.items() if value}
+            all_company_keys = set(list(self.company.keys()))
+            detect_possessed_keys = all_company_keys.difference(detected_missing_keys)
+
             true_positives = actual_missing_keys.intersection(detected_missing_keys)
+            true_negatives = actual_possessed_keys.intersection(detect_possessed_keys)
             false_positives = detected_missing_keys.difference(actual_missing_keys)
             false_negatives = actual_missing_keys.difference(detected_missing_keys)
-            tp_count, fp_count, fn_count = len(true_positives), len(false_positives), len(false_negatives)
+            tp_count, tn_count, fp_count, fn_count = len(true_positives), len(true_negatives), len(false_positives), len(false_negatives)
             precision = tp_count / (tp_count + fp_count) if (tp_count + fp_count) > 0 else 0.0
             recall = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0.0
             f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+            accuracy = (tp_count + tn_count) / len(all_company_keys) if all_company_keys else 0.0
 
             result = {
                 "metrics": {
-                    "predicted_missing_key_num": len(detected_missing_keys),
-                    "precision": round(precision, 3), "recall": round(recall, 3), "f1_score": round(f1_score, 3),
-                    "true_positives": tp_count, "false_positives": fp_count, "false_negatives": fn_count,
+                    "precision": round(precision, 3), "recall": round(recall, 3), "accuracy": round(accuracy, 3), "f1_score": round(f1_score, 3),
+                    "true_positives": tp_count, "true_negatives": tn_count, "false_positives": fp_count, "false_negatives": fn_count,
                 },
                 "details": {
                     "correctly_detected_gaps (TP)": list(true_positives),
+                    "correctly_detected_knowns (TN)": list(true_negatives),
                     "incorrectly_detected_gaps (FP)": list(false_positives),
                     "missed_gaps (FN)": list(false_negatives),
                 }
@@ -623,7 +690,7 @@ class Interviewer:
             if state['profile']['name'] not in evaluation_results:
                 actual_missing_keys = {key for key, value in state['knowledge_tuple'][0].items() if not value}
                 evaluation_results[state['profile']['name']] = {
-                     "metrics": {"missing_key_num": 0.0, "precision": 0.0, "recall": 0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
+                     "metrics": {"precision": 0.0, "recall": 0.0, "accuracy":0.0, "f1_score": 0.0, "true_positives": 0, "false_positives": 0, "false_negatives": len(actual_missing_keys)},
                     "details": {"correctly_detected_gaps (TP)": [], "incorrectly_detected_gaps (FP)": [], "missed_gaps (FN)": list(actual_missing_keys)},
                     "note": "LLM output for this candidate was not found or failed to parse."}
         return evaluation_results
