@@ -715,12 +715,6 @@ class Interviewer:
 
         # 各候補者の面接記録
         {conversation_summary}
-
-        # あなたが以前予測した最も志願度が低い候補者について
-        {least_motivated_eval}
-
-        # あなたが以前予測した志願度が低い候補者順のランキングについて
-        {ranking_eval}
         
         【情報欠損分析の活用】
         - 情報欠損度が高い候補者は、企業研究が不十分で知識の欠如が予想される
