@@ -14,8 +14,6 @@ from ygo.models.command_request import CommandRequest, CommandEntry
 from ygo import constants
 from ygo.constants.enums import ResultType
 
-from src.reward_functions.base_reward_func import BaseRewardFunction
-from src.reward_functions.normal_reward_func import NormalRewardFunction
 from src.ygo_env_wrapper.action_data import ActionData
 from src.ygo_env_wrapper.env_enums import EnvStateColumn
 
@@ -40,7 +38,7 @@ class YgoEnv:
     def step(
         self,
         action_data: ActionData,
-    ) -> dict[EnvStateColumn, any]:
+    ) -> dict[str, any]:
         """
         コマンド(cmd_index)を実行し、次状態を返す
         - デュエルスタートかどうか： "is_duel_start"

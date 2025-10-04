@@ -14,8 +14,13 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models import CommandEntry, CommandRequest
-from src.agents.dqn_agent.sample_tensors import SetActionVector, SetBoardVector, BoardNum, ActionNum, InforNum
-
+from src.agents.dqn_agent.sample_tensors import (
+    SetActionVector,
+    SetBoardVector,
+    BoardNum,
+    ActionNum,
+    InforNum,
+)
 
 # シミュレータ起動コマンド
 # DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
@@ -113,7 +118,6 @@ class DQNAgent(BaseYgoAgent):
         if not done:
             return None
         # episode終了時に学習を行う
-        # self.replay_short_memory.update_all_reward(reward=reward)  # ゲーム終了時に報酬を更新
         self.replay_buffer.extend(
             self.replay_short_memory.buffer
         )  # おおもとの経験再生に1Episode分の経験データをすべて追加
