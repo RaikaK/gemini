@@ -14,8 +14,13 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models import CommandEntry, CommandRequest
-from src.agents.dqn_agent.sample_tensors import SetActionVector, SetBoardVector, BoardNum, ActionNum, InforNum
-
+from src.agents.dqn_agent.sample_tensors import (
+    SetActionVector,
+    SetBoardVector,
+    BoardNum,
+    ActionNum,
+    InforNum,
+)
 
 # シミュレータ起動コマンド
 # DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
@@ -47,8 +52,12 @@ class DQNAgent(BaseYgoAgent):
         # (duel_state_data + command_entry) -> DNN -> Q-value
         self.input_size = BoardNum + InforNum + ActionNum
         self.output_size = 1
-        self.dqn = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
-        self.target_net = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
+        self.dqn = DeepQNetwork(
+            input_size=self.input_size, output_size=self.output_size
+        )
+        self.target_net = DeepQNetwork(
+            input_size=self.input_size, output_size=self.output_size
+        )
 
         # モデルの保存ン関する設定
         self.model_file_name = model_file_name
@@ -63,10 +72,14 @@ class DQNAgent(BaseYgoAgent):
         self.optimizer = torch.optim.Adam(params=self.dqn.parameters(), lr=self.lr)
 
         # 経験再生
-        self.replay_buffer = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
+        self.replay_buffer = ReplayBuffer(
+            buffer_size=buffer_size, batch_size=batch_size
+        )
 
         # 1episode分のデータを管理して毎回クリアする
-        self.replay_short_memory = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
+        self.replay_short_memory = ReplayBuffer(
+            buffer_size=buffer_size, batch_size=batch_size
+        )
 
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
@@ -96,7 +109,9 @@ class DQNAgent(BaseYgoAgent):
         else:
             return self._predict(state=state)
 
-    def update(self, state: dict, action_data: ActionData, next_state: dict) -> dict | None:
+    def update(
+        self, state: dict, action_data: ActionData, next_state: dict
+    ) -> dict | None:
         if action_data is None:
             return None
         reward = next_state["reward"]
@@ -113,7 +128,7 @@ class DQNAgent(BaseYgoAgent):
         if not done:
             return None
         # episode終了時に学習を行う
-        # self.replay_short_memory.update_all_reward(reward=reward)  # ゲーム終了時に報酬を更新
+        self.replay_short_memory.update_all_reward()  # ゲーム終了時に報酬を更新
         self.replay_buffer.extend(
             self.replay_short_memory.buffer
         )  # おおもとの経験再生に1Episode分の経験データをすべて追加
@@ -156,7 +171,9 @@ class DQNAgent(BaseYgoAgent):
                 next_states.append(next_st)
             input_batch_tensor = torch.stack(input_batch).to(self.device)
 
-            targets = self.calc_targets(next_states=next_states, rewards=rewards, dones=dones)
+            targets = self.calc_targets(
+                next_states=next_states, rewards=rewards, dones=dones
+            )
             targets = targets.to(self.device).unsqueeze(1)
             # targets = (
             #     torch.stack([torch.tensor(reward, dtype=torch.float32) for reward in rewards])
@@ -174,7 +191,11 @@ class DQNAgent(BaseYgoAgent):
 
             losses.append(loss.mean())
 
-        loss = np.average(np.array([l.detach().cpu().numpy() for l in losses])) if len(losses) > 0 else 0
+        loss = (
+            np.average(np.array([l.detach().cpu().numpy() for l in losses]))
+            if len(losses) > 0
+            else 0
+        )
         print(f"mean loss: {loss}")
 
         # target_netを更新
@@ -212,7 +233,9 @@ class DQNAgent(BaseYgoAgent):
         )
         return action_data
 
-    def calc_targets(self, next_states: list[dict], rewards: list[float], dones: list[bool]) -> torch.Tensor | None:
+    def calc_targets(
+        self, next_states: list[dict], rewards: list[float], dones: list[bool]
+    ) -> torch.Tensor | None:
         """
         1. 各次状態における選択可能なコマンドの数を保持する辞書を作成
         - next_state_cmd_count = {index_next_state: num_command_entries}
@@ -224,7 +247,8 @@ class DQNAgent(BaseYgoAgent):
         """
         # 1.
         next_state_cmd_count = {
-            i: len(next_state["command_request"].commands) for i, next_state in enumerate(next_states)
+            i: len(next_state["command_request"].commands)
+            for i, next_state in enumerate(next_states)
         }
 
         # 2.
@@ -262,11 +286,15 @@ class DQNAgent(BaseYgoAgent):
 
         # 5.
         targets = []
-        for i, (next_state, reward, done) in enumerate(zip(next_states, rewards, dones)):
+        for i, (next_state, reward, done) in enumerate(
+            zip(next_states, rewards, dones)
+        ):
             if done:
                 target = torch.tensor(reward, dtype=torch.float32)
             else:
-                target = torch.tensor(reward + self.gamma * next_state_max_q[i], dtype=torch.float32)
+                target = torch.tensor(
+                    reward + self.gamma * next_state_max_q[i], dtype=torch.float32
+                )
             targets.append(target)
         return torch.stack(targets)
 
@@ -281,7 +309,9 @@ class DQNAgent(BaseYgoAgent):
         if self.cnt_save_model_interval % self.save_model_interval == 0:
             now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             save_name = self.model_file_name.format(now=now)
-            torch.save(self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name))
+            torch.save(
+                self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name)
+            )
 
     def _get_input_ret(self, state: dict):
         input_ret = [
