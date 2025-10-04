@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import random
 import numpy as np
@@ -14,13 +14,7 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models import CommandEntry, CommandRequest
-from vendor.UDI.samples.tutorial.sample1.SampleAi import (
-    SetBoardVector,
-    SetActionVector,
-    BoardNum,
-    ActionNum,
-    InforNum,
-)
+from src.agents.dqn_agent.sample_tensors import SetActionVector, SetBoardVector, BoardNum, ActionNum, InforNum
 
 
 # シミュレータ起動コマンド
@@ -51,14 +45,10 @@ class DQNAgent(BaseYgoAgent):
 
         # Output Only Q-value based on State&Action(CommandEntry)
         # (duel_state_data + command_entry) -> DNN -> Q-value
-        self.input_size = BoardNum + ActionNum
+        self.input_size = BoardNum + InforNum + ActionNum
         self.output_size = 1
-        self.dqn = DeepQNetwork(
-            input_size=self.input_size, output_size=self.output_size
-        )
-        self.target_net = DeepQNetwork(
-            input_size=self.input_size, output_size=self.output_size
-        )
+        self.dqn = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
+        self.target_net = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
 
         # モデルの保存ン関する設定
         self.model_file_name = model_file_name
@@ -73,14 +63,10 @@ class DQNAgent(BaseYgoAgent):
         self.optimizer = torch.optim.Adam(params=self.dqn.parameters(), lr=self.lr)
 
         # 経験再生
-        self.replay_buffer = ReplayBuffer(
-            buffer_size=buffer_size, batch_size=batch_size
-        )
+        self.replay_buffer = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
 
         # 1episode分のデータを管理して毎回クリアする
-        self.replay_short_memory = ReplayBuffer(
-            buffer_size=buffer_size, batch_size=batch_size
-        )
+        self.replay_short_memory = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
 
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
@@ -110,9 +96,7 @@ class DQNAgent(BaseYgoAgent):
         else:
             return self._predict(state=state)
 
-    def update(
-        self, state: dict, action_data: ActionData, next_state: dict
-    ) -> dict | None:
+    def update(self, state: dict, action_data: ActionData, next_state: dict) -> dict | None:
         if action_data is None:
             return None
         reward = next_state["reward"]
@@ -129,9 +113,7 @@ class DQNAgent(BaseYgoAgent):
         if not done:
             return None
         # episode終了時に学習を行う
-        self.replay_short_memory.update_all_reward(
-            reward=reward
-        )  # ゲーム終了時に報酬を更新
+        # self.replay_short_memory.update_all_reward(reward=reward)  # ゲーム終了時に報酬を更新
         self.replay_buffer.extend(
             self.replay_short_memory.buffer
         )  # おおもとの経験再生に1Episode分の経験データをすべて追加
@@ -151,16 +133,17 @@ class DQNAgent(BaseYgoAgent):
             next_states = []
             for replay_data in batch_data:
                 # Replayデータから情報を抜き取る
-                state: dict = replay_data["state"]
-                action_data: ActionData = replay_data["action_data"]
-                reward: float = replay_data["reward"]
-                done: bool = replay_data["done"]
-                next_state: dict = replay_data["next_state"]
+                st: dict = replay_data["state"]
+                act: ActionData = replay_data["action_data"]
+                rwd: float = replay_data["reward"]
+                terminated: bool = replay_data["done"]
+                next_st: dict = replay_data["next_state"]
 
                 # 状態のテンソルとアクションのテンソルを用意して、入力テンソルを生成
-                input_ret = self._get_input_ret(state)
+                input_ret = self._get_input_ret(st)
                 board_vector = SetBoardVector(input_ret)
-                action_vector = SetActionVector(input_ret)[action_data.command_index]
+                action_vector = SetActionVector(input_ret)[act.command_index]
+
                 x = np.empty((self.input_size), dtype=np.float32)
                 x[0 : BoardNum + InforNum] = board_vector
                 x[BoardNum + InforNum : self.input_size] = action_vector
@@ -168,22 +151,18 @@ class DQNAgent(BaseYgoAgent):
                 input_batch.append(torch.tensor(x, dtype=torch.float32))
 
                 # rewardやdone, next_stateなども保持
-                rewards.append(reward)
-                dones.append(done)
-                next_states.append(next_state)
+                rewards.append(rwd)
+                dones.append(terminated)
+                next_states.append(next_st)
             input_batch_tensor = torch.stack(input_batch).to(self.device)
 
-            # targets = self.calc_targets(
-            #     next_states=next_states, rewards=rewards, dones=dones
+            targets = self.calc_targets(next_states=next_states, rewards=rewards, dones=dones)
+            targets = targets.to(self.device).unsqueeze(1)
+            # targets = (
+            #     torch.stack([torch.tensor(reward, dtype=torch.float32) for reward in rewards])
+            #     .to(self.device)
+            #     .unsqueeze(1)
             # )
-            # targets = targets.to(self.device).unsqueeze(1)
-            targets = (
-                torch.stack(
-                    [torch.tensor(reward, dtype=torch.float32) for reward in rewards]
-                )
-                .to(self.device)
-                .unsqueeze(1)
-            )
 
             # 損失を計算
             loss = self.loss_func(self.dqn(input_batch_tensor), targets)
@@ -195,18 +174,14 @@ class DQNAgent(BaseYgoAgent):
 
             losses.append(loss.mean())
 
-        loss = (
-            np.average(np.array([l.detach().cpu().numpy() for l in losses]))
-            if len(losses) > 0
-            else 0
-        )
+        loss = np.average(np.array([l.detach().cpu().numpy() for l in losses])) if len(losses) > 0 else 0
         print(f"mean loss: {loss}")
 
         # target_netを更新
         self.sync_qnet()
         self.save_model_params()
 
-        log_dict = {"loss": loss}
+        log_dict = {"loss": loss, "reward": reward}
         return log_dict
 
     def _predict(self, state: dict) -> ActionData:
@@ -219,9 +194,9 @@ class DQNAgent(BaseYgoAgent):
         input_ret = self._get_input_ret(state)
         board_vector = SetBoardVector(input_ret)
         action_vector = SetActionVector(input_ret)
-        batch_num = len(state["command_request"].commands)
-        x = np.empty((batch_num, self.input_size), dtype=np.float32)
-        for i in range(batch_num):
+        cmd_count = len(state["command_request"].commands)
+        x = np.empty((cmd_count, self.input_size), dtype=np.float32)
+        for i in range(cmd_count):
             x[i][0 : BoardNum + InforNum] = board_vector
             x[i][BoardNum + InforNum : self.input_size] = action_vector[i]
 
@@ -237,9 +212,7 @@ class DQNAgent(BaseYgoAgent):
         )
         return action_data
 
-    def calc_targets(
-        self, next_states: list[dict], rewards: list[float], dones: list[bool]
-    ) -> torch.Tensor | None:
+    def calc_targets(self, next_states: list[dict], rewards: list[float], dones: list[bool]) -> torch.Tensor | None:
         """
         1. 各次状態における選択可能なコマンドの数を保持する辞書を作成
         - next_state_cmd_count = {index_next_state: num_command_entries}
@@ -251,21 +224,23 @@ class DQNAgent(BaseYgoAgent):
         """
         # 1.
         next_state_cmd_count = {
-            i: len(next_state["command_request"].commands)
-            for i, next_state in enumerate(next_states)
+            i: len(next_state["command_request"].commands) for i, next_state in enumerate(next_states)
         }
 
         # 2.
-
-        input_batch = []
-        for next_state in next_states:
+        all_cmd_count = sum(list(next_state_cmd_count.values()))
+        x = np.empty((all_cmd_count, self.input_size), dtype=np.float32)
+        counter = 0
+        for i, next_state in enumerate(next_states):
             input_ret = self._get_input_ret(next_state)
             board_vector = SetBoardVector(input_ret)
             action_vector = SetActionVector(input_ret)
-            batch_num = len(next_state["command_request"].commands)
-            x = np.empty((batch_num, self.input_size), dtype=np.float32)
-            input_batch.append(torch.tensor(x, dtype=torch.float32))
-        input_batch_tensor = torch.stack(input_batch).to(self.device)
+            cmd_count = next_state_cmd_count[i]
+            for j in range(cmd_count):
+                x[counter][0 : BoardNum + InforNum] = board_vector
+                x[counter][BoardNum + InforNum : self.input_size] = action_vector[j]
+                counter += 1
+        input_batch_tensor = torch.tensor(x, dtype=torch.float32).to(self.device)
 
         # breakpoint()
 
@@ -278,19 +253,20 @@ class DQNAgent(BaseYgoAgent):
         counts = list(next_state_cmd_count.values())
         start_index = 0
         for i, c in enumerate(counts):
-            end_index = start_index + c
-            next_state_max_q[i] = next_qs[start_index:end_index].max().item()
-            start_index = end_index
+            if dones[i]:
+                next_state_max_q[i] = 0
+            else:
+                end_index = start_index + c
+                next_state_max_q[i] = next_qs[start_index:end_index].max().item()
+                start_index = end_index
 
         # 5.
         targets = []
-        for i, (next_state, reward, done) in enumerate(
-            zip(next_states, rewards, dones)
-        ):
+        for i, (next_state, reward, done) in enumerate(zip(next_states, rewards, dones)):
             if done:
-                target = torch.tensor(reward)
+                target = torch.tensor(reward, dtype=torch.float32)
             else:
-                target = torch.tensor(reward + self.gamma * next_state_max_q[i])
+                target = torch.tensor(reward + self.gamma * next_state_max_q[i], dtype=torch.float32)
             targets.append(target)
         return torch.stack(targets)
 
@@ -305,9 +281,7 @@ class DQNAgent(BaseYgoAgent):
         if self.cnt_save_model_interval % self.save_model_interval == 0:
             now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             save_name = self.model_file_name.format(now=now)
-            torch.save(
-                self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name)
-            )
+            torch.save(self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name))
 
     def _get_input_ret(self, state: dict):
         input_ret = [

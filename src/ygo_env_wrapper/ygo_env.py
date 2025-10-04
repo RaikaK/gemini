@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import argparse
 from pprint import pprint
@@ -16,6 +16,7 @@ from ygo import constants
 from src.reward_functions.base_reward_func import BaseRewardFunction
 from src.reward_functions.normal_reward_func import NormalRewardFunction
 from src.ygo_env_wrapper.action_data import ActionData
+from src.ygo_env_wrapper.env_enums import EnvStateColumn
 
 
 class YgoEnv:
@@ -23,9 +24,7 @@ class YgoEnv:
 
     def __init__(self, udi_io: UdiIO):
         self.udi_io = udi_io  # MDクライアントの情報参照
-        self.reward_func = (
-            NormalRewardFunction()
-        )  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
+        self.reward_func = NormalRewardFunction()  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
 
     def reset(self):
         return self.step(None)
@@ -40,7 +39,7 @@ class YgoEnv:
     def step(
         self,
         action_data: ActionData,
-    ) -> dict:
+    ) -> dict[EnvStateColumn, any]:
         """
         コマンド(cmd_index)を実行し、次状態を返す
         - デュエルスタートかどうか： "is_duel_start"
@@ -74,10 +73,10 @@ class YgoEnv:
             is_duel_start = self.udi_io.is_duel_start()
             is_duel_end = self.udi_io.is_duel_end()
             is_cmd_required = self.udi_io.is_command_required()
-            duel_end_data: DuelEndData = (
-                self.udi_io.get_duel_end_data() if is_duel_end else None
+            duel_end_data: DuelEndData = self.udi_io.get_duel_end_data() if is_duel_end else None
+            reward: float = self.reward_func.eval(
+                action_data=action_data, duel_state_data=state, is_duel_end=is_duel_end, duel_end_data=duel_end_data
             )
-            reward: float = self.reward_func.eval(action_data=action_data, duel_state_data=state, is_duel_end=is_duel_end, duel_end_data=duel_end_data)
 
             result_dict = {
                 "is_duel_start": is_duel_start,
@@ -125,9 +124,7 @@ def cli_player(state: dict) -> ActionData:
 
         except Exception as e:
             can_send = False
-            print(
-                f"Invalid command index. Select cmd_index in 0-{len(state['command_request'].commands) - 1}"
-            )
+            print(f"Invalid command index. Select cmd_index in 0-{len(state['command_request'].commands) - 1}")
 
     # コマンド生成
     cmd_request = state["command_request"]
@@ -151,9 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--tcpport", type=int, default=52010)
     parser.add_argument("--tcphost", type=str, default="10.95.102.79")
     parser.add_argument("-g", "--gRPC", action="store_true", help="using gRPC")
-    parser.add_argument(
-        "--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer"
-    )
+    parser.add_argument("--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer")
     parser.add_argument("--LoadWeightName", type=str, default=None)
     parser.add_argument("-x", type=int, default=0, help="Dummy")
     args = parser.parse_args()
@@ -165,9 +160,7 @@ if __name__ == "__main__":
         connect = UdiIO.Connect.GRPC
 
     # UDIの初期化
-    udi_io = UdiIO(
-        tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1
-    )
+    udi_io = UdiIO(tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1)
     # UDIのログは大量に出るため、出力しないようにする
     udi_io.log_response_history = False
     text_util = TextUtil()

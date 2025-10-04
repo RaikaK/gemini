@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models.command_request import CommandRequest, CommandEntry
@@ -25,6 +25,4 @@ class ActionData:
                 return i
 
         # command_entryがcommandsに存在しない場合はエラー
-        raise ValueError(
-            "指定されたCommandEntryは、CommandRequestのcommandsに存在しません。"
-        )
+        raise ValueError("指定されたCommandEntryは、CommandRequestのcommandsに存在しません。")

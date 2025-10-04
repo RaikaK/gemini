@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import torch
 
@@ -12,15 +12,13 @@ class DeepQNetwork(torch.nn.Module):
     def __init__(self, input_size, output_size, r_dropout=0.2):
         super().__init__()
         self.sequence = torch.nn.Sequential(
-            torch.nn.Linear(input_size, 1024),
+            torch.nn.Linear(input_size, 256),
             torch.nn.ReLU(),
-            torch.nn.Dropout(r_dropout),
-            torch.nn.Linear(1024, 512),
+            torch.nn.Linear(256, 512),
             torch.nn.ReLU(),
             torch.nn.Dropout(r_dropout),
             torch.nn.Linear(512, 512),
             torch.nn.ReLU(),
-            torch.nn.Dropout(r_dropout),
             torch.nn.Linear(512, 256),
             torch.nn.ReLU(),
             torch.nn.Dropout(r_dropout),

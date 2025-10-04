@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import abc
 
@@ -17,8 +17,7 @@ class BaseRewardFunction(abc.ABC):
 
     @abc.abstractmethod
     def eval(
-        self,
-        action_data: ActionData, duel_state_data: DuelStateData, is_duel_end: bool, duel_end_data: DuelEndData
+        self, action_data: ActionData, duel_state_data: DuelStateData, is_duel_end: bool, duel_end_data: DuelEndData
     ) -> float:
         """action_dataの結果、ゲームの状態がどのように変化したかを評価する"""
         pass

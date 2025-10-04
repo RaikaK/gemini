@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import abc
 
@@ -18,6 +18,6 @@ class BaseYgoAgent(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def update(self, state:dict, action_data: ActionData, next_state: dict) -> dict|None:
+    def update(self, state: dict, action_data: ActionData, next_state: dict) -> dict | None:
         """状態sとその時の行動action_data、その後の次状態next_stateを取得してエージェントの内部状態を更新する"""
         pass
