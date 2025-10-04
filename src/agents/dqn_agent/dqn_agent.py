@@ -14,6 +14,13 @@ from src.ygo_env_wrapper.action_data import ActionData
 
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models import CommandEntry, CommandRequest
+from vendor.UDI.samples.tutorial.sample1.SampleAi import (
+    SetBoardVector,
+    SetActionVector,
+    BoardNum,
+    ActionNum,
+    InforNum,
+)
 
 
 # シミュレータ起動コマンド
@@ -21,14 +28,6 @@ from ygo.models import CommandEntry, CommandRequest
 
 from src.agents.dqn_agent.deep_q_network import DeepQNetwork
 from src.agents.dqn_agent.replay_buffer import ReplayBuffer
-from src.agents.dqn_agent.simple_tensors.duel_state_data_tensor import (
-    simple_duel_state_data_tensor,
-    DIM_DUEL_STATE_DATA,
-)
-from src.agents.dqn_agent.simple_tensors.command_entry_tensor import (
-    simple_command_entry_tenosr,
-    DIM_COMMAND_ENTRY,
-)
 
 
 class DQNAgent(BaseYgoAgent):
@@ -52,10 +51,14 @@ class DQNAgent(BaseYgoAgent):
 
         # Output Only Q-value based on State&Action(CommandEntry)
         # (duel_state_data + command_entry) -> DNN -> Q-value
-        input_size = DIM_DUEL_STATE_DATA + DIM_COMMAND_ENTRY
-        output_size = 1
-        self.dqn = DeepQNetwork(input_size=input_size, output_size=output_size)
-        self.target_net = DeepQNetwork(input_size=input_size, output_size=output_size)
+        self.input_size = BoardNum + ActionNum
+        self.output_size = 1
+        self.dqn = DeepQNetwork(
+            input_size=self.input_size, output_size=self.output_size
+        )
+        self.target_net = DeepQNetwork(
+            input_size=self.input_size, output_size=self.output_size
+        )
 
         # モデルの保存ン関する設定
         self.model_file_name = model_file_name
@@ -73,9 +76,11 @@ class DQNAgent(BaseYgoAgent):
         self.replay_buffer = ReplayBuffer(
             buffer_size=buffer_size, batch_size=batch_size
         )
-        
+
         # 1episode分のデータを管理して毎回クリアする
-        self.replay_short_memory = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
+        self.replay_short_memory = ReplayBuffer(
+            buffer_size=buffer_size, batch_size=batch_size
+        )
 
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
@@ -103,7 +108,7 @@ class DQNAgent(BaseYgoAgent):
             )
             return action_data
         else:
-            return self.predict(state=state)
+            return self._predict(state=state)
 
     def update(
         self, state: dict, action_data: ActionData, next_state: dict
@@ -113,20 +118,30 @@ class DQNAgent(BaseYgoAgent):
         reward = next_state["reward"]
         done = next_state["is_duel_end"]
 
-        self.replay_short_memory.add(state=state, action_data=action_data, reward=reward, done=done, next_state=next_state)
+        self.replay_short_memory.add(
+            state=state,
+            action_data=action_data,
+            reward=reward,
+            done=done,
+            next_state=next_state,
+        )
 
         if not done:
             return None
         # episode終了時に学習を行う
-        self.replay_short_memory.update_all_reward(reward=reward) # ゲーム終了時に報酬を更新
-        self.replay_buffer.extend(self.replay_short_memory.buffer) # おおもとの経験再生に1Episode分の経験データをすべて追加
-        self.replay_short_memory.clear() # 小メモリはクリアする
-        
+        self.replay_short_memory.update_all_reward(
+            reward=reward
+        )  # ゲーム終了時に報酬を更新
+        self.replay_buffer.extend(
+            self.replay_short_memory.buffer
+        )  # おおもとの経験再生に1Episode分の経験データをすべて追加
+        self.replay_short_memory.clear()  # 小メモリはクリアする
+
         batch_data = self.replay_buffer.get_batch()
         if batch_data is None:
             return None
-        
-        self.dqn.train() # nn.Moduleの学習モード設定
+
+        self.dqn.train()  # nn.Moduleの学習モード設定
         losses = []
         for _ in range(self.epochs_on_update):
             # dqnに入力するinpute_tensorバッチを作成する
@@ -143,14 +158,14 @@ class DQNAgent(BaseYgoAgent):
                 next_state: dict = replay_data["next_state"]
 
                 # 状態のテンソルとアクションのテンソルを用意して、入力テンソルを生成
-                state_tensor = simple_duel_state_data_tensor(
-                    duel_state_data=state["state"]
-                )
-                cmd_entry_tensor = simple_command_entry_tenosr(
-                    command_entry=action_data.command_entry
-                )
-                input_tensor = torch.cat([state_tensor, cmd_entry_tensor])
-                input_batch.append(input_tensor)
+                input_ret = self._get_input_ret(state)
+                board_vector = SetBoardVector(input_ret)
+                action_vector = SetActionVector(input_ret)[action_data.command_index]
+                x = np.empty((self.input_size), dtype=np.float32)
+                x[0 : BoardNum + InforNum] = board_vector
+                x[BoardNum + InforNum : self.input_size] = action_vector
+
+                input_batch.append(torch.tensor(x, dtype=torch.float32))
 
                 # rewardやdone, next_stateなども保持
                 rewards.append(reward)
@@ -162,8 +177,13 @@ class DQNAgent(BaseYgoAgent):
             #     next_states=next_states, rewards=rewards, dones=dones
             # )
             # targets = targets.to(self.device).unsqueeze(1)
-            targets = torch.stack([torch.tensor(reward, dtype=torch.float32) for reward in rewards]).to(self.device).unsqueeze(1)
-
+            targets = (
+                torch.stack(
+                    [torch.tensor(reward, dtype=torch.float32) for reward in rewards]
+                )
+                .to(self.device)
+                .unsqueeze(1)
+            )
 
             # 損失を計算
             loss = self.loss_func(self.dqn(input_batch_tensor), targets)
@@ -189,27 +209,23 @@ class DQNAgent(BaseYgoAgent):
         log_dict = {"loss": loss}
         return log_dict
 
-    def predict(self, state: dict) -> ActionData:
+    def _predict(self, state: dict) -> ActionData:
         """
         stateとCommandEntryのテンソルをconcatし、Q値を出力し、最大のQ値であるCommandEntryとなるActionDataを返す
         self.dqnからの出力
         """
-        # DuelStateData Tensor
-        duel_state_data: DuelStateData = state["state"]
-        duel_state_data_tensor = simple_duel_state_data_tensor(
-            duel_state_data=duel_state_data
-        )
-
         command_request: CommandRequest = state["command_request"]
+        # DuelStateData Tensor
+        input_ret = self._get_input_ret(state)
+        board_vector = SetBoardVector(input_ret)
+        action_vector = SetActionVector(input_ret)
+        batch_num = len(state["command_request"].commands)
+        x = np.empty((batch_num, self.input_size), dtype=np.float32)
+        for i in range(batch_num):
+            x[i][0 : BoardNum + InforNum] = board_vector
+            x[i][BoardNum + InforNum : self.input_size] = action_vector[i]
 
-        input_batch = []
-        for command_entry in command_request.commands:
-            cmd_entry_tensor = simple_command_entry_tenosr(command_entry=command_entry)
-            input_tensor = torch.cat([duel_state_data_tensor, cmd_entry_tensor], dim=0)
-            input_batch.append(input_tensor)
-        # breakpoint()
-        input_batch_tensor = torch.stack(input_batch).to(self.device)
-
+        input_batch_tensor = torch.tensor(x).to(self.device)
         self.dqn.eval()
         qs: torch.Tensor = self.dqn(input_batch_tensor)
 
@@ -240,15 +256,15 @@ class DQNAgent(BaseYgoAgent):
         }
 
         # 2.
+
         input_batch = []
         for next_state in next_states:
-            for cmd_entry in next_state["command_request"].commands:
-                state_tensor = simple_duel_state_data_tensor(
-                    duel_state_data=next_state["state"]
-                )
-                cmd_entry_tensor = simple_command_entry_tenosr(command_entry=cmd_entry)
-                input_tensor = torch.cat([state_tensor, cmd_entry_tensor], dim=0)
-                input_batch.append(input_tensor)
+            input_ret = self._get_input_ret(next_state)
+            board_vector = SetBoardVector(input_ret)
+            action_vector = SetActionVector(input_ret)
+            batch_num = len(next_state["command_request"].commands)
+            x = np.empty((batch_num, self.input_size), dtype=np.float32)
+            input_batch.append(torch.tensor(x, dtype=torch.float32))
         input_batch_tensor = torch.stack(input_batch).to(self.device)
 
         # breakpoint()
@@ -292,3 +308,19 @@ class DQNAgent(BaseYgoAgent):
             torch.save(
                 self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name)
             )
+
+    def _get_input_ret(self, state: dict):
+        input_ret = [
+            [
+                state["is_duel_start"],
+                state["is_duel_end"],
+                state["is_cmd_required"],
+                state["duel_end_data"],
+            ],
+            state["state"].general_data,
+            state["state"].duel_card_table,
+            state["state"].chain_stack,
+            state["command_request"],
+            state["command_request"].commands,
+        ]
+        return input_ret
