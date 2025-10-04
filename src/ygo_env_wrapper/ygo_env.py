@@ -12,6 +12,7 @@ from ygo.models import DuelEndData
 from ygo.models.duel_state_data import DuelStateData
 from ygo.models.command_request import CommandRequest, CommandEntry
 from ygo import constants
+from ygo.constants.enums import ResultType
 
 from src.reward_functions.base_reward_func import BaseRewardFunction
 from src.reward_functions.normal_reward_func import NormalRewardFunction
@@ -24,7 +25,7 @@ class YgoEnv:
 
     def __init__(self, udi_io: UdiIO):
         self.udi_io = udi_io  # MDクライアントの情報参照
-        self.reward_func = NormalRewardFunction()  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
+        # self.reward_func = NormalRewardFunction()  # 勝ち:1.0、負け:-1.0、そのほか:0.0を返す報酬関数
 
     def reset(self):
         return self.step(None)
@@ -74,9 +75,7 @@ class YgoEnv:
             is_duel_end = self.udi_io.is_duel_end()
             is_cmd_required = self.udi_io.is_command_required()
             duel_end_data: DuelEndData = self.udi_io.get_duel_end_data() if is_duel_end else None
-            reward: float = self.reward_func.eval(
-                action_data=action_data, duel_state_data=state, is_duel_end=is_duel_end, duel_end_data=duel_end_data
-            )
+            reward: float = self.compute_reward(is_duel_end=is_duel_end, duel_end_data=duel_end_data)
 
             result_dict = {
                 "is_duel_start": is_duel_start,
@@ -104,6 +103,18 @@ class YgoEnv:
         # print(f"is_cmd_required: {self.udi_io.is_command_required()}, current_phase: {state.general_data.current_phase}")
 
         return result_dict
+
+    def compute_reward(self, is_duel_end: bool, duel_end_data: DuelEndData) -> float:
+        # 終了かどうかを判定
+        if not is_duel_end:
+            return 0.0  # 終了していないので0.0を返す
+
+        result_type: int = duel_end_data.result_type
+        if result_type == int(ResultType.WIN):
+            return 1.0
+        elif result_type == int(ResultType.LOSE):
+            return -1.0
+        return 0.0
 
 
 def cli_player(state: dict) -> ActionData:

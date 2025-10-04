@@ -28,8 +28,8 @@ class DQNAgent(BaseYgoAgent):
     def __init__(
         self,
         gamma=0.9,
-        lr=1e-5,
-        epsilon=0.2,
+        lr=1e-6,
+        epsilon=0.1,
         buffer_size=int(1e5),
         batch_size: int = 128,
         sync_interval: int = 100,
