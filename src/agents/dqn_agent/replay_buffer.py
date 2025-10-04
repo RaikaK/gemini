@@ -25,11 +25,14 @@ class ReplayBuffer:
         done: bool,
         next_state: dict,
     ):
+        lp_rwd = compute_life_point_reward(state=state, next_state=next_state)
+        nodeck_rwd = nodeck_reward(duel_end_data=next_state["duel_end_data"])  # デュエル終了時の報酬
+        new_reward = reward + lp_rwd + nodeck_rwd
         """状態sの時の行動ActionData、その後の次状態s’をBufferに追加"""
         replay_data = {
             "state": state,
             "action_data": action_data,
-            "reward": reward,
+            "reward": new_reward,
             "done": done,
             "next_state": next_state,
         }
@@ -51,16 +54,16 @@ class ReplayBuffer:
         self.buffer.clear()
         # breakpoint()
 
-    # 報酬を単一の報酬に書き換える
-    def update_all_reward(self):
-        for data in self.buffer:
-            lp_rwd = compute_life_point_reward(
-                state=data["state"], next_state=data["next_state"]
-            )
-            nodeck_rwd = nodeck_reward(
-                duel_end_data=data["next_state"]["duel_end_data"]
-            )  # デュエル終了時の報酬
-            data["reward"] += lp_rwd + nodeck_rwd
+    # # 報酬を単一の報酬に書き換える
+    # def update_all_reward(self):
+    #     for data in self.buffer:
+    #         lp_rwd = compute_life_point_reward(
+    #             state=data["state"], next_state=data["next_state"]
+    #         )
+    #         nodeck_rwd = nodeck_reward(
+    #             duel_end_data=data["next_state"]["duel_end_data"]
+    #         )  # デュエル終了時の報酬
+    #         data["reward"] += lp_rwd + nodeck_rwd
 
     def extend(self, memory: list):
         self.buffer.extend(memory)
