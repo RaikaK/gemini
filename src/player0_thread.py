@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import argparse
 import numpy as np
@@ -31,12 +31,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tcpport", type=int, default=52010)
     parser.add_argument("--tcphost", type=str, default="10.95.102.79")
-    parser.add_argument(
-        "-g", "--gRPC", action="store_true", help="using gRPC", default="-g"
-    )
-    parser.add_argument(
-        "--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer"
-    )
+    parser.add_argument("-g", "--gRPC", action="store_true", help="using gRPC", default="-g")
+    parser.add_argument("--RandomPlayer", type=int, default=0, help="0:AI 1:RandomPalyer")
     parser.add_argument("--LoadWeightName", type=str, default=None)
     parser.add_argument("-x", type=int, default=0, help="Dummy")
     args = parser.parse_args()
@@ -46,9 +42,7 @@ if __name__ == "__main__":
         connect = UdiIO.Connect.GRPC
 
     # UDIの初期化
-    udi_io = UdiIO(
-        tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1
-    )
+    udi_io = UdiIO(tcpport=args.tcpport, tcp_host=args.tcphost, connect=connect, api_version=1)
     # UDIのログは大量に出るため、出力しないようにする
     udi_io.log_response_history = False
 
@@ -58,11 +52,13 @@ if __name__ == "__main__":
 
     # 環境ラッパーの起動
     env = YgoEnv(udi_io=udi_io)
-    
+
     # wandb setting
     import wandb
-    entity = "ygo-ai" # TeamAccount名
-    project = "Random-vs-DQN"
+
+    entity = "ygo-ai"  # TeamAccount名
+    # project = "Random-vs-DQN"
+    project = "DQN-vs-DQN"
     wandb.init(project=project, entity=entity)
 
     episode = 0
@@ -70,25 +66,26 @@ if __name__ == "__main__":
     state = env.reset()
     while True:
         action_data = agent.select_action(state)
-        
-        state = env.step(action_data)
+
+        next_state = env.step(action_data)
 
         # エージェントの学習
-        log_dict = agent.update(state=state, action_data=action_data, next_state=state)
+        log_dict = agent.update(state=state, action_data=action_data, next_state=next_state)
+
+        state = next_state
 
         # log
         if log_dict is not None:
             wandb.log(log_dict)
         reward_history.append(state["reward"])
 
-        
         if state["is_duel_end"]:
             ave_reward = np.average(reward_history) if len(reward_history) > 0 else 0
             wandb.log({"ave_reward": ave_reward})
             reward_history.clear()
-            
+
             print(f"episode: {episode} | ave_reward: {ave_reward} | result: {state["duel_end_data"]}")
             episode += 1
             state = env.reset()
-    
+
     wandb.finish()

@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
+sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
 
 import random
 
