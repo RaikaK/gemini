@@ -59,18 +59,18 @@ class YgoEnv:
                     is_cmd_required: bool = self.udi_io.is_command_required()
                     command_request: CommandRequest = self.udi_io.get_command_request()
                     duel_state_data: DuelStateData = self.udi_io.get_duel_state_data()
-                    duel_end_data: DuelEndData | None = self.udi_io.get_duel_end_data()
+                    duel_end_data: DuelEndData | None = self.udi_io.get_duel_end_data() if is_duel_end else None
                     reward: float = self._compute_reward(duel_end_data)
 
                     # デュエル開始
                     if is_duel_start:
-                        print("🐉🐉🐉 Duel Start 🐉🐉🐉")
+                        print("★★★ Duel Start ★★★")
 
                     # デュエル終了
                     if is_duel_end and duel_end_data is not None:
                         result_type = cast(ResultType, duel_end_data.result_type)
                         finish_type = cast(FinishType, duel_end_data.finish_type)
-                        print(f"🐉🐉🐉 Duel End: {result_type.name}, {finish_type.name} 🐉🐉🐉")
+                        print(f"★★★ Duel End ({result_type.name}, {finish_type.name}) ★★★")
 
                     # デュエル終了 or 行動要求
                     if is_duel_end or is_cmd_required:
