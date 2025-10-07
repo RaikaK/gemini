@@ -64,9 +64,9 @@ if __name__ == "__main__":
     reward_history = []
     state = env.reset()
     while True:
-        action_data = agent.select_action(state)
+        action_data, info_dict = agent.select_action(state)
 
-        next_state, info_dict = env.step(action_data)
+        next_state = env.step(action_data)
 
         # エージェントの学習
         log_dict = agent.update(
