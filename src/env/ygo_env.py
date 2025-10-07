@@ -53,7 +53,7 @@ class YgoEnv:
             try:
                 # UDIから通信が来た場合
                 if self.udi_io.input() and self.udi_io.duel_data:
-                    # UDIから状態データを取得
+                    # 状態データを取得
                     is_duel_start: bool = self.udi_io.is_duel_start()
                     is_duel_end: bool = self.udi_io.is_duel_end()
                     is_cmd_required: bool = self.udi_io.is_command_required()
@@ -62,17 +62,17 @@ class YgoEnv:
                     duel_end_data: DuelEndData | None = self.udi_io.get_duel_end_data()
                     reward: float = self._compute_reward(duel_end_data)
 
-                    # UDIからデュエル開始が来た場合
+                    # デュエル開始
                     if is_duel_start:
                         print("🐉🐉🐉 Duel Start 🐉🐉🐉")
 
-                    # UDIからデュエル終了が来た場合
+                    # デュエル終了
                     if is_duel_end and duel_end_data is not None:
                         result_type = cast(ResultType, duel_end_data.result_type)
                         finish_type = cast(FinishType, duel_end_data.finish_type)
                         print(f"🐉🐉🐉 Duel End: {result_type.name}, {finish_type.name} 🐉🐉🐉")
 
-                    # UDIからデュエル終了か行動要求が来た場合
+                    # デュエル終了 or 行動要求
                     if is_duel_end or is_cmd_required:
                         return StateData(
                             is_duel_start=is_duel_start,
