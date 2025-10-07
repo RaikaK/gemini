@@ -19,8 +19,8 @@ class ActionData:
             command_entry (CommandEntry): 選択された行動
             command_index (int): 選択された行動のインデックス
         """
-        self.command_request = command_request
-        self.command_entry = command_entry
+        self.command_request: CommandRequest = command_request
+        self.command_entry: CommandEntry = command_entry
         self.command_index: int = self.get_command_index()
 
     def get_command_index(self) -> int:
