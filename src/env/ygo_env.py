@@ -95,6 +95,7 @@ class YgoEnv:
 
         Args:
             config (dict): プレイヤーのUDI接続設定
+                例: {'tcp_port': 50000, 'tcp_host': '10.95.102.79', 'gRPC': True}
 
         Returns:
             UdiIO: 設定済みのUDI-IOインスタンス
