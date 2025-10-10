@@ -14,18 +14,19 @@ from src.env.state_data import StateData
 class YgoEnv:
     """遊戯王のGym環境"""
 
-    def __init__(self, config: dict):
+    def __init__(self, tcp_host: str, tcp_port: int, use_grpc: bool = True):
         """
         初期化する。
 
         Args:
-            config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_port': 50000, 'tcp_host': '10.95.102.79', 'gRPC': True}
+            tcp_host (str): TCPホスト名
+            tcp_port (int): TCPポート番号
+            use_grpc (bool): gRPC接続フラグ
 
         Attributes:
             udi_io (UdiIO): プレイヤーのUDI-IOインスタンス
         """
-        self.udi_io = self._create_udi_io(config)
+        self.udi_io = self._create_udi_io(tcp_host, tcp_port, use_grpc)
 
     def reset(self) -> StateData:
         """
@@ -89,29 +90,23 @@ class YgoEnv:
 
             time.sleep(0.001)
 
-    def _create_udi_io(self, config: dict) -> UdiIO:
+    def _create_udi_io(self, tcp_host: str, tcp_port: int, use_grpc: bool) -> UdiIO:
         """
         UDI接続設定に基づき、UDI-IOインスタンスを生成する。
 
         Args:
-            config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_port': 50000, 'tcp_host': '10.95.102.79', 'gRPC': True}
+            tcp_host (str): TCPホスト名
+            tcp_port (int): TCPポート番号
+            use_grpc (bool): gRPC接続フラグ
 
         Returns:
             UdiIO: 設定済みのUDI-IOインスタンス
         """
-        try:
-            tcp_port = config["tcp_port"]
-            tcp_host = config["tcp_host"]
-
-        except KeyError as e:
-            raise ValueError(f"Missing required key in udi_io config: {e}") from e
-
-        connect_type = UdiIO.Connect.GRPC if config.get("gRPC") else UdiIO.Connect.SOCKET
+        connect_type = UdiIO.Connect.GRPC if use_grpc else UdiIO.Connect.SOCKET
 
         udi_io = UdiIO(
-            tcpport=tcp_port,
             tcp_host=tcp_host,
+            tcp_port=tcp_port,
             connect=connect_type,
             api_version=1,
         )
