@@ -18,7 +18,7 @@ class RandomAgent(BaseYgoAgent):
         print("RandomAgent")
         return
 
-    def select_action(self, state) -> ActionData:
+    def select_action(self, state) -> tuple[ActionData, dict]:
         command_request = state["command_request"]
         selectable_commands: list[CommandEntry] = command_request.commands
 
@@ -28,8 +28,10 @@ class RandomAgent(BaseYgoAgent):
             command_entry=selected_command_entry,
         )
         # print(f"selected cmd index: {action_data.command_index}/[0-{len(action_data.command_request.commands)-1}]")
-        return action_data
+        return action_data, {}
 
-    def update(self, state: dict, action_data: ActionData, next_state: dict) -> any:
+    def update(
+        self, state: dict, action_data: ActionData, next_state: dict, info: dict
+    ) -> dict | None:
         # print("RandomAgent does not learn")
         return None
