@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tcp_host", type=str, default="10.95.102.79")
     parser.add_argument("--tcp_port", type=int, default=52100)
-    parser.add_argument("-g", "--gRPC", action="store_true", default="-g")
+    parser.add_argument("-g", "--gRPC", action="store_true")
     args = parser.parse_args()
 
     agent = RandomAgent()
