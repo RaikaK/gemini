@@ -4,11 +4,13 @@ import numpy as np
 import torch
 import copy
 import datetime
+from typing import cast
 
 from src.agents.base_agent import BaseAgent
 from src.env.action_data import ActionData
 from src.env.state_data import StateData
 
+from ygo.constants import FinishType
 from ygo.models.command_request import CommandEntry, CommandRequest
 from src.agents.dqn_agent.sample_tensors import (
     set_action_vector,
@@ -175,7 +177,8 @@ class DQNAgent(BaseAgent):
         self._sync_qnet()
         self._save_model_params()
 
-        log_dict = {"loss": loss, "reward": reward}
+        finish_type = cast(FinishType, next_state.duel_end_data.finish_type) if next_state.duel_end_data else None
+        log_dict = {"loss": loss, "reward": reward, "finish_type": finish_type}
         return log_dict
 
     def _predict(self, state: StateData) -> ActionData:
