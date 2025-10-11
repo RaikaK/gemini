@@ -4,6 +4,7 @@ from typing import cast
 from ygo.constants import FinishType, ResultType
 from ygo.models import DuelEndData
 from ygo.models.command_request import CommandRequest
+from ygo.models.duel_log_data_entry import DuelLogDataEntry
 from ygo.models.duel_state_data import DuelStateData
 from ygo.udi_io import UdiIO
 
@@ -60,6 +61,7 @@ class YgoEnv:
                     command_request: CommandRequest = self.udi_io.get_command_request()
                     duel_state_data: DuelStateData = self.udi_io.get_duel_state_data()
                     duel_end_data: DuelEndData | None = self.udi_io.get_duel_end_data() if is_duel_end else None
+                    duel_log_data: list[DuelLogDataEntry] = self.udi_io.get_duel_log_data()
                     reward: float = self._compute_reward(duel_end_data)
 
                     # デュエル開始
@@ -81,6 +83,7 @@ class YgoEnv:
                             command_request=command_request,
                             duel_state_data=duel_state_data,
                             duel_end_data=duel_end_data,
+                            duel_log_data=duel_log_data,
                             reward=reward,
                         )
 

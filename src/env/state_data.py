@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ygo.models import CommandRequest, DuelEndData, DuelStateData
+from ygo.models import CommandRequest, DuelEndData, DuelLogDataEntry, DuelStateData
 
 
 @dataclass
@@ -26,6 +26,9 @@ class StateData:
 
     duel_end_data: DuelEndData | None
     """デュエル結果"""
+
+    duel_log_data: list[DuelLogDataEntry]
+    """デュエルログ"""
 
     reward: float
     """報酬"""
