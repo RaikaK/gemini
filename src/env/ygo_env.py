@@ -20,7 +20,7 @@ class YgoEnv:
 
         Args:
             config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': False}
+                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True}
 
         Attributes:
             udi_io (UdiIO): プレイヤーのUDI-IOインスタンス
@@ -95,7 +95,7 @@ class YgoEnv:
 
         Args:
             config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': False}
+                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True}
 
         Returns:
             UdiIO: 設定済みのUDI-IOインスタンス
