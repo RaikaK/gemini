@@ -1,11 +1,4 @@
-import sys
-
-sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
-
 import torch
-
-from ygo.models.duel_state_data import DuelStateData
-from ygo.models.command_request import CommandRequest
 
 
 class DeepQNetwork(torch.nn.Module):
