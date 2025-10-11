@@ -1,8 +1,3 @@
-import sys
-import os
-
-sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
-
 import numpy as np
 
 from ygo import constants
@@ -47,76 +42,82 @@ OneHotTable = {
     1035: 34,
 }
 
-TableNum = len(OneHotTable)
+TABLE_NUM = len(OneHotTable)
 
 
 # 盤面情報用ベクトル数（SetBoardVector関数で使用）
-BoardNum = TableNum * constants.PosId.UPPER_VALUE
+BOARD_NUM = TABLE_NUM * constants.PosId.UPPER_VALUE
 # ゲーム情報用ベクトル数（SetBoardVector関数で使用）
-InforNum = 2 + constants.Phase.UPPER_VALUE + (constants.SelectionType.UPPER_VALUE + 1)
+INFO_NUM = 2 + constants.Phase.UPPER_VALUE + (constants.SelectionType.UPPER_VALUE + 1)
 # アクション用ベクトル数（SetActionVector関数で使用）
-ActionNum = (constants.CommandType.UPPER_VALUE + 1) + (TableNum + 3)
+ACTION_NUM = (constants.CommandType.UPPER_VALUE + 1) + (TABLE_NUM + 3)
 
 
-def SetBoardVector(Input):
-    DuelTable = Input[2]
-    n = len(DuelTable)
+def set_board_vector(input_data):
+    """
+    盤面情報をベクトル化する
+    """
+    duel_table = input_data[2]
+    n = len(duel_table)
 
-    v = np.zeros(BoardNum + InforNum, dtype=np.float32)
+    v = np.zeros(BOARD_NUM + INFO_NUM, dtype=np.float32)
 
     # 自分のカードの盤面情報をセット（このサンプルでは相手の情報は見ません）
     for i in range(n):
-        d: models.DuelCard = DuelTable[i]
+        d: models.DuelCard = duel_table[i]
         if d.player_id == constants.PlayerId.MYSELF:
             assert d.pos_id >= 0
             # 位置情報のみを使用
             # （位置でオフセットをずらし、ワンホット値を設定）
-            index = (d.pos_id * TableNum) + OneHotTable[d.card_id]
+            index = (d.pos_id * TABLE_NUM) + OneHotTable[d.card_id]
             v[index] = 1.0
 
     # 基本的なゲーム情報をセット
-    GameData = Input[1]
-    v[BoardNum + 0] = GameData.lp[0] / 8000.0  # 自分のLP
-    v[BoardNum + 1] = GameData.lp[1] / 8000.0  # 相手のLP
-    assert GameData.current_phase >= constants.Phase.DRAW
-    assert GameData.current_phase < constants.Phase.UPPER_VALUE
-    v[BoardNum + 2 + GameData.current_phase] = 1.0  # フェイズ
+    game_data = input_data[1]
+    v[BOARD_NUM + 0] = game_data.lp[0] / 8000.0  # 自分のLP
+    v[BOARD_NUM + 1] = game_data.lp[1] / 8000.0  # 相手のLP
+    assert game_data.current_phase >= constants.Phase.DRAW
+    assert game_data.current_phase < constants.Phase.UPPER_VALUE
+    v[BOARD_NUM + 2 + game_data.current_phase] = 1.0  # フェイズ
 
     # 現在の状況をセット
-    Request = Input[4]
-    index = BoardNum + 2 + constants.Phase.UPPER_VALUE
-    v[Request.selection_type + 1 + index] = 1.0
+    request = input_data[4]
+    index = BOARD_NUM + 2 + constants.Phase.UPPER_VALUE
+    v[request.selection_type + 1 + index] = 1.0
 
     return v
 
 
-def SetActionVector(Input):
-    ActionData = Input[5]
-    n = len(ActionData)
+def set_action_vector(input_data):
+    """
+    アクション情報をベクトル化する
+    """
+    action_data = input_data[5]
+    n = len(action_data)
 
-    v = np.zeros((n, ActionNum), dtype=np.float32)
-    Offset = constants.CommandType.UPPER_VALUE + 1
+    v = np.zeros((n, ACTION_NUM), dtype=np.float32)
+    offset = constants.CommandType.UPPER_VALUE + 1
 
     for i in range(n):
         # 各アクション情報をセット（サンプルでは一部の情報のみ使用します）
-        act = ActionData[i]
+        act = action_data[i]
         # constants.CommandType.NO_VALUEも加味しておく
         v[i][act.command_type + 1] = 1.0
 
         # カード情報をセット
-        CardId = act.card_id
-        if CardId == constants.CardId.NO_VALUE:  # カードが無い場合（例：フェーズ移動）
-            Index = TableNum
-        elif CardId == constants.CardId.UNKNOWN:  # カードが裏（伏せ）の場合
-            Index = TableNum + 1
+        card_id = act.card_id
+        if card_id == constants.CardId.NO_VALUE:  # カードが無い場合（例：フェーズ移動）
+            index = TABLE_NUM
+        elif card_id == constants.CardId.UNKNOWN:  # カードが裏（伏せ）の場合
+            index = TABLE_NUM + 1
         elif (
-            CardId in OneHotTable
+            card_id in OneHotTable
         ):  # カード情報がテーブルにある場合（アクションでは自分が持っていないカードも含まれる可能性があるため注意）
-            Index = OneHotTable[act.card_id]  # Index < TableNum
+            index = OneHotTable[act.card_id]  # index < Table_Num
         else:  # テーブルに含まれないカード（カードプールが決定していれば、別のカードテーブルを作成しておくことは可能）
-            Index = TableNum + 2
+            index = TABLE_NUM + 2
 
         # カード情報をセット
-        v[i][Offset + Index] = 1.0
+        v[i][offset + index] = 1.0
 
     return v

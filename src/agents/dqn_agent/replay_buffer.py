@@ -1,40 +1,36 @@
-import sys
-
-sys.path.append("C:/Users/b1/Desktop/u-ni-yo")
-
 import random
 from collections import deque
 
-from ygo.constants.enums import SelectionType
-
-from src.ygo_env_wrapper.action_data import ActionData
 from src.agents.dqn_agent.rewards import compute_life_point_reward, nodeck_reward
+from src.env.action_data import ActionData
+from src.env.state_data import StateData
 
 
 class ReplayBuffer:
     def __init__(self, buffer_size: int, batch_size: int):
         self.buffer_size = buffer_size
-        self.buffer = deque(maxlen=self.buffer_size)
+        self.buffer = deque(maxlen=buffer_size)
         self.batch_size = batch_size
 
     def add(
         self,
-        state: dict,
-        action_data: ActionData,
+        state: StateData,
+        action: ActionData,
         reward: float,
         done: bool,
-        next_state: dict,
+        next_state: StateData,
+        info: dict | None,
     ):
         lp_rwd = compute_life_point_reward(state=state, next_state=next_state)
-        nodeck_rwd = nodeck_reward(duel_end_data=next_state["duel_end_data"])  # デュエル終了時の報酬
+        nodeck_rwd = nodeck_reward(duel_end_data=next_state.duel_end_data)
         new_reward = reward + lp_rwd + nodeck_rwd
-        """状態sの時の行動ActionData、その後の次状態s’をBufferに追加"""
         replay_data = {
             "state": state,
-            "action_data": action_data,
+            "action": action,
             "reward": new_reward,
             "done": done,
             "next_state": next_state,
+            "info": info,
         }
 
         self.buffer.append(replay_data)
@@ -65,5 +61,5 @@ class ReplayBuffer:
     #         )  # デュエル終了時の報酬
     #         data["reward"] += lp_rwd + nodeck_rwd
 
-    def extend(self, memory: list):
+    def extend(self, memory: deque):
         self.buffer.extend(memory)
