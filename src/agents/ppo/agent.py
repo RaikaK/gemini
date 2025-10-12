@@ -1,6 +1,7 @@
 import torch
+from torch.distributions import Categorical
 import numpy as np
-import datatime
+import datetime
 import os
 import copy
 
@@ -19,7 +20,8 @@ from src.agents.base_agent import BaseAgent
 from src.env.state_data import StateData
 from src.env.action_data import ActionData
 from src.agents.ppo.actor_critic_model import Actor, Critic
-from src.agents.ppo.ppo_utils import compute_returns_and_advantages, calc_entropy
+
+# from src.agents.ppo.ppo_utils import compute_returns_and_advantages, calc_entropy
 from src.agents.ppo.rollout_buffer import RolloutBuffer
 
 
@@ -45,14 +47,10 @@ class PPOAgent(BaseAgent):
         self.rollout_buffer = RolloutBuffer()  # 1episodeごとにクリアする
 
         # nn
-        self.device = (
-            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-        )
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.lr = lr
         self.pi_input_size = DNN_INPUT_NUM
-        self.critic_input_size = (
-            BOARD_NUM + INFO_NUM
-        )  # 状態価値はアクション情報を含まない
+        self.critic_input_size = BOARD_NUM + INFO_NUM  # 状態価値はアクション情報を含まない
         self.pi = Actor(input_size=self.pi_input_size)
         self.old_pi = copy.deepcopy(self.pi)
         self.critic = Critic(input_size=self.critic_input_size)
@@ -72,24 +70,23 @@ class PPOAgent(BaseAgent):
         self.pi.eval()
         with torch.no_grad():
             action_values = self.pi(x_tensor)
-            probs = torch.softmax(action_values)
-            breakpoint()  # shapeとcmd_countの確認を行う
+            probs = torch.softmax(action_values, dim=-1).flatten()
+            probs /= torch.sum(probs)
+            # breakpoint()  # shapeとcmd_countの確認を行う
 
         # 状態価値を一緒に出力
         self.critic.eval()
         with torch.no_grad():
             board_vector = set_board_vector(create_input_data(state))
-            board_vector_tensor = torch.tensor(board_vector, dtype=torch.float32).to(
-                self.device
-            )
-            state_value = self.critic(board_vector_tensor)
+            board_vector_tensor = torch.tensor(board_vector, dtype=torch.float32).to(self.device)
+            state_value = self.critic(board_vector_tensor).cpu().detach().numpy()
 
         action_index = np.random.choice(len(probs), p=probs.detach().cpu().numpy())
-        breakpoint()  # action_indexのshapeの確認
+        # breakpoint()  # action_indexのshapeの確認
         action_prob = probs[action_index]
         action_prob = action_prob.unsqueeze(0).detach().cpu().numpy()
 
-        breakpoint()  # 選択された確率値を確認
+        # breakpoint()  # 選択された確率値を確認
 
         action = ActionData(
             command_request=state.command_request,
@@ -99,14 +96,13 @@ class PPOAgent(BaseAgent):
         info = {"action_prob": action_prob, "state_value": state_value}
         return action, info
 
-    def update(
-        self, state: StateData, action: ActionData, next_state: StateData, info: dict
-    ) -> dict | None:
+    def update(self, state: StateData, action: ActionData, next_state: StateData, info: dict) -> dict | None:
         # rollout_bufferに追加
+        reward = next_state.reward
         self.rollout_buffer.add(
             state=state,
             action=action,
-            reward=next_state.reward,
+            reward=reward,
             done=next_state.is_duel_end,
             next_state=next_state,
             info=info,
@@ -124,9 +120,9 @@ class PPOAgent(BaseAgent):
         rewards = data["rewards"]
         dones = data["dones"]
         next_states = data["next_states"]
-        action_probs = data["infos"]["action_probs"]
-        state_values = data["infos"]["state_values"]
-        returns, advantages = compute_returns_and_advantages(
+        action_probs = [torch.tensor(d["action_prob"]).to(self.device) for d in data["infos"]]
+        state_values = [torch.tensor(d["state_value"]).to(self.device) for d in data["infos"]]
+        returns, advantages = self._compute_returns_and_advantages(
             state_values=state_values,
             rewards=rewards,
             dones=dones,
@@ -134,65 +130,64 @@ class PPOAgent(BaseAgent):
             lambda_gae=self.lambda_gae,
         )
 
-        breakpoint()  # advantageとstatesなどの長さを確認
+        # breakpoint()  # advantageとstatesなどの長さを確認
 
-        losses_pi = []
-        losses_critic = []
         for epoch in range(self.epochs_on_update):
             # データ収集時の方策
-            pi_old = action_probs
+            pi_old = [action_prob.to(self.device) for action_prob in action_probs]
             action_probs_list = [
-                self._get_current_policy(s, a, is_train=True)
-                for s, a in zip(states, actions)
-            ]
+                self._get_current_policy(s, a, is_train=True) for s, a in zip(states, actions)
+            ]  # こいつがcudaにある
+            # breakpoint()
             # 現在の方策
             pi = [
-                action_prob[i][action.command_index]
-                for i, (action_prob, action) in enumerate(
-                    zip(action_probs_list, actions)
-                )
+                action_prob[action.command_index]
+                for i, (action_prob, action) in enumerate(zip(action_probs_list, actions))
             ]
+            # breakpoint()s
             # 方策比をクリッピング
-            ratio_unclipped = [
-                p / (p_old + 1e-10) * advantage
-                for p, p_old, advantage in zip(pi, pi_old, advantages)
-            ]
-            ratio_clip = [
-                torch.clamp(r, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * advantage
-                for r, advantage in zip(ratio_unclipped, advantages)
-            ]
+            ratio_unclipped = torch.stack(
+                [p / (p_old + 1e-10) * advantage for p, p_old, advantage in zip(pi, pi_old, advantages)]
+            )
+            ratio_clip = torch.stack(
+                [
+                    torch.clamp(r, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * advantage
+                    for r, advantage in zip(ratio_unclipped, advantages)
+                ]
+            )
 
             # エントロピーボーナス
-            dist_entropy = [
-                calc_entropy(action_prob=action_prob)
-                for action_prob in action_probs_list
-            ]
-            dist_entropy_bonus = torch.tensor(dist_entropy)
+            dist_entropy = [self._calc_entropy(action_prob=action_prob) for action_prob in action_probs_list]
+            dist_entropy_bonus = torch.stack(dist_entropy)
 
+            # breakpoint(s)
             loss_pi = (
                 -torch.min(ratio_unclipped, ratio_clip)
-                + self.c_mse * self.loss_func(state_values, returns)
+                + self.c_mse * self.loss_func(torch.stack(state_values), torch.stack(returns))
                 - self.c_entropy * dist_entropy_bonus
-            )
+            ).mean()
 
             self.optim_pi.zero_grad()
             loss_pi.backward()
             self.optim_pi.step()
 
-            board_tensor = torch.tensor(
-                [set_board_vector(create_input_data(state)) for state in states]
-            ).to(self.device)
-            breakpoint()  # board_tensorのshapeとreturnsのshapeを確認
-            loss_critic = self.loss_func(self.critic(board_tensor), returns)
+            board_tensor = torch.tensor([set_board_vector(create_input_data(state)) for state in states]).to(
+                self.device
+            )
+            # breakpoint()  # board_tensorのshapeとreturnsのshapeを確認
+            loss_critic = self.loss_func(self.critic(board_tensor), torch.stack(returns)).mean()
             self.optim_critic.zero_grad()
             loss_critic.backward()
             self.optim_critic.step()
 
-            losses_pi.append(loss_pi.detach().cpu().numpy().mean())
+            # losses_pi.append(loss_pi.detach().cpu().numpy().mean())
 
         return {
-            "loss_pi": np.average(losses_pi) if len(losses_pi) > 0 else 0,
-            "loss_critic": np.average(losses_critic) if len(losses_critic) > 0 else 0,
+            "loss_pi": loss_pi,
+            "loss_critic": loss_critic,
+            "reward": reward,
+            "ave_reward": np.average(rewards) if len(rewards) > 0 else 0,
+            "finish_type(1:Normal|2:NoDeck)": next_state.duel_end_data.finish_type,
         }
 
     def _create_input_tensor(self, state: StateData) -> torch.Tensor:
@@ -210,9 +205,7 @@ class PPOAgent(BaseAgent):
         x_tensor = torch.tensor(x, dtype=torch.float32).to(self.device)
         return x_tensor
 
-    def _get_current_policy(
-        self, state: StateData, action: ActionData, is_train: bool = True
-    ) -> torch.Tensor:
+    def _get_current_policy(self, state: StateData, action: ActionData, is_train: bool = True) -> torch.Tensor:
         """状態s, 行動aに対する現在の方策pi(s, a)を取得する"""
         input_tensor = self._create_input_tensor(state).to(self.device)
         if is_train:
@@ -223,3 +216,47 @@ class PPOAgent(BaseAgent):
         action_values = self.pi(input_tensor)
         action_prob = torch.softmax(action_values, dim=-1)
         return action_prob
+
+    def _compute_returns_and_advantages(
+        self,
+        state_values: list[float],
+        rewards: list[float],
+        dones: list[bool],
+        gamma: float = 0.9,
+        lambda_gae: float = 0.95,
+    ) -> tuple[list[torch.float32], list[torch.float32]]:
+        td_errors = [
+            rewards[i] + gamma * state_values[i + 1] - state_values[i] if not dones[i] else rewards[i] - state_values[i]
+            for i in range(len(rewards))
+        ]
+        # done = Trueの時 → td_error = r - v
+        # breakpoint()  # len(rewards)とlen(td_errors)を確認 → rewardsの方が1つ多い | donesの中身も確認
+
+        # GAEの計算
+        gaes = [None for t in range(len(td_errors))]
+        for i in reversed(range(len(td_errors))):
+            if not dones[i]:
+                gaes[i] = td_errors[i] + gamma * lambda_gae * (1 - dones[i]) * gaes[i + 1]
+            else:
+                gaes[i] = td_errors[i]
+
+        returns = [
+            torch.tensor(gae + state_value, dtype=torch.float32).to(self.device)
+            for gae, state_value in zip(gaes, state_values)
+        ]
+
+        # advantage
+        mean_gae = torch.mean(torch.stack(gaes))
+        std_gae = torch.std(torch.stack(gaes)) + 1e-8
+        advantages = [gae - mean_gae / std_gae for gae in gaes]
+
+        # breakpoint()  # gaeの中身を確認 | returnsの長さを確認
+        return returns, advantages
+
+    def _calc_entropy(self, action_prob: list[torch.Tensor]) -> torch.Tensor:
+        """エントロピーを計算する"""
+        # dist = Categorical(action_prob)
+        sum_entropy = torch.tensor(0.0, dtype=torch.float32).to(self.device)
+        for p in action_prob:
+            sum_entropy = sum_entropy + p * torch.log(p + 1e-8)
+        return sum_entropy / len(action_prob)

@@ -48,5 +48,5 @@ class RolloutBuffer:
             "infos": self.infos,
         }
         self.clear()
-        breakpoint()  # dataの中身がからでないか確認
+        # breakpoint()  # dataの中身がからでないか確認
         return data
