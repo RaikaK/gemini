@@ -3,6 +3,7 @@ from ygo.models.command_request import CommandEntry, CommandRequest
 from ygo.models.duel_state_data import DuelStateData
 from src.env.state_data import StateData
 from src.env.action_data import ActionData
+from src.common.sample_rewards import life_point_reward, nodeck_reward
 
 
 class RolloutBuffer:
@@ -33,7 +34,11 @@ class RolloutBuffer:
     ):
         self.states.append(state)
         self.actions.append(action)
-        self.rewards.append(reward)
+        # 報酬は、LPとFinishTypeによって分ける
+        new_reward = (
+            reward + life_point_reward(state=state, next_state=next_state) + nodeck_reward(next_state.duel_end_data)
+        )
+        self.rewards.append(new_reward)
         self.dones.append(done)
         self.next_states.append(next_state)
         self.infos.append(info)
