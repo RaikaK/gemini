@@ -21,12 +21,12 @@ class YgoEnv:
 
         Args:
             config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True}
+                例: { 'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True }
 
         Attributes:
             udi_io (UdiIO): プレイヤーのUDI-IOインスタンス
         """
-        self.udi_io = self._create_udi_io(config)
+        self.udi_io: UdiIO = self._create_udi_io(config)
 
     def reset(self) -> StateData:
         """
@@ -70,8 +70,8 @@ class YgoEnv:
 
                     # デュエル終了
                     if is_duel_end and duel_end_data is not None:
-                        result_type = cast(ResultType, duel_end_data.result_type)
-                        finish_type = cast(FinishType, duel_end_data.finish_type)
+                        result_type: ResultType = cast(ResultType, duel_end_data.result_type)
+                        finish_type: FinishType = cast(FinishType, duel_end_data.finish_type)
                         print(f"★★★ Duel End ({result_type.name}, {finish_type.name}) ★★★")
 
                     # デュエル終了 or 行動要求
@@ -94,23 +94,23 @@ class YgoEnv:
 
     def _create_udi_io(self, config: dict) -> UdiIO:
         """
-        UDI接続設定に基づき、UDI-IOインスタンスを生成する。
+        UDI-IOインスタンスを生成する。
 
         Args:
-            config (dict): プレイヤーのUDI接続設定
-                例: {'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True}
+            config (dict): UDI接続設定
+                例: { 'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True }
 
         Returns:
-            UdiIO: 設定済みのUDI-IOインスタンス
+            UdiIO: UDI-IOインスタンス
         """
         try:
-            tcp_port = config["tcp_port"]
-            tcp_host = config["tcp_host"]
+            tcp_host: str = config["tcp_host"]
+            tcp_port: int = config["tcp_port"]
 
         except KeyError as e:
             raise ValueError(f"Missing required key in udi_io config: {e}") from e
 
-        connect_type = UdiIO.Connect.GRPC if config.get("gRPC") else UdiIO.Connect.SOCKET
+        connect_type: UdiIO.Connect = UdiIO.Connect.GRPC if config.get("gRPC") else UdiIO.Connect.SOCKET
 
         udi_io = UdiIO(
             tcp_host=tcp_host,
