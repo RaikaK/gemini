@@ -140,7 +140,7 @@ class PPOAgent(BaseAgent):
             self.optim_actor.step()
 
             # Criticの損失
-            board_tensor = torch.tensor([set_board_vector(create_input_data(state)) for state in states]).to(
+            board_tensor = torch.tensor(np.array([set_board_vector(create_input_data(state)) for state in states])).to(
                 self.device
             )
             # breakpoint()  # board_tensorのshapeとreturnsのshapeを確認
