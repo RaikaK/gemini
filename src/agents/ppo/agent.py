@@ -109,13 +109,13 @@ class PPOAgent(BaseAgent):
         # next_states = data["next_states"]
         rollout_action_probs = [d["action_prob"] for d in rollout_data["infos"]]
         rollout_state_values = [d["state_value"] for d in rollout_data["infos"]]
-        # returns, advantages = self._compute_returns_and_advantages(
-        #     state_values=state_values,
-        #     rewards=rewards,
-        #     dones=dones,
-        #     gamma=self.gamma,
-        #     lambda_gae=self.lambda_gae,
-        # )
+        rollout_returns, rollout_advantages = self._compute_returns_and_advantages(
+            state_values=rollout_state_values,
+            rewards=rollout_rewards,
+            dones=rollout_dones,
+            gamma=self.gamma,
+            lambda_gae=self.lambda_gae,
+        )
 
         indices = np.arange(len(rollout_states))  # rolloutされたデータ数
         np.random.shuffle(indices)
@@ -129,16 +129,11 @@ class PPOAgent(BaseAgent):
                 states: list[StateData] = [rollout_states[i] for i in idxes]
                 actions: list[ActionData] = [rollout_actions[i] for i in idxes]
                 rewards: list[float] = [rollout_rewards[i] for i in idxes]
-                dones: list[bool] = [rollout_dones[i] for i in idxes]
                 action_probs: np.ndarray = np.array([rollout_action_probs[i] for i in idxes], dtype=np.float32)
-                state_values: list[float] = [rollout_state_values[i] for i in idxes]
-                returns, advantages = self._compute_returns_and_advantages(
-                    state_values=state_values,
-                    rewards=rewards,
-                    dones=dones,
-                    gamma=self.gamma,
-                    lambda_gae=self.lambda_gae,
-                )
+
+                returns = [rollout_returns[i] for i in idxes]
+                advantages = [rollout_advantages[i] for i in idxes]
+
                 # データ収集時の方策
                 log_pi_old = torch.log(torch.tensor(action_probs).to(self.device))
                 log_pi = torch.log(
@@ -224,16 +219,16 @@ class PPOAgent(BaseAgent):
         - V_target(=returns)とAdvantageを計算する
         - detach()済み
         """
-        # td_errors = [
-        #     rewards[i] + gamma * state_values[i + 1] - state_values[i]
-        #     if not dones[i]
-        #     else rewards[i] - state_values[i]
-        #     for i in range(len(rewards))
-        # ]
         td_errors = [
-            rewards[i] + gamma * state_values[i + 1] * (1 - int(dones[i])) - state_values[i]
+            rewards[i] + gamma * state_values[i + 1] - state_values[i] if not dones[i] else rewards[i] - state_values[i]
             for i in range(len(rewards))
         ]
+        # td_errors = [
+        #     rewards[i]
+        #     + gamma * state_values[i + 1] * (1 - int(dones[i]))
+        #     - state_values[i]
+        #     for i in range(len(rewards))
+        # ]
         # done = Trueの時 → td_error = r - v
         # breakpoint()  # len(rewards)とlen(td_errors)を確認 → rewardsの方が1つ多い | donesの中身も確認
 
