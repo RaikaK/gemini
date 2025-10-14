@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 
-from ygo.models import CommandRequest, DuelEndData, DuelLogDataEntry, DuelStateData
+from ygo.models import DuelEndData
+from ygo.models.command_request import CommandRequest
+from ygo.models.duel_log_data_entry import DuelLogDataEntry
+from ygo.models.duel_state_data import DuelStateData
 
 
 @dataclass
