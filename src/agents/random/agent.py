@@ -16,7 +16,7 @@ class RandomAgent(BaseAgent):
         command_request: CommandRequest = state.command_request
         selectable_commands: list[CommandEntry] = command_request.commands
         selected_command: CommandEntry = random.choice(selectable_commands)
-        action = ActionData(command_request=command_request, command_entry=selected_command)
+        action: ActionData = ActionData(command_request=command_request, command_entry=selected_command)
 
         return action, None
 

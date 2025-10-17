@@ -10,7 +10,7 @@ class BaseAgent(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         """
         初期化する。
         """

@@ -17,7 +17,7 @@ class YgoEnv:
     遊戯王のGym環境
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         初期化する。
 
