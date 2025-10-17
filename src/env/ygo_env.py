@@ -37,18 +37,18 @@ class YgoEnv:
         """
         return self.step(None)
 
-    def step(self, action_data: ActionData | None) -> StateData:
+    def step(self, action: ActionData | None) -> StateData:
         """
         デュエルを進める。
 
         Args:
-            action_data (ActionData | None): 選択された行動データ
+            action (ActionData | None): 選択された行動データ
 
         Returns:
             StateData: 次の状態データ
         """
-        if action_data is not None:
-            self.udi_io.output_command(action_data.command_index)
+        if action is not None:
+            self.udi_io.output_command(action.command_index)
 
         while True:
             try:
@@ -112,7 +112,7 @@ class YgoEnv:
 
         connect_type: UdiIO.Connect = UdiIO.Connect.GRPC if config.get("gRPC") else UdiIO.Connect.SOCKET
 
-        udi_io = UdiIO(
+        udi_io: UdiIO = UdiIO(
             tcp_host=tcp_host,
             tcp_port=tcp_port,
             connect=connect_type,
