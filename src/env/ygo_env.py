@@ -13,7 +13,9 @@ from src.env.state_data import StateData
 
 
 class YgoEnv:
-    """遊戯王のGym環境"""
+    """
+    遊戯王のGym環境
+    """
 
     def __init__(self, config: dict):
         """

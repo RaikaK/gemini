@@ -8,11 +8,9 @@ from ygo.models.command_request import CommandEntry, CommandRequest
 
 
 class RandomAgent(BaseAgent):
-    """ランダムエージェント"""
-
-    def __init__(self):
-        print("RandomAgent")
-        return
+    """
+    ランダムエージェント
+    """
 
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:
         command_request: CommandRequest = state.command_request

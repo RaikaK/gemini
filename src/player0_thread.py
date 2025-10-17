@@ -6,7 +6,7 @@ import wandb
 from src.env.state_data import StateData
 from src.env.ygo_env import YgoEnv
 
-from src.agents.random_agent.random_agent import RandomAgent
+from src.agents.random.agent import RandomAgent
 from src.agents.dqn_agent.dqn_agent import DQNAgent
 
 # Instance-1でのDuelSimulatorの起動コマンド

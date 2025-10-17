@@ -5,7 +5,9 @@ from src.env.state_data import StateData
 
 
 class BaseAgent(abc.ABC):
-    """基底エージェント"""
+    """
+    基底エージェント
+    """
 
     @abc.abstractmethod
     def __init__(self):
