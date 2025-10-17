@@ -12,6 +12,9 @@ class RandomAgent(BaseAgent):
     ランダムエージェント
     """
 
+    def __init__(self) -> None:
+        pass
+
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:
         command_request: CommandRequest = state.command_request
         selectable_commands: list[CommandEntry] = command_request.commands
