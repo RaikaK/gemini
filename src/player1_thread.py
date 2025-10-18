@@ -21,9 +21,9 @@ if __name__ == "__main__":
     parser.add_argument("--use_gui", action="store_true")
     args = parser.parse_args()
 
-    agent = RandomAgent()
-
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
+
+    agent = HumanAgent(env.command_queue)
 
     episode = 0
     state: StateData = env.reset()

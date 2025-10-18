@@ -32,19 +32,17 @@ class YgoEnv:
 
         Attributes:
             udi_io (UdiIO): UdiIOインスタンス
-            udi_gui_thread (UdiGUIThread | None): UdiGUIThreadインスタンス
-            command_queue (queue.Queue | None): コマンド受信キュー
+            udi_gui_thread (UdiGUIThread): UdiGUIThreadインスタンス
+            command_queue (queue.Queue): コマンド受信キュー
             last_gui_data (UdiLogData | None): 最後のGUI表示データ
         """
         self.udi_io: UdiIO = self._create_udi_io(tcp_host=tcp_host, tcp_port=tcp_port, use_grpc=use_grpc)
-        self.udi_gui_thread: UdiGUIThread | None = None
-        self.command_queue: queue.Queue | None = None
+        self.udi_gui_thread: UdiGUIThread = UdiGUIThread()
+        self.command_queue: queue.Queue = queue.Queue(1)
         self.last_gui_data: UdiLogData | None = None
 
         # GUIを使用する場合
         if use_gui:
-            self.udi_gui_thread = UdiGUIThread()
-            self.command_queue = queue.Queue(1)
             self.udi_gui_thread.start(self.command_queue)
 
     def reset(self) -> StateData:
@@ -189,8 +187,6 @@ class YgoEnv:
         )
 
         if new_gui_data != self.last_gui_data:
-            time.sleep(1.0)
-
             self.udi_gui_thread.set_data(
                 duel_log_data=new_gui_data.duel_log_data,
                 duel_state_data=new_gui_data.duel_state_data,
