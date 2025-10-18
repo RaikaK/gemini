@@ -1,11 +1,14 @@
+import queue
 import time
 from typing import cast
 
 from ygo.constants import FinishType, ResultType
+from ygo.gui.udi_gui_thread import UdiGUIThread
 from ygo.models import DuelEndData
 from ygo.models.command_request import CommandRequest
 from ygo.models.duel_log_data_entry import DuelLogDataEntry
 from ygo.models.duel_state_data import DuelStateData
+from ygo.models.udi_log_data import UdiLogData
 from ygo.udi_io import UdiIO
 
 from src.env.action_data import ActionData
@@ -17,18 +20,32 @@ class YgoEnv:
     遊戯王のGym環境
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, tcp_host: str, tcp_port: int, use_grpc: bool, use_gui: bool) -> None:
         """
         初期化する。
 
         Args:
-            config (dict): プレイヤーのUDI接続設定
-                例: { 'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True }
+            tcp_host (str): TCPホスト名
+            tcp_port (int): TCPポート番号
+            use_grpc (bool): gRPCフラグ
+            use_gui (bool): GUIフラグ
 
         Attributes:
-            udi_io (UdiIO): プレイヤーのUDI-IOインスタンス
+            udi_io (UdiIO): UdiIOインスタンス
+            udi_gui_thread (UdiGUIThread | None): UdiGUIThreadインスタンス
+            command_queue (queue.Queue | None): コマンド受信キュー
+            last_gui_data (UdiLogData | None): 最後のGUI表示データ
         """
-        self.udi_io: UdiIO = self._create_udi_io(config)
+        self.udi_io: UdiIO = self._create_udi_io(tcp_host=tcp_host, tcp_port=tcp_port, use_grpc=use_grpc)
+        self.udi_gui_thread: UdiGUIThread | None = None
+        self.command_queue: queue.Queue | None = None
+        self.last_gui_data: UdiLogData | None = None
+
+        # GUIを使用する場合
+        if use_gui:
+            self.udi_gui_thread = UdiGUIThread()
+            self.command_queue = queue.Queue(1)
+            self.udi_gui_thread.start(self.command_queue)
 
     def reset(self) -> StateData:
         """
@@ -66,6 +83,14 @@ class YgoEnv:
                     duel_log_data: list[DuelLogDataEntry] = self.udi_io.get_duel_log_data()
                     reward: float = self._compute_reward(duel_end_data)
 
+                    # GUIを更新
+                    if self.udi_gui_thread is not None:
+                        self._update_gui(
+                            command_request=command_request,
+                            duel_state_data=duel_state_data,
+                            duel_log_data=duel_log_data,
+                        )
+
                     # デュエル開始
                     if is_duel_start:
                         print("★★★ Duel Start ★★★")
@@ -90,29 +115,24 @@ class YgoEnv:
                         )
 
             except Exception as e:
-                raise IOError(f"UDI-IO failed: {e}") from e
+                raise IOError(f"UdiIO failed: {e}") from e
 
             time.sleep(0.001)
 
-    def _create_udi_io(self, config: dict) -> UdiIO:
+    def _create_udi_io(self, tcp_host: str, tcp_port: int, use_grpc: bool) -> UdiIO:
         """
-        UDI-IOインスタンスを生成する。
+        UdiIOインスタンスを生成する。
 
         Args:
-            config (dict): UDI接続設定
-                例: { 'tcp_host': '10.95.102.79', 'tcp_port': 50000, 'gRPC': True }
+            tcp_host (str): TCPホスト名
+            tcp_port (int): TCPポート番号
+            use_grpc (bool): gRPCフラグ
 
         Returns:
-            UdiIO: UDI-IOインスタンス
+            UdiIO: UdiIOインスタンス
         """
-        try:
-            tcp_host: str = config["tcp_host"]
-            tcp_port: int = config["tcp_port"]
 
-        except KeyError as e:
-            raise ValueError(f"Missing required key in udi_io config: {e}") from e
-
-        connect_type: UdiIO.Connect = UdiIO.Connect.GRPC if config.get("gRPC") else UdiIO.Connect.SOCKET
+        connect_type: UdiIO.Connect = UdiIO.Connect.GRPC if use_grpc else UdiIO.Connect.SOCKET
 
         udi_io: UdiIO = UdiIO(
             tcp_host=tcp_host,
@@ -145,3 +165,36 @@ class YgoEnv:
             return -1.0
 
         return 0.0
+
+    def _update_gui(
+        self, command_request: CommandRequest, duel_state_data: DuelStateData, duel_log_data: list[DuelLogDataEntry]
+    ) -> None:
+        """
+        GUIを更新する。
+
+        Args:
+            command_request (CommandRequest): 行動要求
+            duel_state_data (DuelStateData): デュエル状態
+            duel_log_data (list[DuelLogDataEntry]): デュエルログ
+        """
+
+        if self.udi_gui_thread is None:
+            return
+
+        new_gui_data: UdiLogData = UdiLogData(
+            command_request=command_request,
+            duel_state_data=duel_state_data,
+            duel_log_data=duel_log_data,
+            selected_command=-1,
+        )
+
+        if new_gui_data != self.last_gui_data:
+            time.sleep(1.0)
+
+            self.udi_gui_thread.set_data(
+                duel_log_data=new_gui_data.duel_log_data,
+                duel_state_data=new_gui_data.duel_state_data,
+                command_request=new_gui_data.command_request,
+            )
+
+            self.last_gui_data = new_gui_data

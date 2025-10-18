@@ -1,10 +1,10 @@
 import random
 
+from ygo.models.command_request import CommandEntry, CommandRequest
+
 from src.agents.base_agent import BaseAgent
 from src.env.action_data import ActionData
 from src.env.state_data import StateData
-
-from ygo.models.command_request import CommandEntry, CommandRequest
 
 
 class RandomAgent(BaseAgent):

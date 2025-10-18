@@ -18,11 +18,12 @@ if __name__ == "__main__":
     parser.add_argument("--tcp_host", type=str, default="10.95.102.79")
     parser.add_argument("--tcp_port", type=int, default=52000)
     parser.add_argument("--connect", choices=["Socket", "gRPC"], default="gRPC")
+    parser.add_argument("--use_gui", action="store_true")
     args = parser.parse_args()
 
     agent = DQNAgent()
 
-    env = YgoEnv({"tcp_host": args.tcp_host, "tcp_port": args.tcp_port, "gRPC": args.connect == "gRPC"})
+    env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
     wandb.init(entity="ygo-ai", project="U-Ni-Yo")
 
