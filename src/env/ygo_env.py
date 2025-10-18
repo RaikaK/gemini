@@ -8,7 +8,6 @@ from ygo.models import DuelEndData
 from ygo.models.command_request import CommandRequest
 from ygo.models.duel_log_data_entry import DuelLogDataEntry
 from ygo.models.duel_state_data import DuelStateData
-from ygo.models.udi_log_data import UdiLogData
 from ygo.udi_io import UdiIO
 
 from src.env.action_data import ActionData
@@ -32,17 +31,17 @@ class YgoEnv:
 
         Attributes:
             udi_io (UdiIO): UdiIOインスタンス
-            udi_gui_thread (UdiGUIThread): UdiGUIThreadインスタンス
-            command_queue (queue.Queue): コマンド受信キュー
-            last_gui_data (UdiLogData | None): 最後のGUI表示データ
+            udi_gui_thread (UdiGUIThread | None): UdiGUIThreadインスタンス
+            command_queue (queue.Queue | None): コマンド受信キュー
         """
         self.udi_io: UdiIO = self._create_udi_io(tcp_host=tcp_host, tcp_port=tcp_port, use_grpc=use_grpc)
-        self.udi_gui_thread: UdiGUIThread = UdiGUIThread()
-        self.command_queue: queue.Queue = queue.Queue(1)
-        self.last_gui_data: UdiLogData | None = None
+        self.udi_gui_thread: UdiGUIThread | None = None
+        self.command_queue: queue.Queue | None = None
 
         # GUIを使用する場合
         if use_gui:
+            self.udi_gui_thread = UdiGUIThread()
+            self.command_queue = queue.Queue(1)
             self.udi_gui_thread.start(self.command_queue)
 
     def reset(self) -> StateData:
@@ -83,10 +82,10 @@ class YgoEnv:
 
                     # GUIを更新
                     if self.udi_gui_thread is not None:
-                        self._update_gui(
+                        self.udi_gui_thread.set_data(
+                            duel_log_data=duel_log_data,
                             command_request=command_request,
                             duel_state_data=duel_state_data,
-                            duel_log_data=duel_log_data,
                         )
 
                     # デュエル開始
@@ -163,34 +162,3 @@ class YgoEnv:
             return -1.0
 
         return 0.0
-
-    def _update_gui(
-        self, command_request: CommandRequest, duel_state_data: DuelStateData, duel_log_data: list[DuelLogDataEntry]
-    ) -> None:
-        """
-        GUIを更新する。
-
-        Args:
-            command_request (CommandRequest): 行動要求
-            duel_state_data (DuelStateData): デュエル状態
-            duel_log_data (list[DuelLogDataEntry]): デュエルログ
-        """
-
-        if self.udi_gui_thread is None:
-            return
-
-        new_gui_data: UdiLogData = UdiLogData(
-            command_request=command_request,
-            duel_state_data=duel_state_data,
-            duel_log_data=duel_log_data,
-            selected_command=-1,
-        )
-
-        if new_gui_data != self.last_gui_data:
-            self.udi_gui_thread.set_data(
-                duel_log_data=new_gui_data.duel_log_data,
-                duel_state_data=new_gui_data.duel_state_data,
-                command_request=new_gui_data.command_request,
-            )
-
-            self.last_gui_data = new_gui_data
