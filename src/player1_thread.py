@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
-    agent = HumanAgent(env.command_queue)
+    agent = RandomAgent()
 
     episode = 0
     state: StateData = env.reset()
