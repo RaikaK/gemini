@@ -6,8 +6,9 @@ import wandb
 from src.env.state_data import StateData
 from src.env.ygo_env import YgoEnv
 
-from src.agents.random_agent.random_agent import RandomAgent
+from src.agents.random.agent import RandomAgent
 from src.agents.dqn_agent.dqn_agent import DQNAgent
+from src.agents.human.agent import HumanAgent
 from src.agents.ppo.agent import PPOAgent
 
 # Instance-1でのDuelSimulatorの起動コマンド
@@ -18,14 +19,14 @@ if __name__ == "__main__":
     parser.add_argument("--tcp_host", type=str, default="10.95.102.79")
     parser.add_argument("--tcp_port", type=int, default=52000)
     parser.add_argument("--connect", choices=["Socket", "gRPC"], default="gRPC")
+    parser.add_argument("--use_gui", action="store_true")
     args = parser.parse_args()
 
-    # agent = DQNAgent()
-    agent = PPOAgent()
+    agent = RandomAgent()
 
-    env = YgoEnv({"tcp_host": args.tcp_host, "tcp_port": args.tcp_port, "gRPC": args.connect == "gRPC"})
+    env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
-    wandb.init(entity="ygo-ai", project="U-Ni-Yo")
+    # wandb.init(entity="ygo-ai", project="U-Ni-Yo")
 
     episode = 0
     reward_history = []
@@ -40,14 +41,14 @@ if __name__ == "__main__":
 
         state = next_state
 
-        if log_dict is not None:
-            wandb.log(log_dict)
+        # if log_dict is not None:
+        # wandb.log(log_dict)
 
         reward_history.append(state.reward)
 
         if state.is_duel_end:
             ave_reward = np.average(reward_history) if len(reward_history) > 0 else 0
-            wandb.log({"ave_reward": ave_reward})
+            # wandb.log({"ave_reward": ave_reward})
             reward_history.clear()
 
             print(f"episode: {episode} | ave_reward: {ave_reward} | result: {state.duel_end_data}")

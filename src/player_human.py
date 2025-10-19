@@ -23,7 +23,9 @@ if __name__ == "__main__":
 
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
-    agent = RandomAgent()
+    if env.command_queue is None:
+        raise RuntimeError("GUIモードで起動してください。")
+    agent = HumanAgent(command_queue=env.command_queue)
 
     episode = 0
     state: StateData = env.reset()

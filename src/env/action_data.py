@@ -6,7 +6,7 @@ class ActionData:
     行動データ
     """
 
-    def __init__(self, command_request: CommandRequest, command_entry: CommandEntry):
+    def __init__(self, command_request: CommandRequest, command_entry: CommandEntry) -> None:
         """
         初期化する。
 
