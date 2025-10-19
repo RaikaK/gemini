@@ -9,9 +9,10 @@ from src.env.ygo_env import YgoEnv
 from src.agents.random.agent import RandomAgent
 from src.agents.dqn_agent.dqn_agent import DQNAgent
 from src.agents.human.agent import HumanAgent
+from src.agents.ppo.agent import PPOAgent
 
 # Instance-1でのDuelSimulatorの起動コマンド
-# DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
+# DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52100 --tcp_port1 52000 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
