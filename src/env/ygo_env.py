@@ -1,9 +1,8 @@
-import queue
+from queue import Queue
 import time
 from typing import cast
 
 from ygo.constants import FinishType, ResultType
-from ygo.gui.udi_gui_thread import UdiGUIThread
 from ygo.models import DuelEndData
 from ygo.models.command_request import CommandRequest
 from ygo.models.duel_log_data_entry import DuelLogDataEntry
@@ -12,6 +11,7 @@ from ygo.udi_io import UdiIO
 
 from src.env.action_data import ActionData
 from src.env.state_data import StateData
+from src.gui.thread import GUIThread
 
 
 class YgoEnv:
@@ -31,18 +31,18 @@ class YgoEnv:
 
         Attributes:
             udi_io (UdiIO): UdiIOインスタンス
-            udi_gui_thread (UdiGUIThread | None): UdiGUIThreadインスタンス
-            command_queue (queue.Queue | None): コマンド受信キュー
+            gui_thread (GUIThread | None): GUIスレッド
+            command_queue (Queue | None): コマンド受信キュー
         """
         self.udi_io: UdiIO = self._create_udi_io(tcp_host=tcp_host, tcp_port=tcp_port, use_grpc=use_grpc)
-        self.udi_gui_thread: UdiGUIThread | None = None
-        self.command_queue: queue.Queue | None = None
+        self.gui_thread: GUIThread | None = None
+        self.command_queue: Queue | None = None
 
         # GUIを使用する場合
         if use_gui:
-            self.udi_gui_thread = UdiGUIThread()
-            self.command_queue = queue.Queue(1)
-            self.udi_gui_thread.start(self.command_queue)
+            self.gui_thread = GUIThread()
+            self.command_queue = Queue(1)
+            self.gui_thread.start(self.command_queue)
 
     def reset(self) -> StateData:
         """
@@ -81,8 +81,8 @@ class YgoEnv:
                     reward: float = self._compute_reward(duel_end_data)
 
                     # GUIを更新
-                    if self.udi_gui_thread is not None:
-                        self.udi_gui_thread.set_data(
+                    if self.gui_thread is not None:
+                        self.gui_thread.set_data(
                             duel_log_data=duel_log_data,
                             command_request=command_request,
                             duel_state_data=duel_state_data,

@@ -1,4 +1,4 @@
-import queue
+from queue import Empty, Queue
 import time
 
 from ygo.models.command_request import CommandEntry, CommandRequest
@@ -13,17 +13,17 @@ class HumanAgent(BaseAgent):
     人間エージェント
     """
 
-    def __init__(self, command_queue: queue.Queue) -> None:
+    def __init__(self, command_queue: Queue) -> None:
         """
         初期化する。
 
         Args:
-            command_queue (queue.Queue): コマンド受信キュー
+            command_queue (Queue): コマンド受信キュー
 
         Attributes:
-            command_queue (queue.Queue): コマンド受信キュー
+            command_queue (Queue): コマンド受信キュー
         """
-        self.command_queue: queue.Queue = command_queue
+        self.command_queue: Queue = command_queue
 
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:
         command_request: CommandRequest = state.command_request
@@ -33,7 +33,7 @@ class HumanAgent(BaseAgent):
             try:
                 command_index: int = int(self.command_queue.get(block=False))
 
-            except (queue.Empty, ValueError, TypeError):
+            except (Empty, ValueError, TypeError):
                 time.sleep(0.001)
                 continue
 
