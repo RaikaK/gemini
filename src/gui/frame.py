@@ -28,8 +28,6 @@ class GUIFrame(UdiGUIFrame):
         """
         初期化する。
         """
-        super().__init__(master=master, queue=queue)
-
         tk.Frame.__init__(self, master)
 
         self.is_ready: bool = False
