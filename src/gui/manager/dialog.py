@@ -3,15 +3,13 @@ import tkinter as tk
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.dialog_manager import DialogManager
 
-from src.gui.frame import GUIFrame
-
 
 class GUIDialog(DialogManager):
     """
     GUIダイアログ
     """
 
-    def __init__(self, udi_gui_frame: GUIFrame, master: tk.Misc, **key) -> None:
+    def __init__(self, udi_gui_frame, master: tk.Misc, **key) -> None:
         """
         初期化する。
         """

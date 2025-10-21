@@ -6,8 +6,6 @@ from ygo.gui.manager.card_text_manager import CardTextManager, CardTextLabel
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.scollable_frame import ScrollableFrameY
 
-from src.gui.frame import GUIFrame
-
 
 class GUICardTextLabel(CardTextLabel):
     """
@@ -40,11 +38,11 @@ class GUICardText(CardTextManager):
     GUIカードテキスト
     """
 
-    def __init__(self, udi_gui_frame: GUIFrame, master: tk.Misc, **key) -> None:
+    def __init__(self, udi_gui_frame, master: tk.Misc, **key) -> None:
         """
         初期化する。
         """
-        self.udi_gui_frame: GUIFrame = udi_gui_frame
+        self.udi_gui_frame = udi_gui_frame
         self.master: tk.Misc = master
         self.key: dict = key
 

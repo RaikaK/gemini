@@ -10,8 +10,6 @@ from ygo.gui.manager.util import make_command_icon, make_command_text
 from ygo.models.command_request import CommandEntry
 from ygo.udi_io import UdiIO
 
-from src.gui.frame import GUIFrame
-
 
 class GUICommandLabel(CommandLabel):
     """
@@ -28,7 +26,7 @@ class GUICommandLabel(CommandLabel):
         table_index: int,
         text: str,
         subtext: str,
-        udi_gui_frame: GUIFrame,
+        udi_gui_frame,
         factor: float,
     ) -> None:
         """
@@ -43,7 +41,7 @@ class GUICommandLabel(CommandLabel):
         self.text: str = text
         self.subtext: str = subtext
         self.ai_text: str = ""
-        self.udi_gui_frame: GUIFrame = udi_gui_frame
+        self.udi_gui_frame = udi_gui_frame
         self.num: int = num
 
         scaled_num_font: tuple = (
