@@ -2,20 +2,20 @@ import copy
 import PIL.ImageTk as Itk
 import tkinter as tk
 
-
 from ygo import constants as c
 from ygo import models as mdl
 from ygo.gui.manager.command_manager import CommandLabel, CommandManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.util import make_command_icon, make_command_text
-from ygo.gui.udi_gui_frame import UdiGUIFrame
 from ygo.models.command_request import CommandEntry
 from ygo.udi_io import UdiIO
 
+from src.gui.frame import GUIFrame
 
-class GUILabel(CommandLabel):
+
+class GUICommandLabel(CommandLabel):
     """
-    GUIラベル
+    GUIコマンドラベル
     """
 
     def __init__(
@@ -28,7 +28,7 @@ class GUILabel(CommandLabel):
         table_index: int,
         text: str,
         subtext: str,
-        udi_gui_frame: UdiGUIFrame,
+        udi_gui_frame: GUIFrame,
         factor: float,
     ) -> None:
         """
@@ -43,7 +43,7 @@ class GUILabel(CommandLabel):
         self.text: str = text
         self.subtext: str = subtext
         self.ai_text: str = ""
-        self.udi_gui_frame: UdiGUIFrame = udi_gui_frame
+        self.udi_gui_frame: GUIFrame = udi_gui_frame
         self.num: int = num
 
         scaled_num_font: tuple = (
@@ -204,7 +204,7 @@ class GUICommand(CommandManager):
 
             tkimg: Itk.PhotoImage = Itk.PhotoImage(img)  # カード、アイコンの画像
 
-            label: GUILabel = GUILabel(
+            label: GUICommandLabel = GUICommandLabel(
                 self, self.frame, i, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor
             )
             label.pack(pady=int(Const.COMMAND_PADY * factor), side=tk.TOP, anchor=tk.W)

@@ -5,7 +5,6 @@ from typing import Optional, Union
 from ygo import constants as c
 from ygo.gui.manager.board_manager import BoardManager
 from ygo.gui.manager.card_list_manager import CardListManager
-from ygo.gui.manager.card_text_manager import CardTextManager
 from ygo.gui.manager.chain_manager import ChainManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
@@ -17,6 +16,7 @@ from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
 from src.gui.manager.dialog import GUIDialog
+from src.gui.manager.card_text import GUICardText
 from src.gui.manager.command import GUICommand
 
 
@@ -145,7 +145,7 @@ class GUIFrame(UdiGUIFrame):
         )
         card_text_dir.propagate(False)
         card_text_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.card_text_manager: CardTextManager = CardTextManager(self, card_text_dir)
+        self.card_text_manager: GUICardText = GUICardText(self, card_text_dir)
 
         ##################################################
         # 右
