@@ -4,7 +4,8 @@ import tkinter as tk
 from ygo import models as mdl
 from ygo.gui.manager.card_text_manager import CardTextLabel, CardTextManager
 from ygo.gui.manager.const import Const
-from ygo.gui.manager.scollable_frame import ScrollableFrameY
+
+from src.gui.manager.scroller import ScrollerY
 
 
 class GUICardTextLabel(CardTextLabel):
@@ -49,7 +50,7 @@ class GUICardText(CardTextManager):
         self.duel_card_table: list[mdl.DuelCard] | None = None
         self.table_index: int | None = None
 
-        ScrollableFrameY.__init__(self, master, **key)
+        ScrollerY.__init__(master=master, udi_gui_frame=udi_gui_frame, **key)
 
         factor: float = self.udi_gui_frame.factor
 

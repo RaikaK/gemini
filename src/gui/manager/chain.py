@@ -7,6 +7,8 @@ from ygo import models as mdl
 from ygo.gui.manager.chain_manager import ChainLabel, ChainManager
 from ygo.gui.manager.const import Const
 
+from src.gui.manager.scroller import ScrollerY
+
 
 class GUIChainLabel(ChainLabel):
     """
@@ -50,6 +52,16 @@ class GUIChain(ChainManager):
     """
     GUIチェーン
     """
+
+    def __init__(self, udi_gui_frame, master: tk.Misc, **key) -> None:
+        """
+        初期化する。
+        """
+        self.udi_gui_frame = udi_gui_frame
+        self.master: tk.Misc = master
+        self.key: dict = key
+
+        ScrollerY.__init__(master=master, udi_gui_frame=udi_gui_frame, **key)
 
     def update(self, duel_state_data: mdl.DuelStateData) -> None:
         """
