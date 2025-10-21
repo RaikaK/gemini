@@ -24,17 +24,15 @@ class GUIFrame(UdiGUIFrame):
     GUIフレーム
     """
 
-    def __init__(self, master: Optional[tk.Misc] = None, queue: Optional[Queue] = None):
+    def __init__(self, master: Optional[tk.Misc] = None, queue: Optional[Queue] = None) -> None:
         """
         初期化する。
         """
         tk.Frame.__init__(self, master)
 
+        self.factor: float = 0.5
         self.is_ready: bool = False
 
-        self.small_image_manager: ImageCustomizer = ImageCustomizer(Const.S_CARD_H, Const.S_CARD_W)
-        self.medium_image_manager: ImageCustomizer = ImageCustomizer(Const.M_CARD_H, Const.M_CARD_W)
-        self.large_image_manager: ImageCustomizer = ImageCustomizer(Const.L_CARD_H, Const.L_CARD_W)
         self.card_util: CardUtil = CardUtil()
         self.text_util: TextUtil = TextUtil()
         self.command_queue: Queue = queue if queue is not None else Queue(1)
@@ -47,152 +45,189 @@ class GUIFrame(UdiGUIFrame):
 
         ##################################################
         # GUI設定
-        root: Union[tk.Tk, tk.Toplevel] = self.winfo_toplevel()
-        root.title("UDI GUI App")
-        root.columnconfigure(0, weight=2)
-        root.columnconfigure(1, weight=5)
-        root.columnconfigure(2, weight=2)
-        root.columnconfigure(3, weight=2)
-        root.rowconfigure(0, weight=1)
+        self.root: Union[tk.Tk, tk.Toplevel] = self.winfo_toplevel()
+        self.root.title("UDI GUI App")
 
         # メニューバー
-        menu_bar: tk.Menu = tk.Menu(root)
-        root.config(menu=menu_bar)
+        menu_bar: tk.Menu = tk.Menu(self.root)
+        self.root.config(menu=menu_bar)
         file_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ファイル", menu=file_menu)
         file_menu.add_command(label="ファイルを読み込む", command=self.open_file)
         file_menu.add_command(label="フォルダを読み込む", command=self.open_folder)
         file_menu.add_command(label="デュエルを指定して再生", command=self.load_duel)
 
+        # ズームフレーム
+        zoom_frame = tk.Frame(menu_bar)
+        zoom_frame.pack(side=tk.LEFT, padx=int(5 * self.factor))
+        zoom_in_button = tk.Button(zoom_frame, text="+", command=self._zoom_in, width=2)
+        zoom_in_button.pack(side=tk.LEFT)
+        zoom_out_button = tk.Button(zoom_frame, text="-", command=self._zoom_out, width=2)
+        zoom_out_button.pack(side=tk.LEFT)
+
+        # ヘルプメニュー
         help_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ヘルプ", menu=help_menu)
         help_menu.add_command(label="ファイル・フォルダ読み込みについて", command=self.about_file)
         help_menu.add_command(label="コマンド実行について", command=self.about_exec_command)
 
-        # 追加
-        self.additional_dir: tk.Frame = tk.Frame(root)
-        self.additional_dir.grid(row=0, column=3, sticky="nsew", padx=2, pady=2)
-
-        # 右
-        self.right_dir: tk.Frame = tk.Frame(root)
-        self.right_dir.grid(row=0, column=2, sticky="nsew", padx=2, pady=2)
-
-        # 中央
-        self.mid_dir: tk.Frame = tk.Frame(root)
-        self.mid_dir.grid(row=0, column=1, sticky="nsew", padx=2, pady=2)
-
-        # 左
-        self.left_dir: tk.Frame = tk.Frame(root)
-        self.left_dir.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-
         ##################################################
-        # 左
-        self.left_dir.rowconfigure(0, weight=0, minsize=Const.DIALOG_DIR_HEIGHT)
-        self.left_dir.rowconfigure(1, weight=1)
-        self.left_dir.rowconfigure(2, weight=0)
-        self.left_dir.rowconfigure(3, weight=0, minsize=Const.CARD_TEXT_DIR_HEIGHT)
-        self.left_dir.columnconfigure(0, weight=1)
-
-        # ダイアログ
-        self.dialog_dir: tk.LabelFrame = tk.LabelFrame(self.left_dir, text="Selection Type, Selection ID")
-        self.dialog_manager: DialogManager = DialogManager(self, self.dialog_dir)
-        self.dialog_dir.grid(row=0, column=0, sticky="new", padx=2, pady=2)
-
-        # コマンド
-        self.command_dir: tk.LabelFrame = tk.LabelFrame(self.left_dir, text="Commands")
-        self.command_manager: CommandManager = CommandManager(self, self.command_dir)
-        self.command_dir.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
-
-        # 巻き戻し・次送り機能
-        self.time_dir: tk.Frame = tk.Frame(self.left_dir)
-        self.time_dir.grid(row=2, column=0, sticky="ew", padx=2, pady=2)
-
-        self.b_back: tk.Button = tk.Button(
-            self.time_dir, text="<", width=10, font=("MS Gothic", 10, "bold"), command=self.back
-        )
-        self.b_back.pack(side=tk.LEFT, padx=2, pady=2)
-        self.b_back.config(state=tk.DISABLED)
-        self.key_back_is_enable: bool = False
-        root.bind("<Left>", lambda event: self.key_back())
-
-        self.b_pause: tk.Button = tk.Button(
-            self.time_dir, text="⏸", width=10, font=("MS Gothic", 10, "bold"), command=self.pause
-        )
-        self.b_pause.pack(side=tk.LEFT, padx=2, pady=2)
-        self.b_pause.config(state=tk.DISABLED)
-
-        self.b_resume: tk.Button = tk.Button(
-            self.time_dir, text="▶", width=10, font=("MS Gothic", 10, "bold"), command=self.resume
-        )
-        self.b_resume.pack(side=tk.LEFT, padx=2, pady=2)
-        self.b_resume.config(state=tk.DISABLED)
-
-        self.b_forward: tk.Button = tk.Button(
-            self.time_dir, text=">", width=10, font=("MS Gothic", 10, "bold"), command=self.forward
-        )
-        self.b_forward.pack(side=tk.LEFT, padx=2, pady=2)
-        self.b_forward.config(state=tk.DISABLED)
-        self.key_forward_is_enable: bool = False
-        root.bind("<Right>", lambda event: self.key_forward())
-
-        # カードテキスト
-        self.card_text_dir: tk.LabelFrame = tk.LabelFrame(self.left_dir, text="Card Text")
-        self.card_text_manager: CardTextManager = CardTextManager(self, self.card_text_dir)
-        self.card_text_dir.grid(row=3, column=0, sticky="sew", padx=2, pady=2)
-
-        ##################################################
-        # 右
-        self.right_dir.rowconfigure(0, weight=0, minsize=Const.CHAIN_DIR_HEIGHT)
-        self.right_dir.rowconfigure(1, weight=1)
-        self.right_dir.columnconfigure(0, weight=1)
-
-        # チェーンスタック
-        self.chain_dir: tk.LabelFrame = tk.LabelFrame(self.right_dir, text="Chain Stack")
-        self.chain_manager: ChainManager = ChainManager(self, self.chain_dir)
-        self.chain_dir.grid(row=0, column=0, sticky="new", padx=2, pady=2)
-
-        # カードリスト
-        self.card_list_dir: tk.LabelFrame = tk.LabelFrame(self.right_dir, text="Card List")
-        self.card_list_manager: CardListManager = CardListManager(self, self.card_list_dir)
-        self.card_list_dir.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
-
-        ##################################################
-        # 中央
-        self.mid_dir.rowconfigure(0, weight=0, minsize=Const.HAND_DIR_HEIGHT)
-        self.mid_dir.rowconfigure(1, weight=1)
-        self.mid_dir.rowconfigure(2, weight=0, minsize=Const.HAND_DIR_HEIGHT)
-        self.mid_dir.columnconfigure(0, weight=1)
-
-        # p1の手札
-        self.rival_hand_dir: tk.LabelFrame = tk.LabelFrame(self.mid_dir, text="Rival Hand")
-        self.rival_hand_manager: HandManager = HandManager(self, c.enums.PlayerId.RIVAL, self.rival_hand_dir)
-        self.rival_hand_dir.grid(row=0, column=0, sticky="new")
-
-        # 盤面
-        self.board_dir: tk.LabelFrame = tk.LabelFrame(self.mid_dir, text="Board")
-        self.board_manager: BoardManager = BoardManager(self, self.board_dir)
-        self.board_dir.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
-
-        # p0の手札
-        self.my_hand_dir: tk.LabelFrame = tk.LabelFrame(self.mid_dir, text="My Hand")
-        self.my_hand_manager: HandManager = HandManager(self, c.enums.PlayerId.MYSELF, self.my_hand_dir)
-        self.my_hand_dir.grid(row=2, column=0, sticky="sew")
-
-        ##################################################
-        # 追加
-        self.additional_dir.rowconfigure(0, weight=0, minsize=Const.CONTEXT_DIR_HEIGHT)
-        self.additional_dir.rowconfigure(1, weight=1)
-        self.additional_dir.columnconfigure(0, weight=1)
-
-        # コンテキスト
-        self.context_dir: tk.LabelFrame = tk.LabelFrame(self.additional_dir, text="Command Log")
-        self.context_manager: ContextManager = ContextManager(self, self.context_dir)
-        self.context_dir.grid(row=0, column=0, sticky="new", padx=2, pady=2)
-
-        # デュエルログ
-        self.log_dir: tk.LabelFrame = tk.LabelFrame(self.additional_dir, text="Duel Log Data")
-        self.log_manager: LogManager = LogManager(self, self.log_dir)
-        self.log_dir.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
+        # レイアウト更新
+        self._update_layout()
 
         ##################################################
         self.is_ready = True
+
+    def _zoom_in(self):
+        """
+        ズームインする。
+        """
+        self.factor = min(2.0, self.factor + 0.1)  # 最大2.0倍
+        self._apply_scaling()
+
+    def _zoom_out(self):
+        """
+        ズームアウトする。
+        """
+        self.factor = max(0.1, self.factor - 0.1)  # 最小0.1倍
+        self._apply_scaling()
+
+    def _update_layout(self) -> None:
+        """
+        レイアウトを更新する。
+        """
+        self.small_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.S_CARD_H * self.factor), int(Const.S_CARD_W * self.factor)
+        )
+        self.medium_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.M_CARD_H * self.factor), int(Const.M_CARD_W * self.factor)
+        )
+        self.large_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.L_CARD_H * self.factor), int(Const.L_CARD_W * self.factor)
+        )
+
+        ##################################################
+        # GUI設定
+        geo_parts = Const.GEO_MAIN.split("x")
+        scaled_width = int(int(geo_parts[0]) * self.factor)
+        scaled_height = int(int(geo_parts[1]) * self.factor)
+        self.root.geometry(f"{scaled_width}x{scaled_height}")
+
+        # 追加
+        additional_dir: tk.Frame = tk.Frame(self.root, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
+        additional_dir.propagate(False)
+        additional_dir.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # 右
+        right_dir: tk.Frame = tk.Frame(self.root, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
+        right_dir.propagate(False)
+        right_dir.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # 中央
+        mid_dir: tk.Frame = tk.Frame(self.root, width=int(Const.MID_DIR_WIDTH * self.factor))
+        mid_dir.propagate(False)
+        mid_dir.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # 左
+        left_dir: tk.Frame = tk.Frame(self.root)
+        left_dir.propagate(False)
+        left_dir.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+
+        ##################################################
+        # 左
+
+        # ダイアログ
+        dialog_dir = tk.LabelFrame(
+            left_dir, text="Selection Type, Selection ID", height=int(Const.DIALOG_DIR_HEIGHT * self.factor)
+        )
+        dialog_dir.propagate(False)
+        dialog_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.dialog_manager = DialogManager(self, dialog_dir)
+
+        # コマンド
+        command_dir = tk.LabelFrame(left_dir, text="Commands")
+        command_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
+        self.command_manager = CommandManager(self, command_dir)
+
+        # 巻き戻し・次送り機能
+        time_dir = tk.Frame(left_dir)
+        time_dir.pack(padx=int(2 * self.factor), pady=int(2 * self.factor))
+
+        scaled_font_size = int(15 * self.factor)
+        scaled_font = ("MSゴシック", scaled_font_size, "bold")
+
+        self.b_back = tk.Button(time_dir, text="<", width=10, font=scaled_font, command=self.back)
+        self.b_back.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
+        self.b_back.config(state=tk.DISABLED)
+        self.key_back_is_enable = False
+        self.master.bind("<Left>", lambda event: self.key_back())
+
+        self.b_pause = tk.Button(time_dir, text="⏸", width=10, font=scaled_font, command=self.pause)
+        self.b_pause.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
+        self.b_pause.config(state=tk.DISABLED)
+
+        self.b_resume = tk.Button(time_dir, text="▶", width=10, font=scaled_font, command=self.resume)
+        self.b_resume.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
+        self.b_resume.config(state=tk.DISABLED)
+
+        self.b_forward = tk.Button(time_dir, text=">", width=10, font=scaled_font, command=self.forward)
+        self.b_forward.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
+        self.b_forward.config(state=tk.DISABLED)
+        self.key_forward_is_enable = False
+        self.master.bind("<Right>", lambda event: self.key_forward())
+
+        # カードテキスト
+        card_text_dir = tk.LabelFrame(left_dir, text="Card Text", height=int(Const.CARD_TEXT_DIR_HEIGHT * self.factor))
+        card_text_dir.propagate(False)
+        card_text_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.card_text_manager = CardTextManager(self, card_text_dir)
+
+        ##################################################
+        # 右
+
+        # チェーンスタック
+        chain_dir = tk.LabelFrame(right_dir, text="Chain Stack", height=int(Const.CHAIN_DIR_HEIGHT * self.factor))
+        chain_dir.propagate(False)
+        chain_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.chain_manager = ChainManager(self, chain_dir)
+
+        # カードリスト
+        card_list_dir = tk.LabelFrame(right_dir, text="Card List")
+        card_list_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
+        self.card_list_manager = CardListManager(self, card_list_dir)
+
+        ##################################################
+        # 中央
+
+        # p1の手札
+        rival_hand_dir = tk.LabelFrame(mid_dir, text="Rival Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor))
+        rival_hand_dir.propagate(False)
+        rival_hand_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.rival_hand_manager = HandManager(self, c.enums.PlayerId.RIVAL, rival_hand_dir)
+
+        # 盤面
+        board_dir = tk.LabelFrame(mid_dir, text="Board")
+        board_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
+        self.board_manager = BoardManager(self, board_dir)
+
+        # p0の手札
+        my_hand_dir = tk.LabelFrame(mid_dir, text="My Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor))
+        my_hand_dir.propagate(False)
+        my_hand_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.my_hand_manager = HandManager(self, c.enums.PlayerId.MYSELF, my_hand_dir)
+
+        ##################################################
+        # 追加
+
+        # コンテキスト
+        context_dir = tk.LabelFrame(
+            additional_dir, text="Command Log", height=int(Const.CONTEXT_DIR_HEIGHT * self.factor)
+        )
+        context_dir.propagate(False)
+        context_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
+        self.context_manager = ContextManager(self, context_dir)
+
+        # デュエルログ
+        log_dir = tk.LabelFrame(additional_dir, text="Duel Log Data")
+        log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
+        self.log_manager = LogManager(self, log_dir)

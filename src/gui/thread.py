@@ -22,4 +22,5 @@ class GUIThread(UdiGUIThread):
         スレッドを開始する。
         """
         self.udi_gui_frame = GUIFrame(queue=queue)
+        self.udi_gui_frame.pack()
         self.udi_gui_frame.mainloop()
