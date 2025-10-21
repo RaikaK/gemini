@@ -7,7 +7,6 @@ from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
 from ygo.gui.manager.hand_manager import HandManager
 from ygo.gui.manager.image_customizer import ImageCustomizer
-from ygo.gui.manager.log_manager import LogManager
 from ygo.gui.udi_gui_frame import UdiGUIFrame
 from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
@@ -18,6 +17,7 @@ from src.gui.manager.card_list import GUICardList
 from src.gui.manager.card_text import GUICardText
 from src.gui.manager.chain import GUIChain
 from src.gui.manager.command import GUICommand
+from src.gui.manager.log import GUILog
 
 
 class GUIFrame(UdiGUIFrame):
@@ -201,7 +201,7 @@ class GUIFrame(UdiGUIFrame):
         # デュエルログ
         log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
         log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.log_manager: LogManager = LogManager(self, log_dir)
+        self.log_manager: GUILog = GUILog(self, log_dir)
 
         ##################################################
         self.is_ready = True
