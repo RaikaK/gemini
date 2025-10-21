@@ -10,13 +10,14 @@ from ygo.gui.manager.chain_manager import ChainManager
 from ygo.gui.manager.command_manager import CommandManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
-from ygo.gui.manager.dialog_manager import DialogManager
 from ygo.gui.manager.hand_manager import HandManager
 from ygo.gui.manager.image_customizer import ImageCustomizer
 from ygo.gui.manager.log_manager import LogManager
 from ygo.gui.udi_gui_frame import UdiGUIFrame
 from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
+
+from src.gui.manager.dialog import GUIDialog
 
 
 class GUIFrame(UdiGUIFrame):
@@ -104,7 +105,7 @@ class GUIFrame(UdiGUIFrame):
         )
         dialog_dir.propagate(False)
         dialog_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.dialog_manager = DialogManager(self, dialog_dir)
+        self.dialog_manager = GUIDialog(self, dialog_dir)
 
         # コマンド
         command_dir = tk.LabelFrame(left_dir, text="Commands")
