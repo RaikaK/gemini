@@ -50,7 +50,7 @@ class GUICardText(CardTextManager):
         self.duel_card_table: list[mdl.DuelCard] | None = None
         self.table_index: int | None = None
 
-        ScrollerY.__init__(master=master, udi_gui_frame=udi_gui_frame, **key)
+        ScrollerY.__init__(self, master, udi_gui_frame, **key)
 
         factor: float = self.udi_gui_frame.factor
 

@@ -124,7 +124,7 @@ class GUICommand(CommandManager):
         self.label_list: list[CommandLabel]
         self.label_list = []
 
-        ScrollerY.__init__(master=master, udi_gui_frame=udi_gui_frame, **key)
+        ScrollerY.__init__(self, master, udi_gui_frame, **key)
 
     def update(self, command_request: mdl.CommandRequest, duel_state_data: mdl.DuelStateData) -> None:
         """

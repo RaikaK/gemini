@@ -61,7 +61,7 @@ class GUIChain(ChainManager):
         self.master: tk.Misc = master
         self.key: dict = key
 
-        ScrollerY.__init__(master=master, udi_gui_frame=udi_gui_frame, **key)
+       ScrollerY.__init__(self, master, udi_gui_frame, **key)
 
     def update(self, duel_state_data: mdl.DuelStateData) -> None:
         """
