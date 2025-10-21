@@ -10,8 +10,6 @@ from ygo.gui.manager.util import make_command_icon, make_command_text
 from ygo.models.command_request import CommandEntry
 from ygo.udi_io import UdiIO
 
-from src.gui.manager.scroller import ScrollerY
-
 
 class GUICommandLabel(CommandLabel):
     """
@@ -112,19 +110,6 @@ class GUICommand(CommandManager):
     """
     GUIコマンド
     """
-
-    def __init__(self, udi_gui_frame, master: tk.Misc, **key) -> None:
-        """
-        初期化する。
-        """
-        self.udi_gui_frame = udi_gui_frame
-        self.master: tk.Misc = master
-        self.key: dict = key
-
-        self.label_list: list[CommandLabel]
-        self.label_list = []
-
-        ScrollerY.__init__(self, master, udi_gui_frame, **key)
 
     def update(self, command_request: mdl.CommandRequest, duel_state_data: mdl.DuelStateData) -> None:
         """
