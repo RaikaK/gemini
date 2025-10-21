@@ -9,7 +9,7 @@ from ygo.gui.manager.context_manager import CommandLabel, ContextManager
 from ygo.models.command_request import CommandEntry, CommandLogEntry
 
 
-class GUICommandLabel(CommandLabel):
+class GUIContextLabel(CommandLabel):
     """
     GUIコマンドラベル
     """
@@ -39,11 +39,11 @@ class GUICommandLabel(CommandLabel):
 
         scaled_text_font: tuple = (
             Const.CONTEXT_TEXT_FONT[0],
-            max(6, int(int(Const.CONTEXT_TEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.CONTEXT_TEXT_FONT[1]) * factor)),
         )
         scaled_subtext_font: tuple = (
             Const.CONTEXT_SUBTEXT_FONT[0],
-            max(6, int(int(Const.CONTEXT_SUBTEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.CONTEXT_SUBTEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.CONTEXT_WRAP_LENGTH * factor)
 
@@ -151,7 +151,7 @@ class GUIContext(ContextManager):
             img = self.udi_gui_frame.small_image_manager.get_image_by_card(card)
             tkimg = Itk.PhotoImage(img)
 
-            label: GUICommandLabel = GUICommandLabel(
+            label: GUIContextLabel = GUIContextLabel(
                 self.frame, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor
             )
             label.pack(side=tk.TOP, anchor=tk.W)

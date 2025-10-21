@@ -20,7 +20,7 @@ class GUICardListLabel(CardLabel):
 
         scaled_font: tuple = (
             Const.C_LIST_FONT[0],
-            max(6, int(int(Const.C_LIST_FONT[1]) * factor)),
+            max(8, int(int(Const.C_LIST_FONT[1]) * factor)),
             *Const.C_LIST_FONT[2:],
         )
         scaled_wrap_length: int = int(Const.C_LIST_WRAP_LENGTH * factor)

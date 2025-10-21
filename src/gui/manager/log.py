@@ -15,15 +15,15 @@ class GUILogLabel(LogLabel):
         """
         初期化する。
         """
-        scaled_bd: int = int(Const.LOG_BD * factor)
+        scaled_bd: int = max(1, int(Const.LOG_BD * factor))
         scaled_num_font: tuple = (
             Const.LOG_NUM_FONT[0],
-            int(int(Const.LOG_NUM_FONT[1]) * factor),
+            max(8, int(int(Const.LOG_NUM_FONT[1]) * factor)),
             Const.LOG_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.LOG_TEXT_FONT[0],
-            int(int(Const.LOG_TEXT_FONT[1]) * factor),
+            max(8, int(int(Const.LOG_TEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.LOG_WRAP_LENGTH * factor)
 
@@ -53,7 +53,7 @@ class GUILog(LogManager):
         text_util: TextUtil = self.udi_gui_frame.text_util
 
         if len(self.label_list) < len(udi_io_duel_log):
-            scaled_pady: int = int(Const.LOG_PADY * factor)
+            scaled_pady: int = max(1, int(Const.LOG_PADY * factor))
 
             for i in range(len(self.label_list), len(udi_io_duel_log)):
                 log: mdl.DuelLogDataEntry = udi_io_duel_log[i]

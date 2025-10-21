@@ -46,29 +46,29 @@ class GUICommandLabel(CommandLabel):
 
         scaled_num_font: tuple = (
             Const.COMMAND_NUM_FONT[0],
-            int(int(Const.COMMAND_NUM_FONT[1]) * factor),
+            max(8, int(int(Const.COMMAND_NUM_FONT[1]) * factor)),
             Const.COMMAND_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.COMMAND_TEXT_FONT[0],
-            int(int(Const.COMMAND_TEXT_FONT[1]) * factor),
+            max(8, int(int(Const.COMMAND_TEXT_FONT[1]) * factor)),
             Const.COMMAND_TEXT_FONT[2],
         )
         scaled_subtext_font: tuple = (
             Const.COMMAND_SUBTEXT_FONT[0],
-            int(int(Const.COMMAND_SUBTEXT_FONT[1]) * factor),
+            max(8, int(int(Const.COMMAND_SUBTEXT_FONT[1]) * factor)),
         )
         scaled_button_font: tuple = (
             Const.COMMAND_BUTTON_FONT[0],
-            int(int(Const.COMMAND_BUTTON_FONT[1]) * factor),
+            max(8, int(int(Const.COMMAND_BUTTON_FONT[1]) * factor)),
             Const.COMMAND_BUTTON_FONT[2],
         )
 
         scaled_img_width: int = int(Const.M_CARD_W * factor)
         scaled_img_height: int = int(Const.M_CARD_H * factor)
         scaled_wrap_length: int = int(Const.COMMAND_WRAP_LENGTH * factor)
-        scaled_button_padx: int = int(Const.COMMAND_BUTTON_PADX * factor)
-        scaled_button_pady: int = int(Const.COMMAND_BUTTON_PADY * factor)
+        scaled_button_padx: int = max(1, int(Const.COMMAND_BUTTON_PADX * factor))
+        scaled_button_pady: int = max(1, int(Const.COMMAND_BUTTON_PADY * factor))
 
         # コマンド番号
         num_label: tk.Label = tk.Label(self, text=str(num), font=scaled_num_font)
@@ -205,7 +205,7 @@ class GUICommand(CommandManager):
             label: GUICommandLabel = GUICommandLabel(
                 self, self.frame, i, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor
             )
-            label.pack(pady=int(Const.COMMAND_PADY * factor), side=tk.TOP, anchor=tk.W)
+            label.pack(pady=max(1, int(Const.COMMAND_PADY * factor)), side=tk.TOP, anchor=tk.W)
             self.label_list.append(label)
 
             for child in label.children.values():

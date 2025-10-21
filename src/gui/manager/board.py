@@ -20,7 +20,7 @@ class GUICardLabel(CardLabel):
         """
         super().__init__(master, bg_img, udi_gui_frame)
 
-        scaled_bd: int = int(Const.C_LIST_BD * factor)
+        scaled_bd: int = max(1, int(Const.C_LIST_BD * factor))
         scaled_width: int = int(bg_img.width())
         scaled_height: int = int(bg_img.height())
 
@@ -49,10 +49,10 @@ class GUIPositionLabel(PositionLabel):
 
         scaled_font: tuple = (
             Const.BOARD_POSITION_FONT[0],
-            max(6, int(int(Const.BOARD_POSITION_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_POSITION_FONT[1]) * factor)),
             Const.BOARD_POSITION_FONT[2],
         )
-        scaled_pady: int = int(2 * factor)
+        scaled_pady: int = max(1, int(2 * factor))
 
         self.text_label.config(font=scaled_font)
         self.text_label.pack_configure(pady=scaled_pady)
@@ -157,25 +157,25 @@ class GUIBoard(BoardManager):
                 label.grid(row=label_pos[0], column=label_pos[1])
                 self.card_list_position[player_id][pos_id] = label
 
-        scaled_pady: int = int(4 * factor)
+        scaled_pady: int = max(1, int(4 * factor))
         scaled_player_font: tuple = (
             Const.BOARD_PLAYER_TEXT_FONT[0],
-            int(int(Const.BOARD_PLAYER_TEXT_FONT[1]) * factor),
+            max(8, int(int(Const.BOARD_PLAYER_TEXT_FONT[1]) * factor)),
             Const.BOARD_PLAYER_TEXT_FONT[2],
         )
         scaled_lp_font: tuple = (
             Const.BOARD_PLAYER_LP_FONT[0],
-            int(int(Const.BOARD_PLAYER_LP_FONT[1]) * factor),
+            max(8, int(int(Const.BOARD_PLAYER_LP_FONT[1]) * factor)),
             Const.BOARD_PLAYER_LP_FONT[2],
         )
         scaled_info_font: tuple = (
             Const.BOARD_PLAYER_INFO_FONT[0],
-            int(int(Const.BOARD_PLAYER_INFO_FONT[1]) * factor),
+            max(8, int(int(Const.BOARD_PLAYER_INFO_FONT[1]) * factor)),
             Const.BOARD_PLAYER_INFO_FONT[2],
         )
         scaled_phase_font: tuple = (
             Const.BOARD_PHASE_FONT[0],
-            int(int(Const.BOARD_PHASE_FONT[1]) * factor),
+            max(8, int(int(Const.BOARD_PHASE_FONT[1]) * factor)),
             Const.BOARD_PHASE_FONT[2],
         )
 

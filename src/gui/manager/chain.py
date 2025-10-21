@@ -29,15 +29,15 @@ class GUIChainLabel(ChainLabel):
         """
         super().__init__(master, num, img, text, card, table_index, udi_gui_frame)
 
-        scaled_bd: int = int(Const.CHAIN_BD * factor)
+        scaled_bd: int = max(1, int(Const.CHAIN_BD * factor))
         scaled_num_font: tuple = (
             Const.CHAIN_NUM_FONT[0],
-            int(int(Const.CHAIN_NUM_FONT[1]) * factor),
+            max(8, int(int(Const.CHAIN_NUM_FONT[1]) * factor)),
             Const.CHAIN_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.CHAIN_TEXT_FONT[0],
-            int(int(Const.CHAIN_TEXT_FONT[1]) * factor),
+            max(8, int(int(Const.CHAIN_TEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.CHAIN_WRAP_LENGTH * factor)
 
