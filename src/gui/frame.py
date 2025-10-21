@@ -31,7 +31,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
-        self.factor: float = 0.8
+        self.factor: float = 0.7
         self.is_ready: bool = False
 
         self.card_util: CardUtil = CardUtil()
@@ -62,6 +62,8 @@ class GUIFrame(UdiGUIFrame):
         zoom_in_button.pack(side=tk.LEFT)
         zoom_out_button: tk.Button = tk.Button(zoom_frame, text="縮小", command=self._zoom_out, width=8)
         zoom_out_button.pack(side=tk.LEFT)
+        self.zoom_label: tk.Label = tk.Label(zoom_frame, text=f"{self.factor:.2f}x", width=6, anchor="e")
+        self.zoom_label.pack(side=tk.LEFT, padx=int(5 * self.factor))
 
         # ファイルメニュー
         file_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
@@ -77,20 +79,25 @@ class GUIFrame(UdiGUIFrame):
         help_menu.add_command(label="コマンド実行について", command=self.about_exec_command)
 
         ##################################################
+        # メイン領域
+        self.main_frame: tk.Frame = tk.Frame(self.root)
+        self.main_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        ##################################################
         # レイアウト更新
         self._update_layout()
 
         ##################################################
         self.is_ready = True
 
-    def _zoom_in(self):
+    def _zoom_in(self) -> None:
         """
         ズームインする。
         """
         self.factor = min(2.0, self.factor + 0.05)  # 最大2.0倍
         self._update_layout()
 
-    def _zoom_out(self):
+    def _zoom_out(self) -> None:
         """
         ズームアウトする。
         """
@@ -101,13 +108,10 @@ class GUIFrame(UdiGUIFrame):
         """
         レイアウトを更新する。
         """
-        for widget in self.root.winfo_children():
-            if widget.winfo_class() not in ("Frame", "Labelframe"):
-                continue
-            if widget == self.menu_bar_frame:
-                continue
-
+        for widget in self.main_frame.winfo_children():
             widget.destroy()
+
+        self.zoom_label.config(text=f"{self.factor:.2f}x")
 
         self.small_image_manager: ImageCustomizer = ImageCustomizer(
             int(Const.S_CARD_H * self.factor), int(Const.S_CARD_W * self.factor)
@@ -127,22 +131,22 @@ class GUIFrame(UdiGUIFrame):
         self.root.geometry(f"{scaled_width}x{scaled_height}")
 
         # 追加
-        additional_dir: tk.Frame = tk.Frame(self.root, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
+        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
         additional_dir.propagate(False)
         additional_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 右
-        right_dir: tk.Frame = tk.Frame(self.root, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
+        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
         right_dir.propagate(False)
         right_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 中央
-        mid_dir: tk.Frame = tk.Frame(self.root, width=int(Const.MID_DIR_WIDTH * self.factor))
+        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.MID_DIR_WIDTH * self.factor))
         mid_dir.propagate(False)
         mid_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 左
-        left_dir: tk.Frame = tk.Frame(self.root)
+        left_dir: tk.Frame = tk.Frame(self.main_frame)
         left_dir.propagate(False)
         left_dir.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
 
