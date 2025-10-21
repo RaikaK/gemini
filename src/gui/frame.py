@@ -49,21 +49,25 @@ class GUIFrame(UdiGUIFrame):
         self.root.title("UDI GUI App")
 
         # メニューバー
-        menu_bar: tk.Menu = tk.Menu(self.root)
-        self.root.config(menu=menu_bar)
+        menu_bar_frame: tk.Frame = tk.Frame(self.root)
+        menu_bar_frame.pack(side=tk.TOP, fill=tk.X)
+        menu_bar: tk.Menu = tk.Menu(menu_bar_frame)
+        menu_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # ズームフレーム
+        zoom_frame = tk.Frame(menu_bar_frame)
+        zoom_frame.pack(side=tk.RIGHT, padx=int(5 * self.factor))
+        zoom_in_button = tk.Button(zoom_frame, text="拡大", command=self._zoom_in, width=8)
+        zoom_in_button.pack(side=tk.LEFT)
+        zoom_out_button = tk.Button(zoom_frame, text="縮小", command=self._zoom_out, width=8)
+        zoom_out_button.pack(side=tk.LEFT)
+
+        # ファイルメニュー
         file_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ファイル", menu=file_menu)
         file_menu.add_command(label="ファイルを読み込む", command=self.open_file)
         file_menu.add_command(label="フォルダを読み込む", command=self.open_folder)
         file_menu.add_command(label="デュエルを指定して再生", command=self.load_duel)
-
-        # ズームフレーム
-        zoom_frame = tk.Frame(menu_bar)
-        zoom_frame.pack(side=tk.LEFT, padx=int(5 * self.factor))
-        zoom_in_button = tk.Button(zoom_frame, text="拡大", command=self._zoom_in, width=8)
-        zoom_in_button.pack(side=tk.LEFT)
-        zoom_out_button = tk.Button(zoom_frame, text="縮小", command=self._zoom_out, width=8)
-        zoom_out_button.pack(side=tk.LEFT)
 
         # ヘルプメニュー
         help_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
