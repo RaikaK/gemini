@@ -31,7 +31,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
-        self.factor: float = 0.5
+        self.factor: float = 0.8
         self.is_ready: bool = False
 
         self.small_image_manager: ImageCustomizer = ImageCustomizer(
