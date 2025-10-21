@@ -7,9 +7,9 @@ from ygo.gui.manager.const import Const
 from ygo.gui.manager.scollable_frame import ScrollableFrameY
 
 
-class GUICardLabel(CardLabel):
+class GUICardListLabel(CardLabel):
     """
-    GUIカードラベル
+    GUIカードリストラベル
     """
 
     def __init__(self, master: tk.Misc, udi_gui_frame, factor: float) -> None:
@@ -66,14 +66,14 @@ class GUICardList(CardListManager):
 
         ScrollableFrameY.__init__(self, master, **key)
 
-        self.card_list: list[GUICardLabel] = []
+        self.card_list: list[GUICardListLabel] = []
         MAX_CARD_NUM = 60 + 15
 
         scaled_padx: int = int(Const.C_LIST_PADX * factor)
         scaled_pady: int = int(Const.C_LIST_PADY * factor)
 
         for _ in range(MAX_CARD_NUM):
-            label: GUICardLabel = GUICardLabel(self.frame, self.udi_gui_frame, factor)
+            label: GUICardListLabel = GUICardListLabel(self.frame, self.udi_gui_frame, factor)
             label.pack(padx=scaled_padx, pady=scaled_pady)
 
             for child in label.children.values():

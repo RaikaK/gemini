@@ -3,7 +3,6 @@ import tkinter as tk
 from typing import Optional, Union
 
 from ygo import constants as c
-from ygo.gui.manager.board_manager import BoardManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
 from ygo.gui.manager.hand_manager import HandManager
@@ -13,6 +12,7 @@ from ygo.gui.udi_gui_frame import UdiGUIFrame
 from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
+from src.gui.manager.board import GUIBoard
 from src.gui.manager.dialog import GUIDialog
 from src.gui.manager.card_list import GUICardList
 from src.gui.manager.card_text import GUICardText
@@ -177,7 +177,7 @@ class GUIFrame(UdiGUIFrame):
         # 盤面
         board_dir: tk.LabelFrame = tk.LabelFrame(mid_dir, text="Board")
         board_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.board_manager: BoardManager = BoardManager(self, board_dir)
+        self.board_manager: GUIBoard = GUIBoard(self, board_dir)
 
         # p0の手札
         my_hand_dir: tk.LabelFrame = tk.LabelFrame(
