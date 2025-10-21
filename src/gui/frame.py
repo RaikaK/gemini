@@ -4,7 +4,6 @@ from typing import Optional, Union
 
 from ygo import constants as c
 from ygo.gui.manager.const import Const
-from ygo.gui.manager.context_manager import ContextManager
 from ygo.gui.manager.hand_manager import HandManager
 from ygo.gui.manager.image_customizer import ImageCustomizer
 from ygo.gui.udi_gui_frame import UdiGUIFrame
@@ -17,6 +16,7 @@ from src.gui.manager.card_list import GUICardList
 from src.gui.manager.card_text import GUICardText
 from src.gui.manager.chain import GUIChain
 from src.gui.manager.command import GUICommand
+from src.gui.manager.context import GUIContext
 from src.gui.manager.log import GUILog
 
 
@@ -196,7 +196,7 @@ class GUIFrame(UdiGUIFrame):
         )
         context_dir.propagate(False)
         context_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.context_manager: ContextManager = ContextManager(self, context_dir)
+        self.context_manager: GUIContext = GUIContext(self, context_dir)
 
         # デュエルログ
         log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
