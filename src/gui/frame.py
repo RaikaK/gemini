@@ -34,15 +34,6 @@ class GUIFrame(UdiGUIFrame):
         self.factor: float = 0.8
         self.is_ready: bool = False
 
-        self.small_image_manager: ImageCustomizer = ImageCustomizer(
-            int(Const.S_CARD_H * self.factor), int(Const.S_CARD_W * self.factor)
-        )
-        self.medium_image_manager: ImageCustomizer = ImageCustomizer(
-            int(Const.M_CARD_H * self.factor), int(Const.M_CARD_W * self.factor)
-        )
-        self.large_image_manager: ImageCustomizer = ImageCustomizer(
-            int(Const.L_CARD_H * self.factor), int(Const.L_CARD_W * self.factor)
-        )
         self.card_util: CardUtil = CardUtil()
         self.text_util: TextUtil = TextUtil()
         self.command_queue: Queue = queue if queue is not None else Queue(1)
@@ -55,44 +46,95 @@ class GUIFrame(UdiGUIFrame):
 
         ##################################################
         # GUI設定
-        root: Union[tk.Tk, tk.Toplevel] = self.winfo_toplevel()
-        root.title("UDI GUI")
-        geo_parts: list[str] = Const.GEO_MAIN.split("x")
-        scaled_width: int = int(int(geo_parts[0]) * self.factor)
-        scaled_height: int = int(int(geo_parts[1]) * self.factor)
-        root.geometry(f"{scaled_width}x{scaled_height}")
+        self.root: Union[tk.Tk, tk.Toplevel] = self.winfo_toplevel()
+        self.root.title("UDI GUI App")
 
         # メニューバー
-        menu_bar: tk.Menu = tk.Menu(root)
-        root.config(menu=menu_bar)
+        menu_bar_frame: tk.Frame = tk.Frame(self.root)
+        menu_bar_frame.pack(side=tk.TOP, fill=tk.X)
+        menu_bar: tk.Menu = tk.Menu(menu_bar_frame)
+        self.root.config(menu=menu_bar)
+
+        # ズームフレーム
+        zoom_frame: tk.Frame = tk.Frame(menu_bar_frame)
+        zoom_frame.pack(side=tk.RIGHT, padx=int(5 * self.factor))
+        zoom_in_button: tk.Button = tk.Button(zoom_frame, text="拡大", command=self._zoom_in, width=8)
+        zoom_in_button.pack(side=tk.LEFT)
+        zoom_out_button: tk.Button = tk.Button(zoom_frame, text="縮小", command=self._zoom_out, width=8)
+        zoom_out_button.pack(side=tk.LEFT)
+
+        # ファイルメニュー
         file_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ファイル", menu=file_menu)
         file_menu.add_command(label="ファイルを読み込む", command=self.open_file)
         file_menu.add_command(label="フォルダを読み込む", command=self.open_folder)
         file_menu.add_command(label="デュエルを指定して再生", command=self.load_duel)
 
+        # ヘルプメニュー
         help_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ヘルプ", menu=help_menu)
         help_menu.add_command(label="ファイル・フォルダ読み込みについて", command=self.about_file)
         help_menu.add_command(label="コマンド実行について", command=self.about_exec_command)
 
+        ##################################################
+        # レイアウト更新
+        self._update_layout()
+
+        ##################################################
+        self.is_ready = True
+
+    def _zoom_in(self):
+        """
+        ズームインする。
+        """
+        self.factor = min(2.0, self.factor + 0.05)  # 最大2.0倍
+        self._update_layout()
+
+    def _zoom_out(self):
+        """
+        ズームアウトする。
+        """
+        self.factor = max(0.1, self.factor - 0.05)  # 最小0.1倍
+        self._update_layout()
+
+    def _update_layout(self) -> None:
+        """
+        レイアウトを更新する。
+        """
+        self.small_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.S_CARD_H * self.factor), int(Const.S_CARD_W * self.factor)
+        )
+        self.medium_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.M_CARD_H * self.factor), int(Const.M_CARD_W * self.factor)
+        )
+        self.large_image_manager: ImageCustomizer = ImageCustomizer(
+            int(Const.L_CARD_H * self.factor), int(Const.L_CARD_W * self.factor)
+        )
+
+        ##################################################
+        # GUI設定
+        geo_parts: list = Const.GEO_MAIN.split("x")
+        scaled_width: int = int(int(geo_parts[0]) * self.factor)
+        scaled_height: int = int(int(geo_parts[1]) * self.factor)
+        self.root.geometry(f"{scaled_width}x{scaled_height}")
+
         # 追加
-        additional_dir: tk.Frame = tk.Frame(root, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
+        additional_dir: tk.Frame = tk.Frame(self.root, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
         additional_dir.propagate(False)
         additional_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 右
-        right_dir: tk.Frame = tk.Frame(root, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
+        right_dir: tk.Frame = tk.Frame(self.root, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
         right_dir.propagate(False)
         right_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 中央
-        mid_dir: tk.Frame = tk.Frame(root, width=int(Const.MID_DIR_WIDTH * self.factor))
+        mid_dir: tk.Frame = tk.Frame(self.root, width=int(Const.MID_DIR_WIDTH * self.factor))
         mid_dir.propagate(False)
         mid_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 左
-        left_dir: tk.Frame = tk.Frame(root)
+        left_dir: tk.Frame = tk.Frame(self.root)
         left_dir.propagate(False)
         left_dir.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
 
@@ -202,6 +244,3 @@ class GUIFrame(UdiGUIFrame):
         log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
         log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
         self.log_manager: GUILog = GUILog(self, log_dir)
-
-        ##################################################
-        self.is_ready = True
