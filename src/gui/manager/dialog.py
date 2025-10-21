@@ -1,5 +1,8 @@
+import tkinter as tk
+
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.dialog_manager import DialogManager
+from ygo.gui.udi_gui_frame import UdiGUIFrame
 
 
 class GUIDialog(DialogManager):
@@ -7,7 +10,7 @@ class GUIDialog(DialogManager):
     GUIダイアログ
     """
 
-    def __init__(self, udi_gui_frame, master, **key) -> None:
+    def __init__(self, udi_gui_frame: UdiGUIFrame, master: tk.Misc, **key) -> None:
         """
         初期化する。
         """

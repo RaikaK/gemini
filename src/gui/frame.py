@@ -7,7 +7,6 @@ from ygo.gui.manager.board_manager import BoardManager
 from ygo.gui.manager.card_list_manager import CardListManager
 from ygo.gui.manager.card_text_manager import CardTextManager
 from ygo.gui.manager.chain_manager import ChainManager
-from ygo.gui.manager.command_manager import CommandManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
 from ygo.gui.manager.hand_manager import HandManager
@@ -18,6 +17,7 @@ from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
 from src.gui.manager.dialog import GUIDialog
+from src.gui.manager.command import GUICommand
 
 
 class GUIFrame(UdiGUIFrame):
@@ -110,7 +110,7 @@ class GUIFrame(UdiGUIFrame):
         # コマンド
         command_dir: tk.LabelFrame = tk.LabelFrame(left_dir, text="Commands")
         command_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.command_manager: CommandManager = CommandManager(self, command_dir)
+        self.command_manager: GUICommand = GUICommand(self, command_dir)
 
         # 巻き戻し・次送り機能
         time_dir: tk.Frame = tk.Frame(left_dir)
