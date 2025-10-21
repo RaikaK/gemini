@@ -83,14 +83,14 @@ class GUIFrame(UdiGUIFrame):
         ズームインする。
         """
         self.factor = min(2.0, self.factor + 0.1)  # 最大2.0倍
-        self._apply_scaling()
+        self._update_layout()
 
     def _zoom_out(self):
         """
         ズームアウトする。
         """
         self.factor = max(0.1, self.factor - 0.1)  # 最小0.1倍
-        self._apply_scaling()
+        self._update_layout()
 
     def _update_layout(self) -> None:
         """
