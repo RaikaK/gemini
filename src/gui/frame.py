@@ -4,7 +4,6 @@ from typing import Optional, Union
 
 from ygo import constants as c
 from ygo.gui.manager.board_manager import BoardManager
-from ygo.gui.manager.card_list_manager import CardListManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.context_manager import ContextManager
 from ygo.gui.manager.hand_manager import HandManager
@@ -15,6 +14,7 @@ from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
 from src.gui.manager.dialog import GUIDialog
+from src.gui.manager.card_list import GUICardLabel
 from src.gui.manager.card_text import GUICardText
 from src.gui.manager.chain import GUIChain
 from src.gui.manager.command import GUICommand
@@ -161,7 +161,7 @@ class GUIFrame(UdiGUIFrame):
         # カードリスト
         card_list_dir: tk.LabelFrame = tk.LabelFrame(right_dir, text="Card List")
         card_list_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.card_list_manager: CardListManager = CardListManager(self, card_list_dir)
+        self.card_list_manager: GUICardLabel = GUICardLabel(self, card_list_dir)
 
         ##################################################
         # 中央
