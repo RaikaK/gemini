@@ -79,17 +79,17 @@ class GUIFrame(UdiGUIFrame):
         # 追加
         additional_dir: tk.Frame = tk.Frame(root, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
         additional_dir.propagate(False)
-        additional_dir.pack(side=tk.RIGHT, expand=True, fill=tk.Y)
+        additional_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 右
         right_dir: tk.Frame = tk.Frame(root, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
         right_dir.propagate(False)
-        right_dir.pack(side=tk.RIGHT, expand=True, fill=tk.Y)
+        right_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 中央
         mid_dir: tk.Frame = tk.Frame(root, width=int(Const.MID_DIR_WIDTH * self.factor))
         mid_dir.propagate(False)
-        mid_dir.pack(side=tk.RIGHT, expand=True, fill=tk.Y)
+        mid_dir.pack(side=tk.RIGHT, fill=tk.Y)
 
         # 左
         left_dir: tk.Frame = tk.Frame(root)
