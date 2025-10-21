@@ -19,6 +19,11 @@ from src.gui.manager.command import GUICommand
 from src.gui.manager.context import GUIContext
 from src.gui.manager.log import GUILog
 
+LEFT_DIR_WIDTH = 525
+MID_DIR_WIDTH = 575
+RIGHT_DIR_WIDTH = 150
+ADDITIONAL_DIR_WIDTH = 670
+
 
 class GUIFrame(UdiGUIFrame):
     """
@@ -31,7 +36,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
-        self.factor: float = 0.75
+        self.factor: float = 0.8
         self.is_ready: bool = False
 
         self.card_util: CardUtil = CardUtil()
@@ -130,25 +135,25 @@ class GUIFrame(UdiGUIFrame):
         scaled_height: int = int(int(geo_parts[1]) * self.factor)
         self.root.geometry(f"{scaled_width}x{scaled_height}")
 
-        # 追加
-        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.ADDITIONAL_DIR_WIDTH * self.factor))
-        additional_dir.propagate(False)
-        additional_dir.pack(side=tk.RIGHT, fill=tk.Y)
-
-        # 右
-        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.RIGHT_DIR_WIDTH * self.factor))
-        right_dir.propagate(False)
-        right_dir.pack(side=tk.RIGHT, fill=tk.Y)
+        # 左
+        left_dir: tk.Frame = tk.Frame(self.main_frame, width=int(LEFT_DIR_WIDTH * self.factor))
+        left_dir.propagate(False)
+        left_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 中央
-        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(Const.MID_DIR_WIDTH * self.factor))
+        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(MID_DIR_WIDTH * self.factor))
         mid_dir.propagate(False)
-        mid_dir.pack(side=tk.RIGHT, fill=tk.Y)
+        mid_dir.pack(side=tk.LEFT, fill=tk.Y)
 
-        # 左
-        left_dir: tk.Frame = tk.Frame(self.main_frame)
-        left_dir.propagate(False)
-        left_dir.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+        # 右
+        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(RIGHT_DIR_WIDTH * self.factor))
+        right_dir.propagate(False)
+        right_dir.pack(side=tk.LEFT, fill=tk.Y)
+
+        # 追加
+        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(ADDITIONAL_DIR_WIDTH * self.factor))
+        additional_dir.propagate(False)
+        additional_dir.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
         ##################################################
         # 左
