@@ -58,11 +58,11 @@ class GUIFrame(UdiGUIFrame):
         file_menu.add_command(label="デュエルを指定して再生", command=self.load_duel)
 
         # ズームフレーム
-        zoom_frame = tk.Frame(self.root)
-        zoom_frame.pack(side=tk.RIGHT, padx=int(5 * self.factor), fill=tk.Y)
-        zoom_in_button = tk.Button(zoom_frame, text="+", command=self._zoom_in, width=2)
+        zoom_frame = tk.Frame(menu_bar)
+        zoom_frame.pack(side=tk.LEFT, padx=int(5 * self.factor))
+        zoom_in_button = tk.Button(zoom_frame, text="拡大", command=self._zoom_in, width=8)
         zoom_in_button.pack(side=tk.LEFT)
-        zoom_out_button = tk.Button(zoom_frame, text="-", command=self._zoom_out, width=2)
+        zoom_out_button = tk.Button(zoom_frame, text="縮小", command=self._zoom_out, width=8)
         zoom_out_button.pack(side=tk.LEFT)
 
         # ヘルプメニュー
