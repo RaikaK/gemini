@@ -46,21 +46,21 @@ class GUICommandLabel(CommandLabel):
 
         scaled_num_font: tuple = (
             Const.COMMAND_NUM_FONT[0],
-            max(7, int(int(Const.COMMAND_NUM_FONT[1]) * factor)),
+            max(8, int(int(Const.COMMAND_NUM_FONT[1]) * factor)),
             Const.COMMAND_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.COMMAND_TEXT_FONT[0],
-            max(7, int(int(Const.COMMAND_TEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.COMMAND_TEXT_FONT[1]) * factor)),
             Const.COMMAND_TEXT_FONT[2],
         )
         scaled_subtext_font: tuple = (
             Const.COMMAND_SUBTEXT_FONT[0],
-            max(7, int(int(Const.COMMAND_SUBTEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.COMMAND_SUBTEXT_FONT[1]) * factor)),
         )
         scaled_button_font: tuple = (
             Const.COMMAND_BUTTON_FONT[0],
-            max(7, int(int(Const.COMMAND_BUTTON_FONT[1]) * factor)),
+            max(8, int(int(Const.COMMAND_BUTTON_FONT[1]) * factor)),
             Const.COMMAND_BUTTON_FONT[2],
         )
 

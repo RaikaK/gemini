@@ -18,12 +18,12 @@ class GUILogLabel(LogLabel):
         scaled_bd: int = max(1, int(Const.LOG_BD * factor))
         scaled_num_font: tuple = (
             Const.LOG_NUM_FONT[0],
-            max(7, int(int(Const.LOG_NUM_FONT[1]) * factor)),
+            max(8, int(int(Const.LOG_NUM_FONT[1]) * factor)),
             Const.LOG_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.LOG_TEXT_FONT[0],
-            max(7, int(int(Const.LOG_TEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.LOG_TEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.LOG_WRAP_LENGTH * factor)
 

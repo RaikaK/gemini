@@ -49,7 +49,7 @@ class GUIPositionLabel(PositionLabel):
 
         scaled_font: tuple = (
             Const.BOARD_POSITION_FONT[0],
-            max(7, int(int(Const.BOARD_POSITION_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_POSITION_FONT[1]) * factor)),
             Const.BOARD_POSITION_FONT[2],
         )
         scaled_pady: int = max(1, int(2 * factor))
@@ -160,22 +160,22 @@ class GUIBoard(BoardManager):
         scaled_pady: int = max(1, int(4 * factor))
         scaled_player_font: tuple = (
             Const.BOARD_PLAYER_TEXT_FONT[0],
-            max(7, int(int(Const.BOARD_PLAYER_TEXT_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_PLAYER_TEXT_FONT[1]) * factor)),
             Const.BOARD_PLAYER_TEXT_FONT[2],
         )
         scaled_lp_font: tuple = (
             Const.BOARD_PLAYER_LP_FONT[0],
-            max(7, int(int(Const.BOARD_PLAYER_LP_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_PLAYER_LP_FONT[1]) * factor)),
             Const.BOARD_PLAYER_LP_FONT[2],
         )
         scaled_info_font: tuple = (
             Const.BOARD_PLAYER_INFO_FONT[0],
-            max(7, int(int(Const.BOARD_PLAYER_INFO_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_PLAYER_INFO_FONT[1]) * factor)),
             Const.BOARD_PLAYER_INFO_FONT[2],
         )
         scaled_phase_font: tuple = (
             Const.BOARD_PHASE_FONT[0],
-            max(7, int(int(Const.BOARD_PHASE_FONT[1]) * factor)),
+            max(8, int(int(Const.BOARD_PHASE_FONT[1]) * factor)),
             Const.BOARD_PHASE_FONT[2],
         )
 
