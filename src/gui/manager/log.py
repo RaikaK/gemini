@@ -33,10 +33,10 @@ class GUILogLabel(LogLabel):
         self.udi_gui_frame = udi_gui_frame
 
         num_label = tk.Label(self, text=str(num), font=scaled_num_font)
-        num_label.pack(expand=True, fill=tk.BOTH)
+        num_label.pack()
 
         text_label = tk.Label(self, text=self.text, font=scaled_text_font, wraplength=scaled_wrap_length)
-        text_label.pack(expand=True, fill=tk.BOTH)
+        text_label.pack()
 
 
 class GUILog(LogManager):
