@@ -31,7 +31,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
-        self.factor: float = 0.7
+        self.factor: float = 0.75
         self.is_ready: bool = False
 
         self.card_util: CardUtil = CardUtil()
