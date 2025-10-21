@@ -24,7 +24,7 @@ class GUIFrame(UdiGUIFrame):
     GUIフレーム
     """
 
-    def __init__(self, master: Optional[tk.Misc] = None, queue: Optional[Queue] = None):
+    def __init__(self, master: Optional[tk.Misc] = None, queue: Optional[Queue] = None) -> None:
         """
         初期化する。
         """
