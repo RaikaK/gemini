@@ -50,13 +50,13 @@ class GUIFrame(UdiGUIFrame):
         self.root.title("UDI GUI App")
 
         # メニューバー
-        menu_bar_frame: tk.Frame = tk.Frame(self.root)
-        menu_bar_frame.pack(side=tk.TOP, fill=tk.X)
-        menu_bar: tk.Menu = tk.Menu(menu_bar_frame)
+        self.menu_bar_frame: tk.Frame = tk.Frame(self.root)
+        self.menu_bar_frame.pack(side=tk.TOP, fill=tk.X)
+        menu_bar: tk.Menu = tk.Menu(self.menu_bar_frame)
         self.root.config(menu=menu_bar)
 
         # ズームフレーム
-        zoom_frame: tk.Frame = tk.Frame(menu_bar_frame)
+        zoom_frame: tk.Frame = tk.Frame(self.menu_bar_frame)
         zoom_frame.pack(side=tk.RIGHT, padx=int(5 * self.factor))
         zoom_in_button: tk.Button = tk.Button(zoom_frame, text="拡大", command=self._zoom_in, width=8)
         zoom_in_button.pack(side=tk.LEFT)
@@ -101,6 +101,14 @@ class GUIFrame(UdiGUIFrame):
         """
         レイアウトを更新する。
         """
+        for widget in self.root.winfo_children():
+            if widget.winfo_class() not in ("Frame", "Labelframe"):
+                continue
+            if widget == self.menu_bar_frame:
+                continue
+
+            widget.destroy()
+
         self.small_image_manager: ImageCustomizer = ImageCustomizer(
             int(Const.S_CARD_H * self.factor), int(Const.S_CARD_W * self.factor)
         )
