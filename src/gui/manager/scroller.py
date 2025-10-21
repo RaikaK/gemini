@@ -16,7 +16,7 @@ class ScrollerY(ScrollableFrameY):
         """
         self.udi_gui_frame = udi_gui_frame
 
-        super().__init__(master, **key)
+        ScrollableFrameY.__init__(self, master=master, **key)
 
     def make_canvas_frame(self) -> None:
         """
