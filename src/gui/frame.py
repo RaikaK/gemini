@@ -57,9 +57,9 @@ class GUIFrame(UdiGUIFrame):
         # GUI設定
         root: Union[tk.Tk, tk.Toplevel] = self.winfo_toplevel()
         root.title("UDI GUI")
-        geo_parts = Const.GEO_MAIN.split("x")
-        scaled_width = int(int(geo_parts[0]) * self.factor)
-        scaled_height = int(int(geo_parts[1]) * self.factor)
+        geo_parts: list[str] = Const.GEO_MAIN.split("x")
+        scaled_width: int = int(int(geo_parts[0]) * self.factor)
+        scaled_height: int = int(int(geo_parts[1]) * self.factor)
         root.geometry(f"{scaled_width}x{scaled_height}")
 
         # メニューバー
@@ -100,100 +100,108 @@ class GUIFrame(UdiGUIFrame):
         # 左
 
         # ダイアログ
-        dialog_dir = tk.LabelFrame(
+        dialog_dir: tk.LabelFrame = tk.LabelFrame(
             left_dir, text="Selection Type, Selection ID", height=int(Const.DIALOG_DIR_HEIGHT * self.factor)
         )
         dialog_dir.propagate(False)
         dialog_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.dialog_manager = GUIDialog(self, dialog_dir)
+        self.dialog_manager: GUIDialog = GUIDialog(self, dialog_dir)
 
         # コマンド
-        command_dir = tk.LabelFrame(left_dir, text="Commands")
+        command_dir: tk.LabelFrame = tk.LabelFrame(left_dir, text="Commands")
         command_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.command_manager = CommandManager(self, command_dir)
+        self.command_manager: CommandManager = CommandManager(self, command_dir)
 
         # 巻き戻し・次送り機能
-        time_dir = tk.Frame(left_dir)
+        time_dir: tk.Frame = tk.Frame(left_dir)
         time_dir.pack(padx=int(2 * self.factor), pady=int(2 * self.factor))
 
-        scaled_font_size = int(15 * self.factor)
-        scaled_font = ("MSゴシック", scaled_font_size, "bold")
+        scaled_font_size: int = int(15 * self.factor)
+        scaled_font: tuple = ("MSゴシック", scaled_font_size, "bold")
 
-        self.b_back = tk.Button(time_dir, text="<", width=10, font=scaled_font, command=self.back)
+        self.b_back: tk.Button = tk.Button(time_dir, text="<", width=10, font=scaled_font, command=self.back)
         self.b_back.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
         self.b_back.config(state=tk.DISABLED)
-        self.key_back_is_enable = False
+        self.key_back_is_enable: bool = False
         self.master.bind("<Left>", lambda event: self.key_back())
 
-        self.b_pause = tk.Button(time_dir, text="⏸", width=10, font=scaled_font, command=self.pause)
+        self.b_pause: tk.Button = tk.Button(time_dir, text="⏸", width=10, font=scaled_font, command=self.pause)
         self.b_pause.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
         self.b_pause.config(state=tk.DISABLED)
 
-        self.b_resume = tk.Button(time_dir, text="▶", width=10, font=scaled_font, command=self.resume)
+        self.b_resume: tk.Button = tk.Button(time_dir, text="▶", width=10, font=scaled_font, command=self.resume)
         self.b_resume.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
         self.b_resume.config(state=tk.DISABLED)
 
-        self.b_forward = tk.Button(time_dir, text=">", width=10, font=scaled_font, command=self.forward)
+        self.b_forward: tk.Button = tk.Button(time_dir, text=">", width=10, font=scaled_font, command=self.forward)
         self.b_forward.pack(side=tk.LEFT, padx=int(2 * self.factor), pady=int(2 * self.factor))
         self.b_forward.config(state=tk.DISABLED)
-        self.key_forward_is_enable = False
+        self.key_forward_is_enable: bool = False
         self.master.bind("<Right>", lambda event: self.key_forward())
 
         # カードテキスト
-        card_text_dir = tk.LabelFrame(left_dir, text="Card Text", height=int(Const.CARD_TEXT_DIR_HEIGHT * self.factor))
+        card_text_dir: tk.LabelFrame = tk.LabelFrame(
+            left_dir, text="Card Text", height=int(Const.CARD_TEXT_DIR_HEIGHT * self.factor)
+        )
         card_text_dir.propagate(False)
         card_text_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.card_text_manager = CardTextManager(self, card_text_dir)
+        self.card_text_manager: CardTextManager = CardTextManager(self, card_text_dir)
 
         ##################################################
         # 右
 
         # チェーンスタック
-        chain_dir = tk.LabelFrame(right_dir, text="Chain Stack", height=int(Const.CHAIN_DIR_HEIGHT * self.factor))
+        chain_dir: tk.LabelFrame = tk.LabelFrame(
+            right_dir, text="Chain Stack", height=int(Const.CHAIN_DIR_HEIGHT * self.factor)
+        )
         chain_dir.propagate(False)
         chain_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.chain_manager = ChainManager(self, chain_dir)
+        self.chain_manager: ChainManager = ChainManager(self, chain_dir)
 
         # カードリスト
-        card_list_dir = tk.LabelFrame(right_dir, text="Card List")
+        card_list_dir: tk.LabelFrame = tk.LabelFrame(right_dir, text="Card List")
         card_list_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.card_list_manager = CardListManager(self, card_list_dir)
+        self.card_list_manager: CardListManager = CardListManager(self, card_list_dir)
 
         ##################################################
         # 中央
 
         # p1の手札
-        rival_hand_dir = tk.LabelFrame(mid_dir, text="Rival Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor))
+        rival_hand_dir: tk.LabelFrame = tk.LabelFrame(
+            mid_dir, text="Rival Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor)
+        )
         rival_hand_dir.propagate(False)
         rival_hand_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.rival_hand_manager = HandManager(self, c.enums.PlayerId.RIVAL, rival_hand_dir)
+        self.rival_hand_manager: HandManager = HandManager(self, c.enums.PlayerId.RIVAL, rival_hand_dir)
 
         # 盤面
-        board_dir = tk.LabelFrame(mid_dir, text="Board")
+        board_dir: tk.LabelFrame = tk.LabelFrame(mid_dir, text="Board")
         board_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.board_manager = BoardManager(self, board_dir)
+        self.board_manager: BoardManager = BoardManager(self, board_dir)
 
         # p0の手札
-        my_hand_dir = tk.LabelFrame(mid_dir, text="My Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor))
+        my_hand_dir: tk.LabelFrame = tk.LabelFrame(
+            mid_dir, text="My Hand", height=int(Const.HAND_DIR_HEIGHT * self.factor)
+        )
         my_hand_dir.propagate(False)
         my_hand_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.my_hand_manager = HandManager(self, c.enums.PlayerId.MYSELF, my_hand_dir)
+        self.my_hand_manager: HandManager = HandManager(self, c.enums.PlayerId.MYSELF, my_hand_dir)
 
         ##################################################
         # 追加
 
         # コンテキスト
-        context_dir = tk.LabelFrame(
+        context_dir: tk.LabelFrame = tk.LabelFrame(
             additional_dir, text="Command Log", height=int(Const.CONTEXT_DIR_HEIGHT * self.factor)
         )
         context_dir.propagate(False)
         context_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), fill=tk.X)
-        self.context_manager = ContextManager(self, context_dir)
+        self.context_manager: ContextManager = ContextManager(self, context_dir)
 
         # デュエルログ
-        log_dir = tk.LabelFrame(additional_dir, text="Duel Log Data")
+        log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
         log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
-        self.log_manager = LogManager(self, log_dir)
+        self.log_manager: LogManager = LogManager(self, log_dir)
 
         ##################################################
         self.is_ready = True
