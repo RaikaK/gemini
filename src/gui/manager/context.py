@@ -39,11 +39,11 @@ class GUIContextLabel(CommandLabel):
 
         scaled_text_font: tuple = (
             Const.CONTEXT_TEXT_FONT[0],
-            max(8, int(int(Const.CONTEXT_TEXT_FONT[1]) * factor)),
+            max(7, int(int(Const.CONTEXT_TEXT_FONT[1]) * factor)),
         )
         scaled_subtext_font: tuple = (
             Const.CONTEXT_SUBTEXT_FONT[0],
-            max(8, int(int(Const.CONTEXT_SUBTEXT_FONT[1]) * factor)),
+            max(7, int(int(Const.CONTEXT_SUBTEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.CONTEXT_WRAP_LENGTH * factor)
 

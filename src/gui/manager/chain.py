@@ -32,12 +32,12 @@ class GUIChainLabel(ChainLabel):
         scaled_bd: int = max(1, int(Const.CHAIN_BD * factor))
         scaled_num_font: tuple = (
             Const.CHAIN_NUM_FONT[0],
-            max(8, int(int(Const.CHAIN_NUM_FONT[1]) * factor)),
+            max(7, int(int(Const.CHAIN_NUM_FONT[1]) * factor)),
             Const.CHAIN_NUM_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.CHAIN_TEXT_FONT[0],
-            max(8, int(int(Const.CHAIN_TEXT_FONT[1]) * factor)),
+            max(7, int(int(Const.CHAIN_TEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.CHAIN_WRAP_LENGTH * factor)
 

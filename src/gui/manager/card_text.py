@@ -20,12 +20,12 @@ class GUICardTextLabel(CardTextLabel):
 
         scaled_name_font: tuple = (
             Const.CARDTEXT_NAME_FONT[0],
-            max(8, int(int(Const.CARDTEXT_NAME_FONT[1]) * factor)),
+            max(7, int(int(Const.CARDTEXT_NAME_FONT[1]) * factor)),
             Const.CARDTEXT_NAME_FONT[2],
         )
         scaled_text_font: tuple = (
             Const.CARDTEXT_FONT[0],
-            max(8, int(int(Const.CARDTEXT_FONT[1]) * factor)),
+            max(7, int(int(Const.CARDTEXT_FONT[1]) * factor)),
         )
         scaled_wrap_length: int = int(Const.CARDTEXT_WRAP_LENGTH * factor)
 

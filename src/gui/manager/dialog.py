@@ -16,7 +16,7 @@ class GUIDialog(DialogManager):
         super().__init__(udi_gui_frame, master, **key)
 
         factor: float = self.udi_gui_frame.factor
-        scaled_font_size: int = max(8, int(int(Const.DIALOG_FONT[1]) * factor))
+        scaled_font_size: int = max(7, int(int(Const.DIALOG_FONT[1]) * factor))
         scaled_font: tuple = (Const.DIALOG_FONT[0], scaled_font_size, Const.DIALOG_FONT[2])
         scaled_wrap_length: int = int(Const.DIALOG_WRAP_LENGTH * factor)
         self.text_label.config(font=scaled_font, wraplength=scaled_wrap_length)
