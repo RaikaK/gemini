@@ -129,7 +129,7 @@ class GUICommand(CommandManager):
             ##################################################
             # コマンドに関係するカード
             table_index: int = command.table_index
-            card: mdl.DuelCard | None
+            card: mdl.DuelCard
             card_id: int
 
             if table_index == -1:
@@ -195,9 +195,7 @@ class GUICommand(CommandManager):
 
                 if command.command_type == c.CommandType.SET or command.command_type == c.CommandType.SET_MONST:
                     card = copy.deepcopy(card)
-
-                    if card is not None:
-                        card.turn = 1
+                    card.turn = 1
 
                 img = self.udi_gui_frame.medium_image_manager.get_image_by_card(card)
             else:
@@ -206,17 +204,16 @@ class GUICommand(CommandManager):
 
             tkimg: Itk.PhotoImage = Itk.PhotoImage(img)  # カード、アイコンの画像
 
-            if card is not None:
-                label: GUILabel = GUILabel(
-                    self, self.frame, i, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor
-                )
-                label.pack(pady=int(Const.COMMAND_PADY * factor), side=tk.TOP, anchor=tk.W)
-                self.label_list.append(label)
+            label: GUILabel = GUILabel(
+                self, self.frame, i, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor
+            )
+            label.pack(pady=int(Const.COMMAND_PADY * factor), side=tk.TOP, anchor=tk.W)
+            self.label_list.append(label)
 
-                for child in label.children.values():
-                    child.bind("<MouseWheel>", self._on_mousewheel)
+            for child in label.children.values():
+                child.bind("<MouseWheel>", self._on_mousewheel)
 
-                    for g_child in child.children.values():
-                        g_child.bind("<MouseWheel>", self._on_mousewheel)
+                for g_child in child.children.values():
+                    g_child.bind("<MouseWheel>", self._on_mousewheel)
 
-                label.bind("<MouseWheel>", self._on_mousewheel)
+            label.bind("<MouseWheel>", self._on_mousewheel)
