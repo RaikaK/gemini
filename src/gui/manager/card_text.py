@@ -2,7 +2,7 @@ import PIL.ImageTk as Itk
 import tkinter as tk
 
 from ygo import models as mdl
-from ygo.gui.manager.card_text_manager import CardTextManager, CardTextLabel
+from ygo.gui.manager.card_text_manager import CardTextLabel, CardTextManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.scollable_frame import ScrollableFrameY
 
