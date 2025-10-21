@@ -52,7 +52,7 @@ class GUIFrame(UdiGUIFrame):
         menu_bar_frame: tk.Frame = tk.Frame(self.root)
         menu_bar_frame.pack(side=tk.TOP, fill=tk.X)
         menu_bar: tk.Menu = tk.Menu(menu_bar_frame)
-        menu_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.root.config(menu=menu_bar)
 
         # ズームフレーム
         zoom_frame = tk.Frame(menu_bar_frame)
