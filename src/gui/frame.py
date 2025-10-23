@@ -25,9 +25,9 @@ DEFAULT_FACTOR = 0.8
 # 各領域の幅の比率
 DIR_WIDTH_RATIOS = {
     "left": 0.36,
-    "mid": 0.36,
+    "mid": 0.38,
     "right": 0.1,
-    "additional": 0.18,
+    "additional": 0.16,
 }
 
 
