@@ -138,7 +138,7 @@ class GUICommand(CommandManager):
                 card_id = card.card_id
 
             # コマンドをテキスト化
-            text = ""
+            text: str = ""
 
             if table_index == -1:
                 pass
@@ -200,7 +200,7 @@ class GUICommand(CommandManager):
                 icon_id = int(icon_id)
                 img = self.udi_gui_frame.medium_image_manager.get_icon_image(icon_type, icon_id)
 
-            tkimg: Itk.PhotoImage = Itk.PhotoImage(img)  # カード、アイコンの画像
+            tkimg: Itk.PhotoImage = Itk.PhotoImage(img)
 
             label: GUICommandLabel = GUICommandLabel(
                 self, self.frame, i, tkimg, card, table_index, text, subtext, self.udi_gui_frame, factor

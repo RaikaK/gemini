@@ -18,13 +18,12 @@ class GUICardListLabel(CardLabel):
         """
         super().__init__(master, udi_gui_frame)
 
+        scaled_bd: int = max(1, int(Const.C_LIST_BD * factor))
         scaled_font: tuple = (
             Const.C_LIST_FONT[0],
             max(8, int(int(Const.C_LIST_FONT[1]) * factor)),
-            *Const.C_LIST_FONT[2:],
         )
         scaled_wrap_length: int = int(Const.C_LIST_WRAP_LENGTH * factor)
-        scaled_bd: int = int(Const.C_LIST_BD * factor)
 
         self.config(bd=scaled_bd)
         self.info_label.config(font=scaled_font, wraplength=scaled_wrap_length)
@@ -39,6 +38,8 @@ class GUICardList(CardListManager):
         """
         初期化する。
         """
+        factor: float = self.udi_gui_frame.factor
+
         self.udi_gui_frame = udi_gui_frame
         self.master: tk.Misc = master
         self.key: dict = key
@@ -46,8 +47,6 @@ class GUICardList(CardListManager):
         self.player_id: int = c.enums.PlayerId.NO_VALUE
         self.pos_id: int = c.enums.PosId.NO_VALUE
         self.duel_card_table: list[mdl.DuelCard] | None = None
-
-        factor: float = self.udi_gui_frame.factor
 
         scaled_info_font: tuple = (
             Const.C_LIST_INFO_FONT[0],
@@ -69,8 +68,8 @@ class GUICardList(CardListManager):
         self.card_list: list[GUICardListLabel] = []
         MAX_CARD_NUM = 60 + 15
 
-        scaled_padx: int = int(Const.C_LIST_PADX * factor)
-        scaled_pady: int = int(Const.C_LIST_PADY * factor)
+        scaled_padx: int = max(1, int(Const.C_LIST_PADX * factor))
+        scaled_pady: int = max(1, int(Const.C_LIST_PADY * factor))
 
         for _ in range(MAX_CARD_NUM):
             label: GUICardListLabel = GUICardListLabel(self.frame, self.udi_gui_frame, factor)

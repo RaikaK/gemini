@@ -29,13 +29,13 @@ class GUILogLabel(LogLabel):
 
         tk.Frame.__init__(self, master, relief=tk.SOLID, bd=scaled_bd)
 
-        self.text = text
+        self.text: str = text
         self.udi_gui_frame = udi_gui_frame
 
-        num_label = tk.Label(self, text=str(num), font=scaled_num_font)
+        num_label: tk.Label = tk.Label(self, text=str(num), font=scaled_num_font)
         num_label.pack()
 
-        text_label = tk.Label(self, text=self.text, font=scaled_text_font, wraplength=scaled_wrap_length)
+        text_label: tk.Label = tk.Label(self, text=self.text, font=scaled_text_font, wraplength=scaled_wrap_length)
         text_label.pack()
 
 
@@ -52,6 +52,7 @@ class GUILog(LogManager):
 
         text_util: TextUtil = self.udi_gui_frame.text_util
 
+        # ログが増えた場合は追加
         if len(self.label_list) < len(udi_io_duel_log):
             scaled_pady: int = max(1, int(Const.LOG_PADY * factor))
 
@@ -67,7 +68,9 @@ class GUILog(LogManager):
                 label.bind("<MouseWheel>", self._on_mousewheel)
                 self.label_list.append(label)
 
+        # ログが減った場合は削除
         elif len(self.label_list) > len(udi_io_duel_log):
             for i in range(len(udi_io_duel_log), len(self.label_list)):
                 self.label_list[i].destroy()
+
             self.label_list = self.label_list[: len(udi_io_duel_log)]

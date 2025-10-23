@@ -3,29 +3,8 @@ import PIL.ImageTk as Itk
 import tkinter as tk
 
 from ygo import constants as c
-from ygo import models as mdl
 from ygo.gui.manager.board_manager import BoardManager, CardLabel, PositionLabel
 from ygo.gui.manager.const import Const
-from ygo.gui.manager.util import generate_card_overlay_text
-
-
-class GUICardLabel(CardLabel):
-    """
-    GUIカードラベル
-    """
-
-    def __init__(self, master: tk.Misc, bg_img: Itk.PhotoImage, udi_gui_frame, factor: float) -> None:
-        """
-        初期化する。
-        """
-        super().__init__(master, bg_img, udi_gui_frame)
-
-        scaled_bd: int = max(1, int(Const.C_LIST_BD * factor))
-        scaled_width: int = int(bg_img.width())
-        scaled_height: int = int(bg_img.height())
-
-        self.config(bd=scaled_bd)
-        self.img_label.config(width=scaled_width, height=scaled_height)
 
 
 class GUIPositionLabel(PositionLabel):
@@ -67,17 +46,17 @@ class GUIBoard(BoardManager):
         """
         初期化する。
         """
+        factor: float = self.udi_gui_frame.factor
+
         self.udi_gui_frame = udi_gui_frame
         self.master: tk.Misc = master
         self.key: dict = key
 
-        factor: float = self.udi_gui_frame.factor
-
         # 各マスの背景画像
         card_width: int = int(Const.S_CARD_W * factor)
         card_height: int = int(Const.S_CARD_H * factor)
-        bg_img = Img.new("RGB", (card_width, card_height), "gray")
-        bg_tkimg = Itk.PhotoImage(bg_img)
+        bg_img: Img.Image = Img.new("RGB", (card_width, card_height), "gray")
+        bg_tkimg: Itk.PhotoImage = Itk.PhotoImage(bg_img)
 
         # カード関連
         self.board: dict = {c.enums.PlayerId.MYSELF: dict(), c.enums.PlayerId.RIVAL: dict()}
@@ -115,7 +94,7 @@ class GUIBoard(BoardManager):
         }
         for player_id in range(c.enums.PlayerId.UPPER_VALUE):
             for pos_id in range(c.enums.PosId.FIELD + 1):
-                label: GUICardLabel = GUICardLabel(self.master, bg_tkimg, self.udi_gui_frame, factor)
+                label: CardLabel = CardLabel(self.master, bg_tkimg, self.udi_gui_frame)
                 label_pos: tuple = row_col[player_id][pos_id]
 
                 if pos_id in [c.enums.PosId.EX_L_MONSTER, c.enums.PosId.EX_R_MONSTER]:
@@ -216,22 +195,3 @@ class GUIBoard(BoardManager):
             self.master, text="フェーズ:\n \n ", font=scaled_phase_font, relief="ridge", bg="lightgray"
         )
         self.phase_label.grid(row=9, column=3, columnspan=3, pady=scaled_pady)
-
-    def set_image(
-        self, player_id: int, pos_id: int, index: int, card: mdl.DuelCard, table_index: int, overlay_text: str
-    ) -> None:
-        """
-        画像を設定する。
-        """
-        if index > 0:
-            return
-
-        img = self.udi_gui_frame.small_image_manager.get_image_by_card(card)
-
-        if player_id == c.enums.PlayerId.RIVAL:
-            img = img.transpose(Img.FLIP_TOP_BOTTOM)
-
-        img = generate_card_overlay_text(img, overlay_text)
-
-        tkimg: Itk.PhotoImage = Itk.PhotoImage(img)
-        self.board[player_id][pos_id].update(tkimg, card, table_index)

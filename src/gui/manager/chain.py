@@ -110,7 +110,8 @@ class GUIChain(ChainManager):
 
             ##################################################
             # 画像生成+GUI反映部分
-            tkimg = Itk.PhotoImage(self.udi_gui_frame.medium_image_manager.get_image_by_card(card))
+            img = self.udi_gui_frame.medium_image_manager.get_image_by_card(card)
+            tkimg: Itk.PhotoImage = Itk.PhotoImage(img)
 
             label: GUIChainLabel = GUIChainLabel(
                 self.frame, i, tkimg, text, card, table_index, self.udi_gui_frame, factor

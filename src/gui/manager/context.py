@@ -117,6 +117,7 @@ class GUIContext(ContextManager):
                         text += self.udi_gui_frame.card_util.get_name(card_id)
                     except KeyError:
                         text += "不明カード"
+
             text += "\n"
             text += make_command_text(command)
 

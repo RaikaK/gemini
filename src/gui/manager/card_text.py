@@ -42,6 +42,8 @@ class GUICardText(CardTextManager):
         """
         初期化する。
         """
+        factor: float = self.udi_gui_frame.factor
+
         self.udi_gui_frame = udi_gui_frame
         self.master: tk.Misc = master
         self.key: dict = key
@@ -51,9 +53,8 @@ class GUICardText(CardTextManager):
 
         ScrollableFrameY.__init__(self, master, **key)
 
-        factor: float = self.udi_gui_frame.factor
-
-        tkimg: Itk.PhotoImage = Itk.PhotoImage(self.udi_gui_frame.large_image_manager.get_protector_image())
+        img = self.udi_gui_frame.large_image_manager.get_protector_image()
+        tkimg: Itk.PhotoImage = Itk.PhotoImage(img)
         self.label: GUICardTextLabel = GUICardTextLabel(self.frame, tkimg, factor)
         self.label.pack()
 
