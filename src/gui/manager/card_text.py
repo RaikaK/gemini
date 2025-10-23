@@ -42,7 +42,7 @@ class GUICardText(CardTextManager):
         """
         初期化する。
         """
-        factor: float = self.udi_gui_frame.factor
+        factor: float = udi_gui_frame.factor
 
         self.udi_gui_frame = udi_gui_frame
         self.master: tk.Misc = master
