@@ -20,10 +20,15 @@ from src.gui.manager.command import GUICommand
 from src.gui.manager.context import GUIContext
 from src.gui.manager.log import GUILog
 
-LEFT_DIR_WIDTH = 525
-MID_DIR_WIDTH = 575
-RIGHT_DIR_WIDTH = 150
-ADDITIONAL_DIR_WIDTH = 670
+# デフォルトのズーム率
+DEFAULT_FACTOR = 0.8
+# 各領域の幅の比率
+DIR_WIDTH_RATIOS = {
+    "left": 0.36,
+    "mid": 0.39,
+    "right": 0.1,
+    "additional": 0.15,
+}
 
 
 class GUIFrame(UdiGUIFrame):
@@ -37,7 +42,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
-        self.factor: float = 0.8
+        self.factor: float = DEFAULT_FACTOR
         self.latest_udi_log_data: mdl.UdiLogData | None = None
 
         self.is_ready: bool = False
@@ -98,6 +103,14 @@ class GUIFrame(UdiGUIFrame):
         ##################################################
         self.is_ready = True
 
+    def update(self, udi_log_data: mdl.UdiLogData) -> None:  # type: ignore[override]
+        """
+        表示内容を更新する。
+        """
+        self.latest_udi_log_data = udi_log_data
+
+        super().update(udi_log_data)
+
     def _zoom_in(self) -> None:
         """
         ズームインする。
@@ -145,22 +158,22 @@ class GUIFrame(UdiGUIFrame):
         self.root.geometry(f"{scaled_width}x{scaled_height}")
 
         # 左
-        left_dir: tk.Frame = tk.Frame(self.main_frame, width=int(LEFT_DIR_WIDTH * self.factor))
+        left_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["left"]))
         left_dir.propagate(False)
         left_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 中央
-        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(MID_DIR_WIDTH * self.factor))
+        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["mid"]))
         mid_dir.propagate(False)
         mid_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 右
-        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(RIGHT_DIR_WIDTH * self.factor))
+        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["right"]))
         right_dir.propagate(False)
         right_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 追加
-        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(ADDITIONAL_DIR_WIDTH * self.factor))
+        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["additional"]))
         additional_dir.propagate(False)
         additional_dir.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
@@ -270,11 +283,3 @@ class GUIFrame(UdiGUIFrame):
         log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
         log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
         self.log_manager: GUILog = GUILog(self, log_dir)
-
-    def update(self, udi_log_data: mdl.UdiLogData) -> None:  # type: ignore[override]
-        """
-        表示内容を更新する。
-        """
-        self.latest_udi_log_data = udi_log_data
-
-        super().update(udi_log_data)
