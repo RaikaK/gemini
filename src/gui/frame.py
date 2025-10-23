@@ -22,6 +22,7 @@ from src.gui.manager.log import GUILog
 
 # デフォルトのズーム率
 DEFAULT_FACTOR = 0.8
+
 # 各領域の幅の比率
 DIR_WIDTH_RATIOS = {
     "left": 0.35,
@@ -115,21 +116,23 @@ class GUIFrame(UdiGUIFrame):
         """
         ズームインする。
         """
-        self.factor = min(2.0, self.factor + 0.05)  # 最大2.0倍
-        self._update_layout()
+        if self.is_ready:
+            self.factor = min(2.0, self.factor + 0.05)  # 最大2.0倍
+            self._update_layout()
 
-        if self.latest_udi_log_data is not None:
-            self.update(self.latest_udi_log_data)
+            if self.latest_udi_log_data is not None:
+                self.update(self.latest_udi_log_data)
 
     def _zoom_out(self) -> None:
         """
         ズームアウトする。
         """
-        self.factor = max(0.1, self.factor - 0.05)  # 最小0.1倍
-        self._update_layout()
+        if self.is_ready:
+            self.factor = max(0.1, self.factor - 0.05)  # 最小0.1倍
+            self._update_layout()
 
-        if self.latest_udi_log_data is not None:
-            self.update(self.latest_udi_log_data)
+            if self.latest_udi_log_data is not None:
+                self.update(self.latest_udi_log_data)
 
     def _update_layout(self) -> None:
         """
