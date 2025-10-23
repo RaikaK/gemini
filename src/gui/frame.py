@@ -3,6 +3,7 @@ import tkinter as tk
 from typing import Optional, Union
 
 from ygo import constants as c
+from ygo import models as mdl
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.hand_manager import HandManager
 from ygo.gui.manager.image_customizer import ImageCustomizer
@@ -37,6 +38,8 @@ class GUIFrame(UdiGUIFrame):
         tk.Frame.__init__(self, master)
 
         self.factor: float = 0.8
+        self.latest_udi_log_data: mdl.UdiLogData | None = None
+
         self.is_ready: bool = False
 
         self.card_util: CardUtil = CardUtil()
@@ -102,12 +105,18 @@ class GUIFrame(UdiGUIFrame):
         self.factor = min(2.0, self.factor + 0.05)  # 最大2.0倍
         self._update_layout()
 
+        if self.latest_udi_log_data is not None:
+            self.update(self.latest_udi_log_data)
+
     def _zoom_out(self) -> None:
         """
         ズームアウトする。
         """
         self.factor = max(0.1, self.factor - 0.05)  # 最小0.1倍
         self._update_layout()
+
+        if self.latest_udi_log_data is not None:
+            self.update(self.latest_udi_log_data)
 
     def _update_layout(self) -> None:
         """
@@ -261,3 +270,11 @@ class GUIFrame(UdiGUIFrame):
         log_dir: tk.LabelFrame = tk.LabelFrame(additional_dir, text="Duel Log Data")
         log_dir.pack(anchor=tk.W, padx=int(2 * self.factor), pady=int(2 * self.factor), expand=True, fill=tk.BOTH)
         self.log_manager: GUILog = GUILog(self, log_dir)
+
+    def update(self, udi_log_data: mdl.UdiLogData) -> None:  # type: ignore[override]
+        """
+        表示内容を更新する。
+        """
+        self.latest_udi_log_data = udi_log_data
+
+        super().update(udi_log_data)
