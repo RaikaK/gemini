@@ -52,6 +52,10 @@ class GUILog(LogManager):
 
         text_util: TextUtil = self.udi_gui_frame.text_util
 
+        # 一番下までスクロール
+        self.canvas.update_idletasks()
+        self.canvas.yview_moveto(1.0)
+
         # ログが増えた場合は追加
         if len(self.label_list) < len(udi_io_duel_log):
             scaled_pady: int = max(1, int(Const.LOG_PADY * factor))
