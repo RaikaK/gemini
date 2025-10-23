@@ -24,10 +24,10 @@ from src.gui.manager.log import GUILog
 DEFAULT_FACTOR = 0.8
 # 各領域の幅の比率
 DIR_WIDTH_RATIOS = {
-    "left": 0.34,
-    "mid": 0.34,
-    "right": 0.12,
-    "additional": 0.2,
+    "left": 0.36,
+    "mid": 0.36,
+    "right": 0.1,
+    "additional": 0.18,
 }
 
 
