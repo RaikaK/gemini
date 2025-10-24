@@ -11,7 +11,7 @@ from ygo.models.command_request import CommandEntry, CommandLogEntry
 
 class GUIContextLabel(CommandLabel):
     """
-    GUIコマンドラベル
+    GUIコンテキストラベル
     """
 
     def __init__(
