@@ -100,8 +100,9 @@ class GUIFrame(UdiGUIFrame):
         match_frame.pack(side=tk.TOP, pady=int(5 * self.factor))
         self.match_label: tk.Label = tk.Label(
             match_frame,
-            text="何試合目",
-            width=12,
+            text="🐉🐉🐉 何試合目 🐉🐉🐉",
+            font=("MSゴシック", 10, "bold"),
+            width=24,
             anchor="center",
         )
         self.match_label.pack()
@@ -140,7 +141,7 @@ class GUIFrame(UdiGUIFrame):
         # 試合数更新
         if os.path.isdir(config.DEMONSTRATION_DIR):
             count = len([f for f in os.listdir(config.DEMONSTRATION_DIR) if f.endswith(".pkl")])
-            self.match_label.config(text=f"{count + 1}試合目")
+            self.match_label.config(text=f"🐉🐉🐉 {count + 1}試合目 🐉🐉🐉")
 
         super().update(udi_log_data)
 
