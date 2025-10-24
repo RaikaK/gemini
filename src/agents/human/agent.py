@@ -81,7 +81,7 @@ class HumanAgent(BaseAgent):
         """
         デモを保存する。
         """
-        timestamp: str = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        timestamp: str = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename: Path = config.DEMONSTRATION_DIR / f"{timestamp}.pkl"
 
         try:
