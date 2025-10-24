@@ -5,6 +5,7 @@ from ygo import models as mdl
 from ygo.gui.manager.card_text_manager import CardTextLabel, CardTextManager
 from ygo.gui.manager.const import Const
 from ygo.gui.manager.scollable_frame import ScrollableFrameY
+from ygo.gui.manager.util import generate_text_by_card_detailed, generate_card_info_text
 
 
 class GUICardTextLabel(CardTextLabel):
@@ -62,3 +63,50 @@ class GUICardText(CardTextManager):
             child.bind("<MouseWheel>", self._on_mousewheel)
 
         self.label.bind("<MouseWheel>", self._on_mousewheel)
+
+    def update_table_index(self, table_index: int) -> None:
+        """
+        更新する。
+        """
+        self.reset()
+        self.table_index = table_index
+
+        card: mdl.DuelCard = self.duel_card_table[self.table_index]
+        card_id: int = card.card_id
+        img = self.udi_gui_frame.large_image_manager.get_card_image(card_id)
+        tkimg: Itk.PhotoImage = Itk.PhotoImage(img)
+
+        # カードテキスト取得
+        text: str = ""
+
+        try:
+            card_name: str = self.udi_gui_frame.card_util.get_name(card_id)
+            card_text: str = self.udi_gui_frame.card_util.get_text(card_id)
+        except KeyError:
+            card_name = "(不明)"
+            card_text = ""
+
+        text += card_text
+
+        text += "\n\n"
+        card_info_text: str = generate_card_info_text(card_id, self.udi_gui_frame.card_util)
+        text += card_info_text
+
+        if self.udi_gui_frame.debug_mode:
+            # table indexも表示
+            text += "\n\n"
+            text += "--------------------------------------------------\n"
+            text += f"table index: {self.table_index}\n\n"
+
+            # 詳細情報追加
+            detailed_text: str = generate_text_by_card_detailed(
+                self.duel_card_table, card, self.udi_gui_frame.card_util
+            )
+            text += "info from table:\n"
+            text += detailed_text
+
+            text += "\ninfo from table(raw):\n"
+            text += str(card)
+
+        # 表示更新
+        self.label.update(tkimg, text, card_name)

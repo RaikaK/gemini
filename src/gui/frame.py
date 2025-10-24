@@ -85,6 +85,16 @@ class GUIFrame(UdiGUIFrame):
         self.zoom_label: tk.Label = tk.Label(zoom_frame, text=f"{self.factor:.2f}x", width=6, anchor="e")
         self.zoom_label.pack(side=tk.LEFT, padx=int(5 * self.factor))
 
+        # デバッグフレーム
+        self.debug_var = tk.BooleanVar(value=self.debug_mode)
+        debug_check_button = tk.Checkbutton(
+            self.menu_bar_frame,
+            text="デバッグ",
+            variable=self.debug_var,
+            command=self._toggle_debug,
+        )
+        debug_check_button.pack(side=tk.RIGHT, padx=int(5 * self.factor))
+
         # 試合数フレーム
         match_frame: tk.Frame = tk.Frame(self.menu_bar_frame)
         match_frame.pack(side=tk.TOP, pady=int(5 * self.factor))
@@ -133,6 +143,16 @@ class GUIFrame(UdiGUIFrame):
             self.match_label.config(text=f"{count + 1}試合目")
 
         super().update(udi_log_data)
+
+    def _toggle_debug(self) -> None:
+        """
+        デバッグモードを切り替える。
+        """
+        if self.is_ready:
+            self.debug_mode = self.debug_var.get()
+
+            if self.latest_udi_log_data is not None:
+                self.update(self.latest_udi_log_data)
 
     def _zoom_in(self) -> None:
         """
