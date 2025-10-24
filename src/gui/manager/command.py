@@ -92,10 +92,11 @@ class GUICommandLabel(CommandLabel):
             text_dir, text=self.text, font=scaled_text_font, wraplength=scaled_wrap_length
         )
         self.text_label.pack(side=tk.TOP)
-        self.subtext_label: tk.Label = tk.Label(
-            text_dir, text=self.subtext, font=scaled_subtext_font, wraplength=scaled_wrap_length
-        )
-        self.subtext_label.pack(side=tk.TOP)
+        if self.udi_gui_frame.debug_mode:
+            self.subtext_label: tk.Label = tk.Label(
+                text_dir, text=self.subtext, font=scaled_subtext_font, wraplength=scaled_wrap_length
+            )
+            self.subtext_label.pack(side=tk.TOP)
         self.ai_text_label: tk.Label = tk.Label(
             text_dir, text=self.ai_text, font=scaled_subtext_font, wraplength=scaled_wrap_length, foreground="#ff0000"
         )
@@ -160,7 +161,7 @@ class GUICommand(CommandManager):
             text += make_command_text(command)
 
             # コマンドをそのまま表示
-            subtext: str = str(command) if self.udi_gui_frame.debug_mode else ""
+            subtext: str = str(command)
 
             ##################################################
             # 画像生成+GUI反映部分
