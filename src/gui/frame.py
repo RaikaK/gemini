@@ -144,6 +144,10 @@ class GUIFrame(UdiGUIFrame):
 
         super().update(udi_log_data)
 
+        # ログを一番下までスクロール
+        self.log_manager.canvas.update_idletasks()
+        self.log_manager.canvas.yview_moveto(1.0)
+
     def _toggle_debug(self) -> None:
         """
         デバッグモードを切り替える。
