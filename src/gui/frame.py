@@ -1,3 +1,4 @@
+import os
 from queue import Queue
 import tkinter as tk
 from typing import Optional, Union
@@ -11,6 +12,7 @@ from ygo.gui.udi_gui_frame import UdiGUIFrame
 from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
+import src.config as config
 from src.gui.manager.board import GUIBoard
 from src.gui.manager.dialog import GUIDialog
 from src.gui.manager.card_list import GUICardList
@@ -79,6 +81,17 @@ class GUIFrame(UdiGUIFrame):
         self.zoom_label: tk.Label = tk.Label(zoom_frame, text=f"{self.factor:.2f}x", width=6, anchor="e")
         self.zoom_label.pack(side=tk.LEFT, padx=int(5 * self.factor))
 
+        # 試合数フレーム
+        match_frame: tk.Frame = tk.Frame(self.menu_bar_frame)
+        match_frame.pack(side=tk.TOP, pady=int(5 * self.factor))
+        self.match_label: tk.Label = tk.Label(
+            match_frame,
+            text="何試合目",
+            width=12,
+            anchor="center",
+        )
+        self.match_label.pack()
+
         # ファイルメニュー
         file_menu: tk.Menu = tk.Menu(menu_bar, tearoff=False)
         menu_bar.add_cascade(label="ファイル", menu=file_menu)
@@ -109,6 +122,11 @@ class GUIFrame(UdiGUIFrame):
         表示内容を更新する。
         """
         self.latest_udi_log_data = udi_log_data
+
+        # 試合数更新
+        if os.path.isdir(config.DEMONSTRATION_DIR):
+            count = len([f for f in os.listdir(config.DEMONSTRATION_DIR) if f.endswith(".pkl")])
+            self.match_label.config(text=f"{count + 1}試合目")
 
         super().update(udi_log_data)
 
