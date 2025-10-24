@@ -160,7 +160,7 @@ class GUICommand(CommandManager):
             text += make_command_text(command)
 
             # コマンドをそのまま表示
-            subtext: str = str(command)
+            subtext: str = str(command) if self.udi_gui_frame.debug_mode else ""
 
             ##################################################
             # 画像生成+GUI反映部分

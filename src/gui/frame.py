@@ -22,10 +22,13 @@ from src.gui.manager.command import GUICommand
 from src.gui.manager.context import GUIContext
 from src.gui.manager.log import GUILog
 
-# デフォルトのズーム率
+# デバッグフラグ
+DEBUG_MODE = False
+
+# ズーム率
 DEFAULT_FACTOR = 0.8
 
-# 各領域の幅の比率
+# 幅の比率
 DIR_WIDTH_RATIOS = {
     "left": 0.35,
     "mid": 0.37,
@@ -45,6 +48,7 @@ class GUIFrame(UdiGUIFrame):
         """
         tk.Frame.__init__(self, master)
 
+        self.debug_mode: bool = DEBUG_MODE
         self.factor: float = DEFAULT_FACTOR
         self.latest_udi_log_data: mdl.UdiLogData | None = None
 
