@@ -65,7 +65,8 @@ class GUIContextLabel(CommandLabel):
         self.subtext_label: tk.Label = tk.Label(
             text_dir, text=self.subtext, font=scaled_subtext_font, wraplength=scaled_wrap_length
         )
-        self.subtext_label.pack(side=tk.TOP)
+        if self.udi_gui_frame.debug_mode:
+            self.subtext_label.pack(side=tk.TOP)
 
 
 class GUIContext(ContextManager):
