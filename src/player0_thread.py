@@ -22,11 +22,12 @@ if __name__ == "__main__":
     parser.add_argument("--use_gui", action="store_true")
     args = parser.parse_args()
 
-    agent = RandomAgent()
+    # agent = RandomAgent()
+    agent = DQNAgent()
 
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
-    # wandb.init(entity="ygo-ai", project="U-Ni-Yo")
+    wandb.init(entity="ygo-ai", project="U-Ni-Yo")
 
     episode = 0
     reward_history = []
@@ -41,14 +42,14 @@ if __name__ == "__main__":
 
         state = next_state
 
-        # if log_dict is not None:
-        # wandb.log(log_dict)
+        if log_dict is not None:
+            wandb.log(log_dict)
 
         reward_history.append(state.reward)
 
         if state.is_duel_end:
             ave_reward = np.average(reward_history) if len(reward_history) > 0 else 0
-            # wandb.log({"ave_reward": ave_reward})
+            wandb.log({"ave_reward": ave_reward})
             reward_history.clear()
 
             print(f"episode: {episode} | ave_reward: {ave_reward} | result: {state.duel_end_data}")
