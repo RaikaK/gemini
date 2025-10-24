@@ -11,7 +11,7 @@ if __name__ == "__main__":
     if env.command_queue is None:
         raise RuntimeError("Command queue in YgoEnv is None for HumanAgent.")
 
-    agent = HumanAgent(command_queue=env.command_queue)
+    agent = HumanAgent(command_queue=env.command_queue, save_demo=True)
 
     state: StateData = env.reset()
 
