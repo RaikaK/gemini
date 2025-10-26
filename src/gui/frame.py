@@ -29,7 +29,7 @@ DEBUG_MODE = False
 DEFAULT_FACTOR = 0.8
 
 # 幅の比率
-DIR_WIDTH_RATIOS = {
+WIDTH_RATIOS = {
     "left": 0.35,
     "mid": 0.37,
     "right": 0.1,
@@ -208,22 +208,22 @@ class GUIFrame(UdiGUIFrame):
         self.root.geometry(f"{scaled_width}x{scaled_height}")
 
         # 左
-        left_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["left"]))
+        left_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * WIDTH_RATIOS["left"]))
         left_dir.propagate(False)
         left_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 中央
-        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["mid"]))
+        mid_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * WIDTH_RATIOS["mid"]))
         mid_dir.propagate(False)
         mid_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 右
-        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["right"]))
+        right_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * WIDTH_RATIOS["right"]))
         right_dir.propagate(False)
         right_dir.pack(side=tk.LEFT, fill=tk.Y)
 
         # 追加
-        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * DIR_WIDTH_RATIOS["additional"]))
+        additional_dir: tk.Frame = tk.Frame(self.main_frame, width=int(scaled_width * WIDTH_RATIOS["additional"]))
         additional_dir.propagate(False)
         additional_dir.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
