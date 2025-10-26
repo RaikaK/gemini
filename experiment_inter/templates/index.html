@@ -216,7 +216,7 @@
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="interviewFlowType" id="dynamicFlow" value="dynamic">
                                             <label class="form-check-label" for="dynamicFlow">
-                                                智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大10ラウンド）
+                                                智的動的フロー（面接官がゴール達成に向けて最適な質問タイプを自動選択、最大20ラウンド）
                                             </label>
                                         </div>
                                         
@@ -274,6 +274,11 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="spreadsheet-tab" data-bs-toggle="tab" data-bs-target="#spreadsheet" type="button" role="tab">
                                 <i class="fas fa-table"></i> スプレッドシート連携
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="human-interviewer-tab" data-bs-toggle="tab" data-bs-target="#human-interviewer" type="button" role="tab">
+                                <i class="fas fa-user-tie"></i> 人間面接官モード
                             </button>
                         </li>
 
@@ -357,6 +362,151 @@
                             </div>
                         </div>
 
+                        <!-- 人間面接官モード -->
+                        <div class="tab-pane fade" id="human-interviewer" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-user-tie"></i> 人間面接官モード</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>面接セッション設定</h6>
+                                            <div class="mb-3">
+                                                <label for="humanSetIndex" class="form-label">データセットインデックス（空欄でランダム）</label>
+                                                <input type="number" class="form-control" id="humanSetIndex" placeholder="例: 0, 1, 2...">
+                                            </div>
+                                            <button id="startHumanInterviewBtn" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-play"></i> 人間面接を開始
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <span class="status-indicator" id="humanStatusIndicator"></span>
+                                                <span id="humanStatusText">待機中</span>
+                                                <span id="humanRoundInfo" class="badge bg-secondary ms-2" style="display: none;">ラウンド: 0/20</span>
+                                            </div>
+                                            <div class="progress mb-3">
+                                                <div class="progress-bar" id="humanProgressBar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <div id="humanCurrentStep" class="text-muted small"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 会社情報表示エリア -->
+                            <div id="humanCompanyInfo" class="card mb-3" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-building"></i> 会社情報</h6>
+                                </div>
+                                <div class="card-body" id="humanCompanyInfoContent">
+                                    <!-- 会社情報がここに表示されます -->
+                                </div>
+                            </div>
+
+                            <!-- 面接セッション表示エリア -->
+                            <div id="humanInterviewSession" class="card" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-comments"></i> 面接セッション</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div id="humanInterviewLog" class="log-container" style="max-height: 500px;">
+                                                <!-- 面接ログがここに表示されます -->
+                                            </div>
+                                            
+                                            <!-- 人間面接官の発言入力エリア -->
+                                            <div class="mt-3">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0"><i class="fas fa-microphone"></i> 面接官の発言</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="mb-3">
+                                                            <label for="questionTypeSelect" class="form-label">質問タイプ</label>
+                                                            <select class="form-select" id="questionTypeSelect">
+                                                                <option value="common">全体質問（全候補者に同じ質問）</option>
+                                                                <option value="individual">個別質問（特定の候補者に質問）</option>
+                                                                <option value="custom">カスタム質問</option>
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        <div id="individualCandidateSelect" class="mb-3" style="display: none;">
+                                                            <label for="candidateSelect" class="form-label">対象候補者</label>
+                                                            <select class="form-select" id="candidateSelect">
+                                                                <!-- 候補者が動的に追加されます -->
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="humanQuestionInput" class="form-label">質問内容</label>
+                                                            <textarea class="form-control" id="humanQuestionInput" rows="3" placeholder="質問を入力してください..."></textarea>
+                                                        </div>
+                                                        
+                                                        <div class="d-flex gap-2">
+                                                            <button id="askHumanQuestionBtn" class="btn btn-primary">
+                                                                <i class="fas fa-paper-plane"></i> 質問を送信
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6>候補者情報</h6>
+                                            <div id="humanCandidatesInfo">
+                                                <!-- 候補者情報がここに表示されます -->
+                                            </div>
+                                            
+                                            <h6 class="mt-3">会話履歴</h6>
+                                            <div class="mb-3">
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <button id="endInterviewBtn" class="btn btn-danger w-100">
+                                                    <i class="fas fa-stop"></i> 面接を終了
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 評価結果表示エリア -->
+                            <div id="humanEvaluationResults" class="card" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-line"></i> 評価結果</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="humanEvaluationContent">
+                                        <!-- 評価結果がここに表示されます -->
+                                    </div>
+                                    
+                                    <!-- 人間による志望度ランキング -->
+                                    <div id="humanRankingSection" class="mt-4" style="display: none;">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fas fa-user-tie"></i> 人間面接官による志望度ランキング</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="text-muted">候補者を志望度が低い順（1位が最も志望度が低い）にドラッグ&ドロップで並び替えてください。</p>
+                                                <div id="humanRankingList" class="list-group">
+                                                    <!-- 候補者が動的に追加されます -->
+                                                </div>
+                                                <div class="mt-3">
+                                                    <button id="submitHumanRankingBtn" class="btn btn-primary">
+                                                        <i class="fas fa-check"></i> ランキングを確定
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -378,11 +528,28 @@
         </div>
     </div>
 
+    <!-- 会話履歴モーダル -->
+    <div class="modal fade" id="conversationHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">学生別会話履歴</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="conversationHistoryContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let statusUpdateInterval;
         let results = [];
         let interviewFlow = [1]; // デフォルトは個別質問1回
+        let humanInterviewFlow = [1]; // 人間面接官用のフロー
+        let humanInterviewSession = null; // 人間面接セッション情報
 
         // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', function() {
@@ -391,6 +558,7 @@
             loadModelsStatus();
             loadSpreadsheetStatus();
             updateLocalModelStatus(); // ローカルモデル状態を初期化
+            initializeHumanInterviewer(); // 人間面接官モードの初期化
             statusUpdateInterval = setInterval(updateStatus, 1000);
         });
 
@@ -1505,6 +1673,660 @@
                 console.error('Error:', error);
                 alert('データクリアに失敗しました');
             });
+        }
+
+        // ==================== 人間面接官モード機能 ====================
+        
+        // 人間面接官モードの初期化
+        function initializeHumanInterviewer() {
+            // 人間面接開始ボタンのイベントリスナー
+            document.getElementById('startHumanInterviewBtn').addEventListener('click', startHumanInterview);
+            
+            // 新しい質問ボタンのイベントリスナー
+            document.getElementById('askHumanQuestionBtn').addEventListener('click', askHumanQuestion);
+            document.getElementById('endInterviewBtn').addEventListener('click', endHumanInterview);
+            document.getElementById('submitHumanRankingBtn').addEventListener('click', submitHumanRanking);
+            
+            // 質問タイプ選択のイベントリスナー
+            document.getElementById('questionTypeSelect').addEventListener('change', handleQuestionTypeChange);
+        }
+
+
+        // 人間面接を開始
+        function startHumanInterview() {
+            const setIndex = document.getElementById('humanSetIndex').value;
+            
+            fetch('/api/human_interview/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    set_index: setIndex || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    humanInterviewSession = data.session;
+                    // 候補者情報も追加で保存
+                    if (data.candidates) {
+                        humanInterviewSession.candidates = data.candidates;
+                    }
+                    displayHumanInterviewSession(data);
+                    updateHumanStatus('running', '面接中', 0, '面接セッションを開始しました');
+                    document.getElementById('humanInterviewSession').style.display = 'block';
+                    document.getElementById('startHumanInterviewBtn').disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('人間面接の開始に失敗しました');
+            });
+        }
+
+        // 人間面接セッションの表示
+        function displayHumanInterviewSession(data) {
+            const candidatesInfo = document.getElementById('humanCandidatesInfo');
+            const interviewLog = document.getElementById('humanInterviewLog');
+            const candidateSelect = document.getElementById('candidateSelect');
+            const companyInfoContent = document.getElementById('humanCompanyInfoContent');
+            const companyInfoCard = document.getElementById('humanCompanyInfo');
+            
+            console.log('displayHumanInterviewSession data:', data); // デバッグ用
+            
+            // 会社情報を独立したコンテナに表示
+            const companyProfile = data.session?.company_profile || data.company_profile;
+            if (companyProfile) {
+                // 事業内容を配列から文字列に変換
+                const businessText = Array.isArray(companyProfile.business) 
+                    ? companyProfile.business.join(', ') 
+                    : companyProfile.business || 'N/A';
+                
+                // 基本情報を取得
+                const basicInfo = companyProfile.basic_info || {};
+                const employees = basicInfo.employees ? `${basicInfo.employees}人` : 'N/A';
+                const capital = basicInfo.capital || 'N/A';
+                const established = basicInfo.established || 'N/A';
+                const hq = basicInfo.hq || 'N/A';
+                
+                companyInfoContent.innerHTML = `
+                    <h5>${companyProfile.name}</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>従業員数:</strong> ${employees}</p>
+                            <p><strong>資本金:</strong> ${capital}</p>
+                            <p><strong>設立年:</strong> ${established}年</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>本社:</strong> ${hq}</p>
+                            <p><strong>事業内容:</strong> ${businessText}</p>
+                            <p><strong>ビジョン:</strong> ${companyProfile.vision || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <p><strong>企業説明:</strong> ${companyProfile.plan || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+                companyInfoCard.style.display = 'block';
+            }
+            
+            // 候補者情報の表示（準備レベルと知識カバレッジは非表示）
+            if (data.candidates && Array.isArray(data.candidates)) {
+                candidatesInfo.innerHTML = data.candidates.map((candidate, index) => `
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <h6 class="mb-1">候補者 ${index + 1}: ${candidate.name}</h6>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // 個別質問用の候補者選択肢を更新
+                candidateSelect.innerHTML = data.candidates.map((candidate, index) => 
+                    `<option value="${index}">候補者 ${index + 1}: ${candidate.name}</option>`
+                ).join('');
+            } else {
+                candidatesInfo.innerHTML = '<div class="text-muted">候補者情報を読み込み中...</div>';
+                console.log('candidates data not found:', data);
+            }
+            
+            // 面接ログの初期化
+            interviewLog.innerHTML = '<div class="text-muted text-center">面接を開始してください</div>';
+        }
+
+        // 質問タイプ変更の処理
+        function handleQuestionTypeChange() {
+            const questionType = document.getElementById('questionTypeSelect').value;
+            const individualSelect = document.getElementById('individualCandidateSelect');
+            
+            if (questionType === 'individual') {
+                individualSelect.style.display = 'block';
+            } else {
+                individualSelect.style.display = 'none';
+            }
+        }
+
+        // 人間面接官の質問を送信
+        function askHumanQuestion() {
+            const question = document.getElementById('humanQuestionInput').value.trim();
+            const questionType = document.getElementById('questionTypeSelect').value;
+            
+            if (!question) {
+                alert('質問を入力してください');
+                return;
+            }
+            
+            if (!humanInterviewSession) return;
+            
+            // 最大20ラウンドの制限チェック
+            if (humanInterviewSession.current_round >= 20) {
+                alert('最大20ラウンドに達しました。面接を終了してください。');
+                return;
+            }
+            
+            let targetCandidateIndex = null;
+            if (questionType === 'individual') {
+                targetCandidateIndex = parseInt(document.getElementById('candidateSelect').value);
+            }
+            
+            // 送信ボタンを無効化
+            const submitBtn = document.getElementById('askHumanQuestionBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 回答生成中...';
+            
+            displayQuestion(question, questionType === 'common' ? '全体質問' : questionType === 'individual' ? '個別質問' : 'カスタム質問', targetCandidateIndex);
+            document.getElementById('humanQuestionInput').value = '';
+            
+            // ラウンド数を更新
+            if (humanInterviewSession) {
+                humanInterviewSession.current_round = (humanInterviewSession.current_round || 0) + 1;
+                updateHumanStatus('running', '面接中', 0, '質問を送信しました');
+            }
+            
+            // 自動で回答を取得
+            getStudentAnswer(question, questionType === 'common' ? '全体質問' : questionType === 'individual' ? '個別質問' : 'カスタム質問', targetCandidateIndex);
+        }
+
+
+        // 質問を表示
+        function displayQuestion(question, questionType, targetCandidateIndex = null) {
+            const interviewLog = document.getElementById('humanInterviewLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const questionElement = document.createElement('div');
+            questionElement.className = 'log-entry mb-3';
+            
+            let targetInfo = '';
+            if (questionType === '個別質問' && targetCandidateIndex !== null) {
+                const candidateName = humanInterviewSession.candidates[targetCandidateIndex]?.name || '候補者';
+                targetInfo = `<small class="text-muted">対象: ${candidateName}</small>`;
+            }
+            
+            questionElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge ${questionType === '全体質問' ? 'bg-success' : questionType === '個別質問' ? 'bg-primary' : 'bg-secondary'}">${questionType}</span>
+                    <small class="text-muted">${timestamp}</small>
+                </div>
+                ${targetInfo}
+                <div class="bg-light p-3 rounded">
+                    <strong>面接官:</strong> ${question}
+                </div>
+                <div class="mt-2">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> 学生の回答を生成中...
+                    </div>
+                </div>
+            `;
+            
+            interviewLog.appendChild(questionElement);
+            interviewLog.scrollTop = interviewLog.scrollHeight;
+        }
+
+        // 学生の回答を取得
+        function getStudentAnswer(question, questionType, targetCandidateIndex = null) {
+            if (!humanInterviewSession) return;
+            
+            fetch('/api/human_interview/get_student_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id,
+                    question: question,
+                    question_type: questionType,
+                    target_candidate_index: targetCandidateIndex
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayStudentAnswer(data.answers);
+                    
+                    // 最大ラウンド到達時の処理
+                    if (data.max_rounds_reached) {
+                        alert(data.message);
+                        document.getElementById('askHumanQuestionBtn').disabled = true;
+                        return;
+                    }
+                }
+                
+                // ボタンを再有効化
+                const submitBtn = document.getElementById('askHumanQuestionBtn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 質問を送信';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('回答の取得に失敗しました');
+                
+                // エラー時もボタンを再有効化
+                const submitBtn = document.getElementById('askHumanQuestionBtn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 質問を送信';
+            });
+        }
+
+        // 学生の回答を表示
+        function displayStudentAnswer(answers) {
+            const interviewLog = document.getElementById('humanInterviewLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // 「学生の回答を生成中...」の表示を削除
+            const loadingElements = interviewLog.querySelectorAll('.text-center');
+            loadingElements.forEach(element => {
+                if (element.textContent.includes('学生の回答を生成中')) {
+                    element.remove();
+                }
+            });
+            
+            answers.forEach((answer, index) => {
+                const answerElement = document.createElement('div');
+                answerElement.className = 'log-entry mb-3';
+                answerElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-info">候補者 ${index + 1} の回答</span>
+                        <small class="text-muted">${timestamp}</small>
+                    </div>
+                    <div class="bg-light p-3 rounded">
+                        <strong>${answer.candidate_name}:</strong> ${answer.answer}
+                    </div>
+                `;
+                
+                interviewLog.appendChild(answerElement);
+            });
+            
+            interviewLog.scrollTop = interviewLog.scrollHeight;
+        }
+
+        // 人間面接を終了
+        function endHumanInterview() {
+            if (!humanInterviewSession) return;
+            
+            if (!confirm('面接を終了しますか？')) return;
+            
+            fetch('/api/human_interview/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    session_id: humanInterviewSession.session_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayHumanEvaluationResults(data.evaluation);
+                    updateHumanStatus('completed', '完了', 100, '面接が完了しました');
+                    document.getElementById('humanEvaluationResults').style.display = 'block';
+                    document.getElementById('endInterviewBtn').disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('面接の終了に失敗しました');
+            });
+        }
+
+        // 人間面接の評価結果を表示
+        function displayHumanEvaluationResults(evaluation) {
+            const evaluationContent = document.getElementById('humanEvaluationContent');
+            
+            evaluationContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>面接統計</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><strong>総質問数:</strong> ${evaluation.total_questions || 'N/A'}</li>
+                                    <li><strong>全体質問数:</strong> ${evaluation.common_questions || 'N/A'}</li>
+                                    <li><strong>個別質問数:</strong> ${evaluation.individual_questions || 'N/A'}</li>
+                                    <li><strong>面接時間:</strong> ${evaluation.duration || 'N/A'}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="mb-0">次のステップ</h6>
+                            <p class="mb-0">下記のランキング機能で候補者を志望度順に並び替えてください。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6>人間による志望度ランキング</h6>
+                            <button id="generateAiEvaluationBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-robot"></i> AI評価を生成
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 人間による志望度ランキングセクションを表示
+            displayHumanRankingSection();
+            
+            // AI評価生成ボタンのイベントリスナーを追加
+            document.getElementById('generateAiEvaluationBtn').addEventListener('click', generateAiEvaluation);
+        }
+
+        // AI評価を生成する
+        function generateAiEvaluation() {
+            const button = document.getElementById('generateAiEvaluationBtn');
+            const originalText = button.innerHTML;
+            
+            // ボタンを無効化してローディング表示
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI評価を生成中...';
+            
+            fetch('/api/human_interview/generate_ai_evaluation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: humanInterviewSession.session_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // AI評価結果を表示
+                displayAiEvaluationResults(data.ai_evaluation);
+                
+                // ボタンを更新
+                button.innerHTML = '<i class="fas fa-check"></i> AI評価完了';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-success');
+                
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('AI評価の生成に失敗しました: ' + error.message);
+                
+                // ボタンを元に戻す
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        }
+        
+        // AI評価結果を表示
+        function displayAiEvaluationResults(aiEvaluation) {
+            const evaluationContent = document.getElementById('humanEvaluationContent');
+            
+            // AI評価結果を追加
+            const aiEvaluationHtml = `
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>AI面接官による評価結果</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>最も志望度が低い候補者</h6>
+                                        <div class="bg-light p-2 rounded mb-3">
+                                            ${aiEvaluation.least_motivated_candidate}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>候補者ランキング（志望度が低い順）</h6>
+                                        <div class="bg-light p-2 rounded">
+                                            ${aiEvaluation.motivation_ranking}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            evaluationContent.innerHTML += aiEvaluationHtml;
+        }
+
+        // 人間による志望度ランキングセクションを表示
+        function displayHumanRankingSection() {
+            const rankingSection = document.getElementById('humanRankingSection');
+            const rankingList = document.getElementById('humanRankingList');
+            
+            rankingSection.style.display = 'block';
+            
+            // 候補者リストを作成
+            rankingList.innerHTML = humanInterviewSession.candidates.map((candidate, index) => `
+                <div class="list-group-item d-flex justify-content-between align-items-center" data-candidate-index="${index}">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-secondary me-2 ranking-number">${index + 1}</span>
+                        <span class="candidate-name">${candidate.name}</span>
+                    </div>
+                    <div class="drag-handle">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
+                </div>
+            `).join('');
+            
+            // ドラッグ&ドロップ機能を初期化
+            initializeDragAndDrop();
+        }
+
+        // ドラッグ&ドロップ機能を初期化
+        function initializeDragAndDrop() {
+            const rankingList = document.getElementById('humanRankingList');
+            let draggedElement = null;
+            
+            rankingList.addEventListener('dragstart', (e) => {
+                draggedElement = e.target.closest('.list-group-item');
+                e.target.style.opacity = '0.5';
+            });
+            
+            rankingList.addEventListener('dragend', (e) => {
+                e.target.style.opacity = '1';
+                draggedElement = null;
+            });
+            
+            rankingList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            rankingList.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const dropTarget = e.target.closest('.list-group-item');
+                if (dropTarget && draggedElement && dropTarget !== draggedElement) {
+                    const parent = dropTarget.parentNode;
+                    const nextSibling = dropTarget.nextSibling;
+                    parent.insertBefore(draggedElement, nextSibling);
+                    updateRankingNumbers();
+                }
+            });
+            
+            // ドラッグ可能にする
+            rankingList.querySelectorAll('.list-group-item').forEach(item => {
+                item.draggable = true;
+                item.style.cursor = 'move';
+            });
+        }
+
+        // ランキング番号を更新
+        function updateRankingNumbers() {
+            const rankingItems = document.querySelectorAll('#humanRankingList .list-group-item');
+            rankingItems.forEach((item, index) => {
+                const badge = item.querySelector('.ranking-number');
+                badge.textContent = index + 1;
+            });
+        }
+
+        // 人間によるランキングを送信
+        function submitHumanRanking() {
+            const rankingItems = document.querySelectorAll('#humanRankingList .list-group-item');
+            const humanRanking = Array.from(rankingItems).map((item, index) => ({
+                rank: index + 1,
+                candidate_index: parseInt(item.dataset.candidateIndex),
+                candidate_name: item.querySelector('.candidate-name').textContent
+            }));
+            
+            // ボタンをローディング状態に変更
+            const submitBtn = document.getElementById('submitHumanRankingBtn');
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>生成中...';
+            
+            // バックエンドに送信
+            fetch('/api/human_interview/submit_ranking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: humanInterviewSession.session_id,
+                    human_ranking: humanRanking
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('エラー: ' + data.error);
+                } else {
+                    displayFinalComparison(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('ランキングの送信に失敗しました');
+            })
+            .finally(() => {
+                // ローディング状態を解除
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalContent;
+            });
+        }
+
+        // 最終比較結果を表示
+        function displayFinalComparison(data) {
+            const evaluationContent = document.getElementById('humanEvaluationContent');
+            
+            // 比較結果のみを追加（既存の内容は保持）
+            const comparisonHtml = `
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>人間 vs AI面接官の比較結果</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>順位</th>
+                                                <th>人間面接官の予測</th>
+                                                <th>AI面接官の予測</th>
+                                                <th>実際の志望度</th>
+                                                <th>人間の正解</th>
+                                                <th>AIの正解</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.comparison_results.map((result, index) => `
+                                                <tr>
+                                                    <td>${index + 1}位</td>
+                                                    <td>${result.human_prediction}</td>
+                                                    <td>${result.ai_prediction}</td>
+                                                    <td>${result.actual_motivation}</td>
+                                                    <td><span class="badge ${result.human_correct ? 'bg-success' : 'bg-danger'}">${result.human_correct ? '正解' : '不正解'}</span></td>
+                                                    <td><span class="badge ${result.ai_correct ? 'bg-success' : 'bg-danger'}">${result.ai_correct ? '正解' : '不正解'}</span></td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3">
+                                    <h6>スコア比較</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <h4 class="text-primary">${data.human_score}%</h4>
+                                                    <p class="mb-0">人間面接官の正解率</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-body text-center">
+                                                    <h4 class="text-info">${data.ai_score}%</h4>
+                                                    <p class="mb-0">AI面接官の正解率</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            evaluationContent.innerHTML += comparisonHtml;
+        }
+
+
+        // 人間面接のステータス更新
+        function updateHumanStatus(status, text, progress, step) {
+            const statusIndicator = document.getElementById('humanStatusIndicator');
+            const statusText = document.getElementById('humanStatusText');
+            const progressBar = document.getElementById('humanProgressBar');
+            const currentStep = document.getElementById('humanCurrentStep');
+            const roundInfo = document.getElementById('humanRoundInfo');
+            
+            if (status === 'running') {
+                statusIndicator.className = 'status-indicator status-running';
+                
+                // ラウンド情報を表示・更新
+                if (humanInterviewSession) {
+                    roundInfo.style.display = 'inline-block';
+                    roundInfo.textContent = `ラウンド: ${humanInterviewSession.current_round || 0}/20`;
+                }
+            } else {
+                statusIndicator.className = 'status-indicator status-idle';
+                roundInfo.style.display = 'none';
+            }
+            
+            statusText.textContent = text;
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            currentStep.textContent = step;
         }
 
     </script>
