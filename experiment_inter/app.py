@@ -186,6 +186,7 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         
         # 真のランキングをスコア順にソート（低い順）
         true_ranking.sort(key=lambda x: x['score'])
+        true_names = [item['name'] for item in true_ranking]
         
         # 予測ランキングを抽出
         predicted_ranking = []
@@ -202,10 +203,36 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         else:
             predicted_ranking = ["不明"] * len(candidate_states)
         
-        # ランキングの一致度を計算
-        true_names = [item['name'] for item in true_ranking]
+        # 3. ペアの順位一致率（Concordant Pair Ratio）を計算
+        
+        total_pairs = 0
+        correct_pairs = 0
+        n = len(true_names)
+        
+        # すべての可能なペア(i, j)を比較 (i < j)
+        for i in range(n):
+            for j in range(i + 1, n):
+                total_pairs += 1
+
+                # 真の順位: true_names[i] の方が true_names[j] よりも志望度が低い (つまり、先にいる)
+                
+                # 予測順位におけるそれぞれの候補者のインデックスを取得
+                # インデックスが小さいほど、志望度が低い（ランキングで上位）
+                try:
+                    pred_idx_i = predicted_ranking.index(true_names[i])
+                    pred_idx_j = predicted_ranking.index(true_names[j])
+                except ValueError:
+                    # 予測名が正しく抽出されていない場合は、このペアは比較不能
+                    continue 
+
+                # 順位が一致するかチェック
+                # 志望度の低さの順位は true_names[i] < true_names[j] である
+                # 予測も pred_idx_i < pred_idx_j であれば順位が一致
+                if pred_idx_i < pred_idx_j:
+                    correct_pairs += 1
+        
+        ranking_accuracy = correct_pairs / total_pairs if total_pairs > 0 else 0
         correct_positions = sum(1 for true, pred in zip(true_names, predicted_ranking) if true == pred)
-        ranking_accuracy = correct_positions / len(true_names) if true_names else 0
         
         return {
             'accuracy': ranking_accuracy,
