@@ -3,15 +3,6 @@ import argparse
 from src.agents.human.agent import HumanAgent
 from src.env.ygo_env import YgoEnv
 
-# シュミレータ起動コマンド
-# DuelSimulator.exe --player_type0 Human --player_type1 CPU \
-# --deck_path0 DeckData/RoyaleBE.json --deck_path1 DeckData/RoyaleBE.json \
-# --first_player 0 --lp0 8000 --lp1 8000 --hand_num0 5 --hand_num1 5 \
-# --log_level 1 --loop_num 100000 --randomize_seed true \
-# --play_reverse_duel true --exit_with_udi true --connect gRPC \
-# --grpc_deadline_seconds 60 --tcp_host0 10.95.102.79 --tcp_port0 53000 \
-# --tcp_host1 10.95.102.79 --tcp_port1 53100 --on_start_retry_connect_seconds 60
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tcp_host", type=str, default="10.95.102.79")
