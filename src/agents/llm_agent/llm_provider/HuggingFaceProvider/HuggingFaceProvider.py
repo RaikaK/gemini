@@ -1,14 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-import sys
-import os
-
-# プロジェクトのルートディレクトリを sys.path に追加
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-)
-
 from src.agents.llm_agent.llm_provider.HuggingFaceProvider.hf_models import (
     HuggingFaceModelId,
 )
@@ -16,14 +8,16 @@ from src.agents.llm_agent.llm_provider.BaseLlmProvider import BaseLlmProvider
 
 
 class HuggingFaceProvider(BaseLlmProvider):
-    def __init__(self, model_id: HuggingFaceModelId = HuggingFaceModelId.Gemma3):
+    def __init__(self, model_id: HuggingFaceModelId = HuggingFaceModelId.Gemma3_4B_IT):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(model_id.value)
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        print(f"Using device: {self.device} ")
         self.model = AutoModelForCausalLM.from_pretrained(
             model_id.value,
-            dtype=torch.bfloat16,
-        ).to(self.device)
+            load_in_4bit=True,
+            device_map="auto",
+        )
 
     def generate_response(self, messages: list[dict]) -> str:
         inputs = self.tokenizer.apply_chat_template(
@@ -33,10 +27,9 @@ class HuggingFaceProvider(BaseLlmProvider):
             return_dict=True,
             return_tensors="pt",
         ).to(self.model.device)
-        outputs = self.model.generate(**inputs, max_new_tokens=512, temperature=0.7)
-        response = self.tokenizer.decode(
-            outputs[0][inputs["input_ids"].shape[-1] :], skip_special_tokens=True
-        )
+        with torch.no_grad():
+            outputs = self.model.generate(**inputs, max_new_tokens=512, temperature=0.7)
+        response: str = self.tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1] :], skip_special_tokens=True)
 
         breakpoint()
         return response

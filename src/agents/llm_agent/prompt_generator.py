@@ -1,6 +1,8 @@
 from src.env.action_data import ActionData
 from src.env.state_data import StateData
 from ygo.util.text import TextUtil
+from ygo.models.duel_card import DuelCard
+from ygo.constants.enums import PlayerId, PosId, Face, Turn
 
 
 SYSTEM_PROMPT = """
@@ -34,26 +36,29 @@ class PromptGenerator:
         self.text_util = TextUtil()
 
     def generate_instruction_prompt(self, state: StateData) -> str:
+        card_table = self._get_text_or_none(self._get_public_card_table_text(state=state))
+        log = self._get_text_or_none(self._get_log_text(state=state))
+        chain_stack = self._get_text_or_none(self._get_chain_stack_text(state=state))
+        general_data = self._get_text_or_none(self._get_general_data_text(state=state))
         prompt = f"""以下の**遊技王カードゲーム**において、ゲームに勝つことを目的に最適な選択肢を<Commands>の中から1つ数字で選びなさい。ただし、ゲームのルールは、<Rule>、盤面上のカードに関する情報は、<Card Table>、これまでのゲームの流れは<Log>、相手との呪文の打ち合い(チェイン)に関する情報は、<Chain Stack>、ライフポイント(LP)やターン情報などの一般情報は、<General Data>に記載されています。<Instruction>の指示にしたがい、最適な選択肢を指定されたフォーマットで出力してください。
-
 <Rule>
 {NORMAL_RULE}
 </Rule>
 
 <Card Table>
-{self._get_duel_card_table_text(state=state)}
+{card_table}
 </Card Table>
 
 <Log>
-{self._get_log_text(state=state)}
+{log}
 </Log>
 
 <Chain Stack>
-{self._get_chain_stack_text(state=state)}
+{chain_stack}
 </Chain Stack>
 
 <General Data>
-{self._get_general_data_text(state=state)}
+{general_data}
 </General Data>
 
 <Commands>
@@ -74,25 +79,43 @@ class PromptGenerator:
 あなたが現在取るべき最適な行動を選択しなさい。"""
         return prompt
 
-    def _get_duel_card_table_text(self, state: StateData) -> str:
+    def _get_public_card_table_text(self, state: StateData) -> str:
+        # 盤面に存在する自分のカード情報
+
+        # 盤面に存在する相手のカード情報
         duel_card_table = state.duel_state_data.duel_card_table
-        return self.text_util.get_duel_card_table_markdown(
-            duel_card_table=duel_card_table
-        )
+        player_field_cards, enemy_field_cards = self._get_player_and_enemy_card_table(duel_card_table=duel_card_table)
+        player_card_text_list = self._get_card_text_list(card_table=player_field_cards)
+        enemy_card_text_list = self._get_card_text_list(card_table=enemy_field_cards)
+        player_card_text = "あなたのフィールド上のカード"
+        if len(player_card_text_list) == 0:
+            player_card_text += ": None"
+        else:
+            player_card_text += ":\n" + "\n".join(player_card_text_list)
+        enemy_card_text = "相手のフィールド上のカード"
+        if len(enemy_card_text_list) == 0:
+            enemy_card_text += ": None"
+        else:
+            enemy_card_text += ":\n" + "\n".join(enemy_card_text_list)
+        text = f"{player_card_text}\n{enemy_card_text}"
+        return text
 
     def _get_command_list_text(self, state: StateData) -> str:
         """選択可能なコマンドリスト"""
+        cmds = []
         command_request = state.command_request
-        return self.text_util.get_commands_text(commands=command_request.commands)
+
+        for i, cmd_entry in enumerate(command_request.commands):
+            cmd_text = f"{i}: {self.text_util.get_command_entry_text(cmd_entry)}"
+            cmds.append(cmd_text)
+        return "\n".join(cmds)
 
     def _get_log_text(self, state: StateData) -> str:
         """デュエルログ"""
         duel_log_entries = state.duel_log_data
         log_text = ""
         for duel_log_entry in duel_log_entries:
-            log_text += (
-                f"- {self.text_util.get_duel_log_entry_text([duel_log_entry])}\n"
-            )
+            log_text += f"- {self.text_util.get_duel_log_entry_text(duel_log_entry)}\n"
         return log_text
 
     def _get_chain_stack_text(self, state: StateData) -> str:
@@ -102,5 +125,44 @@ class PromptGenerator:
 
     def _get_general_data_text(self, state: StateData) -> str:
         """一般情報"""
-        duel_state = state.duel_state_data
-        return self.text_util.get_general_data_text(duel_state=duel_state)
+        general_data = state.duel_state_data.general_data
+        return self.text_util.get_general_data_text(general_data=general_data)
+
+    def _get_player_and_enemy_card_table(
+        self, duel_card_table: list[DuelCard]
+    ) -> tuple[list[DuelCard], list[DuelCard]]:
+        player_cards: list[DuelCard] = []
+        enemy_cards: list[DuelCard] = []
+        for card in duel_card_table:
+            # 盤面に存在するか
+            if card.pos_id != PosId.FIELD:
+                continue
+            if card.player_id == PlayerId.MYSELF:
+                player_cards.append(card)
+            else:
+                enemy_cards.append(card)
+        return player_cards, enemy_cards
+
+    def _get_card_text_list(self, card_table: list[DuelCard]) -> list[str]:
+
+        # カードの情報は、表向きなのか、裏向きなのか、攻撃表示なのか、守備表示なのか
+        card_text_list = [self._get_card_info_text(card) for card in card_table]
+        return card_text_list
+
+    def _get_card_info_text(self, card: DuelCard) -> str:
+        if card.pos_id != PosId.FIELD:
+            return ""
+        name = self.text_util.get_card_name(card.card_id)
+        if card.face == Face.FRONT:
+            atk = self.text_util.get_atk(card.card_id)
+            deff = self.text_util.get_def(card.card_id)
+            if card.turn == Turn.VERTICAL:
+                return f"- {name}: (攻撃力={atk}, 守備力={deff}) | 表示形式=攻撃表示"
+            elif card.turn == Turn.HORIZONTAL:
+                return f"- {name}: (攻撃力={atk}, 守備力={deff}) | 表示形式=守備表示"
+        return "- ???: 裏側のカード"
+
+    def _get_text_or_none(self, text: str) -> str:
+        if text is None or text == "":
+            return "None"
+        return text
