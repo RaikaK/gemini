@@ -31,7 +31,7 @@ class HuggingFaceProvider(BaseLlmProvider):
             outputs = self.model.generate(**inputs, max_new_tokens=512, temperature=0.7)
         response: str = self.tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1] :], skip_special_tokens=True)
 
-        breakpoint()
+        # breakpoint()
         return response
 
 

@@ -35,9 +35,9 @@ class LLMAgent(BaseAgent):
 
         # 無駄な選択は避ける
         if len(cmd_request.commands) == 1:
-            return ActionData(
-                command_request=cmd_request, command_entry=cmd_request.commands[0]
-            ), None
+            action = ActionData(command_request=cmd_request, command_entry=cmd_request.commands[0])
+            info = "length of commands is 1"
+            return action, info
 
         # breakpoint()
 
@@ -48,22 +48,19 @@ class LLMAgent(BaseAgent):
 
         response: str = self.provider.generate_response(messages=messages)
 
-        breakpoint()
+        # breakpoint()
 
         can_parsed = False
         n_try = 0
         while not can_parsed:
             n_try += 1
-            cmd_index, json_object = self._parse_response_to_cmd_index(
-                response, cmd_request.commands
-            )
-            breakpoint()
+            cmd_index, json_object = self._parse_response_to_cmd_index(response, cmd_request.commands)
+            # breakpoint()
             if cmd_index is not None:
                 cmd_entry = cmd_request.commands[cmd_index]
-                action = ActionData(
-                    command_request=cmd_request, command_entry=cmd_entry
-                )
-                return action, json_object
+                action = ActionData(command_request=cmd_request, command_entry=cmd_entry)
+                info = f"prompt: {prompt}\nresponse: {json_object}"
+                return action, info
 
             if n_try >= self.max_try:
                 break
@@ -79,14 +76,13 @@ class LLMAgent(BaseAgent):
         next_state: StateData,
         info: dict | None,
     ) -> dict | None:
-        pass
+        print(info)
+        return None
 
-    def _parse_response_to_cmd_index(
-        self, response: str, commands: list
-    ) -> tuple[int | None, dict]:
+    def _parse_response_to_cmd_index(self, response: str, commands: list) -> tuple[int | None, dict]:
         expected_keys = {"reasoning", "action"}
         parsed_json_object: dict | None = self._extract_json_from_text(response)
-        breakpoint()
+        # breakpoint()
         """commandsの中から選択されたかチェックする"""
         if parsed_json_object is None:
             return None, {}
