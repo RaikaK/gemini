@@ -1,21 +1,24 @@
-import sys
-
-sys.path.append("C:/Users/b1/Desktop/master-duel-ai")
-
 from ygo.util.text import TextUtil
+from src.env.action_data import ActionData
+from src.agents.base_agent import BaseAgent
+from src.agents.llm_agent.prompt_generator import PromptGenerator, SYSTEM_PROMPT
 
-from src.ygo_env_wrapper.action_data import ActionData
-from src.agents.base_ygo_agent import BaseYgoAgent
 
-
-class LLMAgent(BaseYgoAgent):
+class LLMAgent(BaseAgent):
     def __init__(self):
         super().__init__()
+        self.prompt_generator = PromptGenerator()
 
     def select_action(self, state: dict) -> ActionData:
         """状態stateに基づき、行動データActionDataを返す"""
-        # LLMを用いて行動を選択するロジックをここに実装
+        prompt = self.prompt_generator.generate_instruction_prompt(state=state)
+
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
+
         pass
 
     def update(self, state, action_data, next_state) -> dict | None:
-        return super().update(state, action_data, next_state)
+        pass
