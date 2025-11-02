@@ -1,4 +1,5 @@
 from openai import OpenAI
+import time
 from src.agents.llm_agent.llm_provider.BaseLlmProvider import BaseLlmProvider
 from src.agents.llm_agent.llm_provider.OpneAIProvider.api import (
     ApiType,
@@ -26,11 +27,16 @@ class OpenAIProvider(BaseLlmProvider):
         self.top_p = top_p
 
     def generate_response(self, messages: list[dict]) -> str:
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            top_p=self.top_p,
-        )
-        return response.choices[0].message.content
+        while True:
+            try:
+                time.sleep(1)
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    top_p=self.top_p,
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                time.sleep(3)
