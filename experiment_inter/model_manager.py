@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 import logging
 from typing import Dict, List, Optional, Tuple
+from huggingface_hub import try_to_load_from_cache
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
@@ -60,10 +61,10 @@ class HuggingFaceModelManager:
             
             # 軽量モデル
             "calm2-3b": {
-                "model_id": "cyberagent/calm2-3b-chat",
-                "size_gb": 6,
-                "description": "CALM2 3B Chat - 軽量で高速",
-                "recommended_gpu": "RTX 3060, RTX 4060"
+                "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+                "size_gb": 2,
+                "description": "TinyLlama 1.1B - 超軽量モデル（calm2-3bの代替）",
+                "recommended_gpu": "RTX 3060, CPU"
             },
             "tinyllama": {
                 "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
@@ -84,7 +85,40 @@ class HuggingFaceModelManager:
                 "size_gb": 14,
                 "description": "Mistral 7B Instruct - 高性能欧州モデル",
                 "recommended_gpu": "RTX 4080, A100"
+            },
+
+            # 新しく追加されたモデル
+            "qwen3-4b-instruct-2507": {
+                "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+                "size_gb": 8,
+                "description": "Qwen3 4B Instruct 2507 - 最新世代の指示対応モデル",
+                "recommended_gpu": "RTX 4070, A100"
+            },
+            "meta-llama-3-8b": {
+                "model_id": "meta-llama/Meta-Llama-3-8B",
+                "size_gb": 16,
+                "description": "Meta Llama 3 8B - 最新のLlama 3モデル",
+                "recommended_gpu": "RTX 4090, A100"
+            },
+            "qwen2.5-7b-instruct": {
+                "model_id": "Qwen/Qwen2.5-7B-Instruct",
+                "size_gb": 14,
+                "description": "Qwen2.5 7B Instruct - 高性能指示対応モデル",
+                "recommended_gpu": "RTX 4080, A100"
+            },
+            "qwen3-8b": {
+                "model_id": "Qwen/Qwen3-8B",
+                "size_gb": 16,
+                "description": "Qwen3 8B - 最新世代の汎用モデル",
+                "recommended_gpu": "RTX 4090, A100"
+            },
+            "gemma-3-1b-it": {
+                "model_id": "google/gemma-3-1b-it",
+                "size_gb": 2,
+                "description": "Gemma 3 1B IT - 軽量高性能モデル",
+                "recommended_gpu": "RTX 3060, CPU"
             }
+
         }
     
     def check_hf_cli_installed(self) -> bool:
@@ -159,10 +193,18 @@ class HuggingFaceModelManager:
         if not model_info:
             return False
         
+        # まず、model_keyで直接チェック（ダウンロード時に使用されるパス）
+        model_path = self.models_dir / model_key
+        if model_path.exists() and any(model_path.iterdir()):
+            return True
+        
+        # 次に、Hugging Faceの標準キャッシュディレクトリ構造でチェック
         model_id = model_info["model_id"]
-        # Hugging Faceのキャッシュディレクトリ構造に基づいてチェック
-        model_path = self.models_dir / "--".join(model_id.split("/"))
-        return model_path.exists() and any(model_path.iterdir())
+        hf_model_path = self.models_dir / "--".join(model_id.split("/"))
+        if hf_model_path.exists() and any(hf_model_path.iterdir()):
+            return True
+        
+        return False
     
     def download_model(self, model_key: str, force: bool = False, progress_callback=None) -> bool:
         """モデルをダウンロード（進捗表示対応）"""
@@ -229,7 +271,20 @@ class HuggingFaceModelManager:
         if not self.is_model_downloaded(model_key):
             return None
         
-        return self.models_dir / model_key
+        # まず、model_keyで直接チェック
+        model_path = self.models_dir / model_key
+        if model_path.exists() and any(model_path.iterdir()):
+            return model_path
+        
+        # 次に、Hugging Faceの標準キャッシュディレクトリ構造でチェック
+        model_info = self.get_model_info(model_key)
+        if model_info:
+            model_id = model_info["model_id"]
+            hf_model_path = self.models_dir / "--".join(model_id.split("/"))
+            if hf_model_path.exists() and any(hf_model_path.iterdir()):
+                return hf_model_path
+        
+        return None
     
     def initialize_model(self, model_key: str, device: str = "auto", 
                         quantization: bool = True) -> Tuple[Optional[AutoModelForCausalLM], Optional[AutoTokenizer]]:
@@ -266,6 +321,7 @@ class HuggingFaceModelManager:
                 str(model_path),
                 trust_remote_code=True
             )
+            logger.info("トークナイザーのロードが完了しました")
             
             # モデルをロード
             model = AutoModelForCausalLM.from_pretrained(
@@ -275,6 +331,7 @@ class HuggingFaceModelManager:
                 device_map=device,
                 trust_remote_code=True
             )
+            logger.info("モデルのロードが完了しました")
             
             # パッドトークンの設定
             if tokenizer.pad_token_id is None:

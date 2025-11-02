@@ -58,16 +58,29 @@ experiment_status = {
     'simulation_results': []
 }
 
+# モデルダウンロード進捗管理
+download_status = {
+    'is_downloading': False,
+    'model_key': None,
+    'progress': 0,
+    'current_step': '',
+    'logs': [],
+    'error': None
+}
+
 experiment_queue = queue.Queue()
 
 # 人間面接官セッション管理
 human_interview_sessions = {}
 
+# ローカルモデルのダウンロード先
+# hf_hub_cache = os.environ.get("HF_HUB_CACHE")
 # モデル管理システムの初期化
 model_manager = HuggingFaceModelManager()
 
 # 絶対パスでresultsディレクトリを指定
 RESULTS_DIR = Path(__file__).parent / 'results'
+
 
 def log_message(message):
     """ログメッセージを追加"""
@@ -77,10 +90,24 @@ def log_message(message):
     if len(experiment_status['logs']) > 100:  # ログを100件まで保持
         experiment_status['logs'] = experiment_status['logs'][-100:]
 
+def log_download_message(message):
+    """ダウンロードログメッセージを追加"""
+    timestamp = datetime.datetime.now().strftime('%H:%M:%S')
+    log_entry = f"[{timestamp}] {message}"
+    download_status['logs'].append(log_entry)
+    if len(download_status['logs']) > 50:  # ダウンロードログを50件まで保持
+        download_status['logs'] = download_status['logs'][-50:]
+
 def update_progress(progress, step):
     """進捗状況を更新"""
     experiment_status['progress'] = progress
     experiment_status['current_step'] = step
+
+def update_download_progress(progress, step):
+    """ダウンロード進捗状況を更新"""
+    download_status['progress'] = progress
+    download_status['current_step'] = step
+
 
 def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_eval=None, knowledge_gaps_eval=None):
     """既存のinterv.pyの評価手法に基づく精度指標を計算"""
@@ -139,14 +166,27 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
         
         # 評価3: 知識欠損検出精度（オプション）
-        knowledge_gaps_metrics = None
-        knowledge_gaps_detailed = None
-        if knowledge_gaps_eval and isinstance(knowledge_gaps_eval, dict):
-            knowledge_gaps_metrics = knowledge_gaps_eval.get('quantitative_performance_metrics', {})
-            knowledge_gaps_detailed = {
-                'llm_qualitative_analysis': knowledge_gaps_eval.get('llm_qualitative_analysis', ''),
-                'quantitative_performance_metrics': knowledge_gaps_eval.get('quantitative_performance_metrics', {})
-            }
+        # 1. 志望度レベルごとにメトリクスを格納するための辞書を初期化
+        kg_accuracy_by_motivation = {
+            'low': None,
+            'medium': None,
+            'high': None
+        }
+        
+        # 2. 候補者リストをループし、志望度レベルとメトリクスを紐づける
+        if knowledge_gaps_eval and 'quantitative_performance_metrics' in knowledge_gaps_eval:
+            performance_metrics = knowledge_gaps_eval['quantitative_performance_metrics']
+            
+            for state in candidate_states:
+                candidate_name = state['profile'].get('name')
+                preparation_level = state['profile'].get('preparation', 'low') # 志望度レベル (low, medium, high)
+                
+                if candidate_name in performance_metrics:
+                    candidate_data = performance_metrics[candidate_name]
+                    
+                    # 該当する候補者の accuracy を取得し、志望度レベルのキーに直接格納
+                    if preparation_level in kg_accuracy_by_motivation and 'metrics' in candidate_data and 'accuracy' in candidate_data['metrics']:
+                        kg_accuracy_by_motivation[preparation_level] = candidate_data['metrics']['accuracy']
 
         
         return {
@@ -161,8 +201,9 @@ def calculate_accuracy_metrics(candidate_states, least_motivated_eval, ranking_e
             'y_true': y_true,
             'y_pred': y_pred,
             'ranking_accuracy': ranking_accuracy,
-            'knowledge_gaps_metrics': knowledge_gaps_metrics,
-            'knowledge_gaps_detailed': knowledge_gaps_detailed
+            'knowledge_gaps_metrics_by_motivation': kg_accuracy_by_motivation,
+            # 'knowledge_gaps_metrics': knowledge_gaps_metrics,
+            # 'knowledge_gaps_detailed': knowledge_gaps_detailed
         }
     except Exception as e:
         log_message(f"精度指標の計算中にエラーが発生しました: {e}")
@@ -275,6 +316,14 @@ def initialize_local_model(model_name=None):
     if not model_manager.is_model_downloaded(model_key):
         model_info = model_manager.get_model_info(model_key)
         if model_info:
+            # ダウンロード状態を初期化
+            download_status['is_downloading'] = True
+            download_status['model_key'] = model_key
+            download_status['progress'] = 0
+            download_status['current_step'] = 'ダウンロード準備中'
+            download_status['logs'] = []
+            download_status['error'] = None
+            
             log_message(f"モデル {model_key} が初回選択されました。ダウンロードを開始します...")
             log_message(f"モデルサイズ: {model_info['size_gb']}GB")
             log_message(f"推奨GPU: {model_info['recommended_gpu']}")
@@ -282,13 +331,40 @@ def initialize_local_model(model_name=None):
             
             # 進捗表示付きでダウンロード
             def progress_callback(message):
-                log_message(f"[ダウンロード進捗] {message}")
+                log_download_message(f"[ダウンロード進捗] {message}")
+                # 進捗の解析（簡単な例）
+                if "ダウンロード開始" in message:
+                    update_download_progress(10, "ダウンロード開始")
+                elif "ダウンロード中" in message:
+                    # メッセージから進捗を推定
+                    if "%" in message:
+                        try:
+                            import re
+                            percent_match = re.search(r'(\d+)%', message)
+                            if percent_match:
+                                progress = int(percent_match.group(1))
+                                update_download_progress(10 + (progress * 0.8), f"ダウンロード中 ({progress}%)")
+                        except:
+                            pass
+                    else:
+                        update_download_progress(50, "ダウンロード中")
+                elif "ダウンロード完了" in message:
+                    update_download_progress(100, "ダウンロード完了")
             
-            if not model_manager.download_model(model_key, progress_callback=progress_callback):
-                log_message(f"モデル {model_key} のダウンロードに失敗しました")
+            try:
+                if not model_manager.download_model(model_key, progress_callback=progress_callback):
+                    download_status['error'] = f"モデル {model_key} のダウンロードに失敗しました"
+                    log_message(f"モデル {model_key} のダウンロードに失敗しました")
+                    download_status['is_downloading'] = False
+                    return None, None
+                else:
+                    log_message(f"モデル {model_key} のダウンロードが完了しました")
+                    download_status['is_downloading'] = False
+            except Exception as e:
+                download_status['error'] = f"ダウンロード中にエラーが発生: {e}"
+                log_message(f"ダウンロード中にエラーが発生: {e}")
+                download_status['is_downloading'] = False
                 return None, None
-            else:
-                log_message(f"モデル {model_key} のダウンロードが完了しました")
         else:
             log_message(f"モデル {model_key} の情報を取得できませんでした")
             return None, None
@@ -417,7 +493,7 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
     # 実行時間を計算
     end_time = time.time()
     execution_time = end_time - start_time
-    
+
     # --- 6. 結果の整理 ---
     result = {
         "simulation_num": simulation_num,
@@ -449,24 +525,136 @@ def run_single_experiment(local_interviewer_model=None, local_interviewer_tokeni
         },
         "knowledge_gaps_detailed": accuracy_metrics.get('knowledge_gaps_detailed') if accuracy_metrics else None,
         "accuracy_metrics": accuracy_metrics,
-        "execution_time_seconds": execution_time
+        # 知識欠損検出（LLM出力との比較）に関する定量メトリクスを明示的に追加
+        # これは interv.detect_knowledge_gaps() の戻り値中の
+        # 'quantitative_performance_metrics' を要約したものです。
+        "knowledge_gaps_detection_metrics": None,
+        "execution_time_seconds": execution_time,
+        # "accuracy_low": accuracy_motivation.get('low') if accuracy_motivation else None,
+        # "accuracy_medium": accuracy_motivation.get('medium') if accuracy_motivation else None,
+        # "accuracy_high": accuracy_motivation.get('high') if accuracy_motivation else None,
     }
+
+    # --- 知識欠損検出メトリクスを抽出して要約 ---
+    try:
+        kg_quant = None
+        if isinstance(knowledge_gap_eval, dict):
+            kg_quant = knowledge_gap_eval.get('quantitative_performance_metrics', {})
+
+        per_candidate_metrics = {}
+        acc_list, prec_list, rec_list, f1_list = [], [], [], []
+
+        if isinstance(kg_quant, dict):
+            for cand_name, cand_res in kg_quant.items():
+                metrics = cand_res.get('metrics', {}) if isinstance(cand_res, dict) else {}
+                # 主要メトリクスを抽出
+                acc = metrics.get('accuracy') if metrics is not None else None
+                prec = metrics.get('precision') if metrics is not None else None
+                rec = metrics.get('recall') if metrics is not None else None
+                f1 = metrics.get('f1_score') if metrics is not None else None
+
+                per_candidate_metrics[cand_name] = {
+                    'accuracy': acc,
+                    'precision': prec,
+                    'recall': rec,
+                    'f1_score': f1,
+                    'true_positives': metrics.get('true_positives') if metrics is not None else None,
+                    'true_negatives': metrics.get('true_negatives') if metrics is not None else None,
+                    'false_positives': metrics.get('false_positives') if metrics is not None else None,
+                    'false_negatives': metrics.get('false_negatives') if metrics is not None else None,
+                }
+
+                # 平均計算用リストに追加（数値のみ）
+                if isinstance(acc, (int, float)):
+                    acc_list.append(acc)
+                if isinstance(prec, (int, float)):
+                    prec_list.append(prec)
+                if isinstance(rec, (int, float)):
+                    rec_list.append(rec)
+                if isinstance(f1, (int, float)):
+                    f1_list.append(f1)
+
+        # 集計（候補者ごとの平均）
+        aggregated = {}
+        if acc_list:
+            aggregated['avg_accuracy'] = sum(acc_list) / len(acc_list)
+        if prec_list:
+            aggregated['avg_precision'] = sum(prec_list) / len(prec_list)
+        if rec_list:
+            aggregated['avg_recall'] = sum(rec_list) / len(rec_list)
+        if f1_list:
+            aggregated['avg_f1_score'] = sum(f1_list) / len(f1_list)
+
+        # 結果を result に格納
+        result['knowledge_gaps_detection_metrics'] = {
+            'per_candidate': per_candidate_metrics,
+            'aggregated': aggregated
+        }
+        # フラットな候補者ごとの accuracy マップ（スプレッドシート側で取り扱いやすくするため）
+        try:
+            candidate_acc_map = {name: v.get('accuracy') for name, v in per_candidate_metrics.items()}
+        except Exception:
+            candidate_acc_map = {}
+        result['candidate_detection_accuracy'] = candidate_acc_map
+        # 準備レベル（preparation）ごとの集計 (low/medium/high)
+        try:
+            # 候補者名 -> preparation マップを作成
+            name_to_prep = {}
+            for s in candidate_states:
+                prof = s.get('profile', {})
+                name = prof.get('name')
+                prep = prof.get('preparation', 'low')
+                if name:
+                    name_to_prep[name] = prep
+
+            prep_groups = {'low': {}, 'medium': {}, 'high': {}}
+            prep_acc_lists = {'low': [], 'medium': [], 'high': []}
+
+            for name, metrics in per_candidate_metrics.items():
+                acc = metrics.get('accuracy') if isinstance(metrics, dict) else None
+                prep = name_to_prep.get(name, None)
+                if prep not in prep_groups:
+                    # unknown/その他は low にフォールバック
+                    prep = 'low'
+
+                prep_groups[prep][name] = acc
+                if isinstance(acc, (int, float)):
+                    prep_acc_lists[prep].append(acc)
+
+            detection_accuracy_by_prep = {}
+            for prep_level in ['low', 'medium', 'high']:
+                accs = prep_acc_lists.get(prep_level, [])
+                avg = (sum(accs) / len(accs)) if accs else None
+                detection_accuracy_by_prep[prep_level] = {
+                    'avg_accuracy': avg,
+                    'per_candidate': prep_groups.get(prep_level, {})
+                }
+
+            result['detection_accuracy_by_preparation'] = detection_accuracy_by_prep
+        except Exception as e:
+            log_message(f"準備レベル別精度の集計中にエラー: {e}")
+    except Exception as e:
+        log_message(f"知識欠損検出メトリクスの抽出中にエラー: {e}")
     
     log_message(f"=== シミュレーション {simulation_num} 完了 ===")
     if accuracy_metrics:
         log_message(f"評価1 - 正解: {'✓' if accuracy_metrics['is_correct'] else '✗'}")
-        log_message(f"評価1 - F1スコア: {accuracy_metrics['f1_score']:.3f}")
-        log_message(f"評価1 - 正解率: {accuracy_metrics['accuracy']:.3f}")
+        # log_message(f"評価1 - F1スコア: {accuracy_metrics['f1_score']:.3f}")
+        # log_message(f"評価1 - 正解率: {accuracy_metrics['accuracy']:.3f}")
         if accuracy_metrics.get('ranking_accuracy'):
             log_message(f"評価2 - ランキング正解率: {accuracy_metrics['ranking_accuracy']['accuracy']:.3f}")
         if accuracy_metrics.get('knowledge_gaps_metrics'):
             kg_metrics = accuracy_metrics['knowledge_gaps_metrics']
+            accuracy_motivation = accuracy_metrics.get('knowledge_gaps_metrics_by_motivation') if accuracy_metrics else None
             log_message(f"評価3 - 知識欠損検出:")
-            log_message(f"  - 検出された知識欠損数: {kg_metrics.get('detected_gaps_count', 'N/A')}")
-            log_message(f"  - 真の知識欠損数: {kg_metrics.get('true_gaps_count', 'N/A')}")
-            log_message(f"  - 検出精度: {kg_metrics.get('detection_accuracy', 'N/A')}")
-            log_message(f"  - 検出F1スコア: {kg_metrics.get('detection_f1_score', 'N/A')}")
-            log_message(f"  - 検出された欠損詳細: {kg_metrics.get('detected_gaps_details', 'N/A')}")
+            log_message(f"  - Acc_low: {accuracy_motivation.get('low', {}).get('avg_accuracy', 'N/A')}")
+            log_message(f"  - Acc_medium: {accuracy_motivation.get('medium', {}).get('avg_accuracy', 'N/A')}")
+            log_message(f"  - Acc_high: {accuracy_motivation.get('high', {}).get('avg_accuracy', 'N/A')}")
+            # log_message(f"  - 検出された知識欠損数: {kg_metrics.get('detected_gaps_count', 'N/A')}")
+            # log_message(f"  - 真の知識欠損数: {kg_metrics.get('true_gaps_count', 'N/A')}")
+            # log_message(f"  - 検出精度: {kg_metrics.get('detection_accuracy', 'N/A')}")
+            # log_message(f"  - 検出F1スコア: {kg_metrics.get('detection_f1_score', 'N/A')}")
+            # log_message(f"  - 検出された欠損詳細: {kg_metrics.get('detected_gaps_details', 'N/A')}")
         else:
             log_message(f"評価3 - 知識欠損検出: データなし")
     
@@ -810,6 +998,11 @@ def get_status():
     """実験の状態を取得"""
     return jsonify(experiment_status)
 
+@app.route('/api/download/status')
+def get_download_status():
+    """ダウンロードの状態を取得"""
+    return jsonify(download_status)
+
 @app.route('/api/results')
 def get_results():
     """過去の実験結果一覧を取得"""
@@ -862,26 +1055,76 @@ def download_model():
     if experiment_status['is_running']:
         return jsonify({'error': '実験実行中はモデルのダウンロードはできません'}), 400
     
+    if download_status['is_downloading']:
+        return jsonify({'error': '既にダウンロードが実行中です'}), 400
+    
     data = request.get_json()
     model_key = data.get('model_key')
     
     if not model_key:
         return jsonify({'error': 'model_keyが必要です'}), 400
     
-    try:
-        log_message(f"モデル {model_key} のダウンロードを開始...")
-        success = model_manager.download_model(model_key)
-        
-        if success:
-            log_message(f"モデル {model_key} のダウンロードが完了しました")
-            return jsonify({'message': f'モデル {model_key} のダウンロードが完了しました'})
-        else:
-            log_message(f"モデル {model_key} のダウンロードに失敗しました")
-            return jsonify({'error': f'モデル {model_key} のダウンロードに失敗しました'}), 500
+    # バックグラウンドでダウンロードを実行
+    def run_download():
+        try:
+            # ダウンロード状態を初期化
+            download_status['is_downloading'] = True
+            download_status['model_key'] = model_key
+            download_status['progress'] = 0
+            download_status['current_step'] = 'ダウンロード準備中'
+            download_status['logs'] = []
+            download_status['error'] = None
             
-    except Exception as e:
-        log_message(f"モデルダウンロード中にエラー: {e}")
-        return jsonify({'error': f'ダウンロード中にエラーが発生: {e}'}), 500
+            model_info = model_manager.get_model_info(model_key)
+            if model_info:
+                log_download_message(f"モデル {model_key} のダウンロードを開始...")
+                log_download_message(f"モデルサイズ: {model_info['size_gb']}GB")
+                update_download_progress(10, "ダウンロード開始")
+                
+                # 進捗表示付きでダウンロード
+                def progress_callback(message):
+                    log_download_message(f"[ダウンロード進捗] {message}")
+                    # 進捗の解析
+                    if "ダウンロード開始" in message:
+                        update_download_progress(10, "ダウンロード開始")
+                    elif "ダウンロード中" in message:
+                        if "%" in message:
+                            try:
+                                import re
+                                percent_match = re.search(r'(\d+)%', message)
+                                if percent_match:
+                                    progress = int(percent_match.group(1))
+                                    update_download_progress(10 + (progress * 0.8), f"ダウンロード中 ({progress}%)")
+                            except:
+                                pass
+                        else:
+                            update_download_progress(50, "ダウンロード中")
+                    elif "ダウンロード完了" in message:
+                        update_download_progress(100, "ダウンロード完了")
+                
+                success = model_manager.download_model(model_key, progress_callback=progress_callback)
+                
+                if success:
+                    log_download_message(f"モデル {model_key} のダウンロードが完了しました")
+                    download_status['is_downloading'] = False
+                else:
+                    download_status['error'] = f"モデル {model_key} のダウンロードに失敗しました"
+                    log_download_message(f"モデル {model_key} のダウンロードに失敗しました")
+                    download_status['is_downloading'] = False
+            else:
+                download_status['error'] = f"モデル {model_key} の情報を取得できませんでした"
+                download_status['is_downloading'] = False
+                
+        except Exception as e:
+            download_status['error'] = f"ダウンロード中にエラーが発生: {e}"
+            log_download_message(f"ダウンロード中にエラーが発生: {e}")
+            download_status['is_downloading'] = False
+    
+    thread = threading.Thread(target=run_download)
+    thread.daemon = True
+    thread.start()
+    
+    return jsonify({'message': f'モデル {model_key} のダウンロードを開始しました'})
 
 @app.route('/api/models/cleanup', methods=['POST'])
 def cleanup_model():

@@ -11,7 +11,7 @@ AVAILABLE_LOCAL_MODELS = {
     # 主要な日本語対応モデル
     "llama3": "meta-llama/Llama-3.1-8B-Instruct",
     "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
-    "SWALLOW": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
+    "SWALLOW": "rinna/weblab-10b-instruction-sft",
     "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
     
     # Llama 3シリーズ
@@ -22,7 +22,7 @@ AVAILABLE_LOCAL_MODELS = {
     "japanese-stablelm": "stabilityai/japanese-stablelm-instruct-gamma-7b",
     "weblab-10b": "rinna/weblab-10b-instruction-sft",
     "calm2-7b": "cyberagent/calm2-7b-chat",
-    "calm2-3b": "cyberagent/calm2-3b-chat",
+    "calm2-3b": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     
     # 軽量・高性能モデル
     "gemma2-9b": "google/gemma-2-9b-it",
@@ -31,7 +31,14 @@ AVAILABLE_LOCAL_MODELS = {
     # その他の高性能モデル
     "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.3",
     "qwen-7b": "Qwen/Qwen-7B-Chat",
-    "phi-3": "microsoft/Phi-3-mini-4k-instruct"
+    "phi-3": "microsoft/Phi-3-mini-4k-instruct",
+
+    # 新しく追加されたモデル
+    "qwen3-4b-instruct-2507": "Qwen/Qwen3-4B-Instruct-2507",
+    "meta-llama-3-8b": "meta-llama/Meta-Llama-3-8B",
+    "qwen2.5-7b-instruct": "Qwen/Qwen2.5-7B-Instruct",
+    "qwen3-8b": "Qwen/Qwen3-8B",
+    "gemma-3-1b-it": "google/gemma-3-1b-it"
 }
 
 # デフォルトのローカルモデル
