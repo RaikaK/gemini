@@ -23,7 +23,6 @@ from src.agents.llm_agent.llm_provider.OpneAIProvider.api import ApiType
 class LLMAgent(BaseAgent):
     def __init__(
         self,
-        model_id: HuggingFaceModelId = HuggingFaceModelId.Swallow,
         max_try: int = 3,
     ):
         super().__init__()
