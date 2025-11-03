@@ -14,10 +14,10 @@ from src.agents.llm_agent.llm_provider.HuggingFaceProvider.HuggingFaceProvider i
 from src.agents.llm_agent.llm_provider.HuggingFaceProvider.hf_models import (
     HuggingFaceModelId,
 )
-from src.agents.llm_agent.llm_provider.OpneAIProvider.OpenAIProvider import (
+from src.agents.llm_agent.llm_provider.OpenAIProvider.OpenAIProvider import (
     OpenAIProvider,
 )
-from src.agents.llm_agent.llm_provider.OpneAIProvider.api import ApiType
+from src.agents.llm_agent.llm_provider.OpenAIProvider.api import ApiType
 
 
 class LLMAgent(BaseAgent):
@@ -28,7 +28,8 @@ class LLMAgent(BaseAgent):
         super().__init__()
         self.prompt_generator = PromptGenerator()
         # LLM Provider
-        self.provider: BaseLlmProvider = OpenAIProvider(api_type=ApiType.GeminiApi)
+        self.provider: BaseLlmProvider = HuggingFaceProvider()
+        # self.provider: BaseLlmProvider = OpenAIProvider(api_type=ApiType.GeminiApi)
         self.max_try = max_try
 
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:
@@ -38,9 +39,7 @@ class LLMAgent(BaseAgent):
 
         # 無駄な選択は避ける
         if len(cmd_request.commands) == 1:
-            action = ActionData(
-                command_request=cmd_request, command_entry=cmd_request.commands[0]
-            )
+            action = ActionData(command_request=cmd_request, command_entry=cmd_request.commands[0])
             info = "length of commands is 1"
             return action, info
 
@@ -59,15 +58,11 @@ class LLMAgent(BaseAgent):
         n_try = 0
         while not can_parsed:
             n_try += 1
-            cmd_index, json_object = self._parse_response_to_cmd_index(
-                response, cmd_request.commands
-            )
+            cmd_index, json_object = self._parse_response_to_cmd_index(response, cmd_request.commands)
             # breakpoint()
             if cmd_index is not None:
                 cmd_entry = cmd_request.commands[cmd_index]
-                action = ActionData(
-                    command_request=cmd_request, command_entry=cmd_entry
-                )
+                action = ActionData(command_request=cmd_request, command_entry=cmd_entry)
                 info = f"prompt: {prompt}\nresponse: {json_object}"
                 return action, info
 
@@ -88,9 +83,7 @@ class LLMAgent(BaseAgent):
         print(info)
         return None
 
-    def _parse_response_to_cmd_index(
-        self, response: str, commands: list
-    ) -> tuple[int | None, dict]:
+    def _parse_response_to_cmd_index(self, response: str, commands: list) -> tuple[int | None, dict]:
         expected_keys = {"reasoning", "action"}
         parsed_json_object: dict | None = self._extract_json_from_text(response)
         # breakpoint()
