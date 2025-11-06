@@ -2,6 +2,11 @@ import torch
 import numpy as np
 import os
 
+# temp
+import sys
+
+sys.path.append("/Users/fujiyamax/home/labwork/master-duel-ai/u-ni-yo")
+
 from src.config import DEMONSTRATION_DIR
 from src.agents.base_agent import BaseAgent
 from src.env.action_data import ActionData
@@ -18,19 +23,29 @@ from src.common.sample_tensor import (
 
 
 class DataLoader:
-    def __init__(self, is_each_step: bool = True):
+    def __init__(self, is_each_step: bool = True, batch_size: int = 32):
         """
         Args:
             is_each_step (bool): Trueなら各step単位、Falseなら各episode単位でデータを読み込む
         """
+        self._is_each_step = is_each_step
         self.buffer: list = (
             self._load_data_each_step()
             if is_each_step
             else self._load_data_each_episode()
         )
+        np.random.shuffle(self.buffer)
+        self._batch_size = batch_size
 
     def pop(self) -> tuple[torch.Tensor, torch.Tensor]:
         """X_train, y_trainをbatch_size分取り出す"""
+        batch_indices = list[range(0, self._batch_size)]
+        breakpoint()
+        batch_data = self.buffer.pop(batch_indices)
+        breakpoint()
+
+    def _reload_data(self):
+        self.__init__(self._is_each_step, self._batch_size)
 
     def _load_data_each_episode(self) -> list[list]:
         """各データの単位がepisode"""
@@ -45,7 +60,7 @@ class DataLoader:
                         data_list.append(obj)
                     except Exception as e:
                         print(f"Failed to load {path}: {e}")
-        # breakpoint()
+        breakpoint()
         return data_list
 
     def _load_data_each_step(self) -> list:
@@ -70,3 +85,8 @@ class DataLoader:
         train_data = [data_list[i] for i in train_indices]
         other_data = [data_list[i] for i in other_indices]
         return (train_data, other_data)
+
+
+if __name__ == "__main__":
+    data_loader = DataLoader()
+    batch = data_loader.pop()
