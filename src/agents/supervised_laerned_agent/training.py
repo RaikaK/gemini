@@ -17,7 +17,8 @@ from src.common.sample_tensor import (
 )
 
 
-def load_data() -> list:
+def load_data_each_episode() -> list[list]:
+    """各データの単位がepisode"""
     # DEMONSTRATION_DIRから学習データを読み込む
     # DEMONSTRATION_DIRに含まれる.pklファイルを全て読み込む
     data_list = []
@@ -31,9 +32,18 @@ def load_data() -> list:
                     data_list.append(obj)
                 except Exception as e:
                     print(f"Failed to load {path}: {e}")
-    breakpoint()
+    # breakpoint()
     return data_list
 
 
+def load_data_each_step() -> list:
+    """各データの単位がstep"""
+    data_list_each_episode = load_data_each_episode()
+    data_list_each_step = []
+    for episode_data in data_list_each_episode:
+        data_list_each_step.extend(episode_data)
+    return data_list_each_step
+
+
 if __name__ == "__main__":
-    data_list = load_data()
+    data_list = load_data_each_step()
