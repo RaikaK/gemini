@@ -1,11 +1,8 @@
 import torch
 import numpy as np
 import os
+import copy
 
-# temp
-import sys
-
-sys.path.append("/Users/fujiyamax/home/labwork/master-duel-ai/u-ni-yo")
 
 from src.config import DEMONSTRATION_DIR
 from src.agents.base_agent import BaseAgent
@@ -23,29 +20,88 @@ from src.common.sample_tensor import (
 
 
 class DataLoader:
-    def __init__(self, is_each_step: bool = True, batch_size: int = 32):
+    def __init__(
+        self,
+        is_each_step: bool = True,
+        batch_size: int = 32,
+        train_data_ratio: float = 0.8,
+    ):
         """
         Args:
             is_each_step (bool): Trueなら各step単位、Falseなら各episode単位でデータを読み込む
         """
         self._is_each_step = is_each_step
-        self.buffer: list = (
+        self._train_data_ratio = train_data_ratio
+        self._init_train_buffer, self._init_test_buffer = self._split_data(
+            self._load_data(), self._train_data_ratio
+        )
+        self.batch_size = batch_size
+        self.train_buffer = []
+        self.test_buffer = []
+        # 実際に使用するデータの用意
+        self.reset()
+
+    def get_train_batch_data(
+        self,
+    ) -> tuple[list[np.ndarray], list[np.ndarray], list[int]] | None:
+        """
+        Returns:
+            バッチデータ数のX_batch, y_batch, has_batchを返す
+            - X_batch: list[DNNへの入力テンソル]
+            - y_batch: list[正解ラベルテンソル]
+            - hash_batch: X_batch,y_batchでコマンド数
+            - **_train_bufferが空ならば、Noneを返す**
+        """
+        if len(self.train_buffer) <= 0:
+            return None
+        batch_data: list[dict] = self.train_buffer[: self.batch_size]
+        self.train_buffer = self.train_buffer[self.batch_size :]
+
+        # batch_tensorを作成
+        X_batch = []
+        y_batch = []
+        hash_batch = []
+        for data in batch_data:
+            state: StateData = data["state"]
+            action: ActionData = data["action"]
+            cmd_count = len(action.command_request.commands)
+            input_data = create_input_data(state)
+            x = np.empty((cmd_count, DNN_INPUT_NUM), dtype=np.float32)
+            y = np.zeros((cmd_count,), dtype=np.float32)
+            # set x
+            for i in range(cmd_count):
+                x[i][0 : BOARD_NUM + INFO_NUM] = set_board_vector(input_data)
+                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(
+                    input_data
+                )[i]
+            # set y
+            y[action.command_index] = 1.0
+            X_batch.append(x)
+            y_batch.append(y)
+            hash_batch.append(cmd_count)
+
+        return X_batch, y_batch, hash_batch
+
+    def reset(self):
+        """
+        - データローダーのリセット (get_train_batch_data()でNoneが返されたら、呼び出せば良い)
+        - ただし、new()はしないこと -> new()すると、trainデータとテストデータが更新されるため
+        - new()するときは、train/testデータを更新したいときのみ行う
+        """
+        self.train_buffer.clear()
+        self.test_buffer.clear()
+        self.train_buffer = copy.deepcopy(self._init_train_buffer)
+        self.test_buffer = copy.deepcopy(self._init_test_buffer)
+
+    def _load_data(self) -> list:
+        """データの読み込み"""
+        data_list = (
             self._load_data_each_step()
-            if is_each_step
+            if self._is_each_step
             else self._load_data_each_episode()
         )
-        np.random.shuffle(self.buffer)
-        self._batch_size = batch_size
-
-    def pop(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """X_train, y_trainをbatch_size分取り出す"""
-        batch_indices = list[range(0, self._batch_size)]
-        breakpoint()
-        batch_data = self.buffer.pop(batch_indices)
-        breakpoint()
-
-    def _reload_data(self):
-        self.__init__(self._is_each_step, self._batch_size)
+        np.random.shuffle(data_list)
+        return data_list
 
     def _load_data_each_episode(self) -> list[list]:
         """各データの単位がepisode"""
@@ -60,7 +116,7 @@ class DataLoader:
                         data_list.append(obj)
                     except Exception as e:
                         print(f"Failed to load {path}: {e}")
-        breakpoint()
+        # breakpoint()
         return data_list
 
     def _load_data_each_step(self) -> list:
@@ -71,7 +127,7 @@ class DataLoader:
             data_list_each_step.extend(episode_data)
         return data_list_each_step
 
-    def split_data(self, data_list: list, train_ratio: float) -> tuple[list, list]:
+    def _split_data(self, data_list: list, train_ratio: float) -> tuple[list, list]:
         """
         データリストを2つに分割する
         Returns:
@@ -89,4 +145,6 @@ class DataLoader:
 
 if __name__ == "__main__":
     data_loader = DataLoader()
-    batch = data_loader.pop()
+    for i in range(40):
+        print(i)
+        batch = data_loader.get_train_batch_data()
