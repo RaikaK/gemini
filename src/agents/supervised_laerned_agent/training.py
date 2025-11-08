@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-# import wandb
+import wandb
 import datetime
 import os
 
@@ -16,9 +16,7 @@ def training(
     epochs: int,
     optimizer: torch.optim.Optimizer,
     loss_fn: torch.nn.functional = torch.nn.CrossEntropyLoss(),
-    device: torch.device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu"
-    ),
+    device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
     checkpoint_epoch: int = 100,
 ):
     """
@@ -30,6 +28,7 @@ def training(
         - loss_fn: 損失関数 | default: CrossEntropyLoss
         - device: 学習に使用するデバイス default: cuda
     """
+    wandb.init(entity="ygo-ai", project="U-Ni-Yo", group="SupervisedLearning")
     print(f"Training on device: {device}")
     model.to(device)
     model.train()
@@ -46,6 +45,7 @@ def training(
         batch_data = data_loader.get_train_batch_data()
         while batch_data is not None:
             # === impl here ===============
+            # note: now... -> unable to batch learning
             (X_batch, y_batch, hash_batch) = batch_data
             for X, y, hash in zip(X_batch, y_batch, hash_batch):
                 input_tensor = torch.tensor(X).to(device)
@@ -64,7 +64,7 @@ def training(
             # =============================
             batch_data = data_loader.get_train_batch_data()
         print(f"Epoch: {epoch} | TotalLoss: {total_loss}")
-
+        wandb.log({"total_loss": total_loss}, step=epoch)
         if epoch % checkpoint_epoch == 0:
             save_torch_model(
                 model=model,
@@ -73,9 +73,13 @@ def training(
             )
         data_loader.reset()
 
+    wandb.finish()
 
-def evaluate():
-    pass
+
+def evaluate(model: torch.nn.Module, data_loader: DataLoader) -> dict:
+    model.eval()
+    test_data = data_loader.
+
 
 
 if __name__ == "__main__":
@@ -85,6 +89,6 @@ if __name__ == "__main__":
     training(
         model=model,
         data_loader=data_loader,
-        epochs=1000,
+        epochs=int(1e6),
         optimizer=optimizer,
     )
