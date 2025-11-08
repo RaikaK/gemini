@@ -41,6 +41,28 @@ class DataLoader:
         # 実際に使用するデータの用意
         self.reset()
 
+    def get_test_data(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        X = []
+        y = []
+        for data in self.test_buffer:
+            state: StateData = data["state"]
+            action: ActionData = data["action"]
+            cmd_count = len(action.command_request.commands)
+            input_data = create_input_data(state)
+            x = np.empty((cmd_count, DNN_INPUT_NUM), dtype=np.float32)
+            y = np.zeros((cmd_count,), dtype=np.float32)
+            # set x
+            for i in range(cmd_count):
+                x[i][0 : BOARD_NUM + INFO_NUM] = set_board_vector(input_data)
+                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(
+                    input_data
+                )[i]
+            # set y
+            y[action.command_index] = 1.0
+            X.append(x)
+            y.append(y)
+        return X, y
+
     def get_train_batch_data(
         self,
     ) -> tuple[list[np.ndarray], list[np.ndarray], list[int]] | None:

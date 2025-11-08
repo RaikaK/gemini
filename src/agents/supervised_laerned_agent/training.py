@@ -16,7 +16,9 @@ def training(
     epochs: int,
     optimizer: torch.optim.Optimizer,
     loss_fn: torch.nn.functional = torch.nn.CrossEntropyLoss(),
-    device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
+    device: torch.device = torch.device(
+        "cuda:0" if torch.cuda.is_available() else "cpu"
+    ),
     checkpoint_epoch: int = 100,
 ):
     """
@@ -66,20 +68,44 @@ def training(
         print(f"Epoch: {epoch} | TotalLoss: {total_loss}")
         wandb.log({"total_loss": total_loss}, step=epoch)
         if epoch % checkpoint_epoch == 0:
+            top_k_accuracy_dict = evaluate(
+                model=model, data_loader=data_loader, device=device
+            )
             save_torch_model(
                 model=model,
                 save_dir=save_dir,
                 model_name=start_datetime + f"_epoch{epoch + 1}.pth",
             )
+            wandb.log(top_k_accuracy_dict, step=epoch)
         data_loader.reset()
 
     wandb.finish()
 
 
-def evaluate(model: torch.nn.Module, data_loader: DataLoader) -> dict:
+def evaluate(
+    model: torch.nn.Module,
+    data_loader: DataLoader,
+    device: torch.device,
+) -> dict:
     model.eval()
-    test_data = data_loader.
+    X, y = data_loader.get_test_data()
+    top_ks = [1, 2, 3]
+    top_k_accuracy_dict = {k: 0 for k in top_ks}
+    for x, label in zip(X, y):
+        input_tensor = torch.tensor(x).to(device)
+        label_tensor = torch.tensor(label).to(device)
+        with torch.no_grad():
+            probs = torch.softmax(model(input_tensor).reshape((len(label),)), dim=0)
+            for top_k in top_ks:
+                topk_indices = torch.topk(probs, k=top_k).indices.cpu().numpy()
+                if int(label_tensor.item()) in topk_indices:
+                    top_k_accuracy_dict[top_k] += 1
 
+    top_k_accuracy_dict = {
+        f"top_{k}_accuracy": v / len(X) if len(X) > 0 else 0
+        for k, v in top_k_accuracy_dict.items()
+    }
+    return top_k_accuracy_dict
 
 
 if __name__ == "__main__":
