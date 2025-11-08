@@ -16,9 +16,7 @@ def training(
     epochs: int,
     optimizer: torch.optim.Optimizer,
     loss_fn: torch.nn.functional = torch.nn.CrossEntropyLoss(),
-    device: torch.device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu"
-    ),
+    device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
     checkpoint_epoch: int = 100,
 ):
     """
@@ -38,12 +36,12 @@ def training(
     # モデルの保存先を決定
     start_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    dir_name = "trained_models"
+    dir_name = f"trained_models/{start_datetime}"
     save_dir = os.path.join(current_dir, dir_name)
     os.makedirs(save_dir, exist_ok=True)
 
     for epoch in range(epochs):
-        total_loss = 0.0
+        losses = []
         batch_data = data_loader.get_train_batch_data()
         while batch_data is not None:
             # === impl here ===============
@@ -61,20 +59,18 @@ def training(
                 optimizer.step()
                 # breakpoint()  # lossの値を確認 mean()するかしないか
 
-                total_loss += loss.item()
+                losses.append(loss.item())
 
             # =============================
             batch_data = data_loader.get_train_batch_data()
-        print(f"Epoch: {epoch} | TotalLoss: {total_loss}")
-        wandb.log({"total_loss": total_loss}, step=epoch)
+        print(f"Epoch: {epoch} | AveLoss: {np.mean(losses)}")
+        wandb.log({"average_loss": np.mean(losses) if len(losses) > 0 else 0}, step=epoch)
         if epoch % checkpoint_epoch == 0:
-            top_k_accuracy_dict = evaluate(
-                model=model, data_loader=data_loader, device=device
-            )
+            top_k_accuracy_dict = evaluate(model=model, data_loader=data_loader, device=device)
             save_torch_model(
                 model=model,
                 save_dir=save_dir,
-                model_name=start_datetime + f"_epoch{epoch + 1}.pth",
+                model_name=f"epoch{epoch + 1}.pth",
             )
             wandb.log(top_k_accuracy_dict, step=epoch)
         data_loader.reset()
@@ -91,20 +87,25 @@ def evaluate(
     X, y = data_loader.get_test_data()
     top_ks = [1, 2, 3]
     top_k_accuracy_dict = {k: 0 for k in top_ks}
+    # top_kの値よりも長いラベル数の時だけtop_k accuracyを計算する
+    total_samples = {k: len([label for label in y if len(label) > k]) for k in top_ks}
     for x, label in zip(X, y):
         input_tensor = torch.tensor(x).to(device)
         label_tensor = torch.tensor(label).to(device)
         with torch.no_grad():
             probs = torch.softmax(model(input_tensor).reshape((len(label),)), dim=0)
             for top_k in top_ks:
+                # top_kの値よりも長いラベル数の時だけtop_k accuracyを計算する
+                if len(probs) <= top_k:
+                    continue
                 topk_indices = torch.topk(probs, k=top_k).indices.cpu().numpy()
-                if int(label_tensor.item()) in topk_indices:
+                if label_tensor[topk_indices].any() == 1.0:
                     top_k_accuracy_dict[top_k] += 1
 
     top_k_accuracy_dict = {
-        f"top_{k}_accuracy": v / len(X) if len(X) > 0 else 0
-        for k, v in top_k_accuracy_dict.items()
+        f"top_{k}_accuracy": v / total_samples[k] if total_samples[k] > 0 else 0 for k, v in top_k_accuracy_dict.items()
     }
+    print(top_k_accuracy_dict)
     return top_k_accuracy_dict
 
 
@@ -112,9 +113,4 @@ if __name__ == "__main__":
     model = Dnn(input_size=DNN_INPUT_NUM, output_size=1)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     data_loader = DataLoader()
-    training(
-        model=model,
-        data_loader=data_loader,
-        epochs=int(1e6),
-        optimizer=optimizer,
-    )
+    training(model=model, data_loader=data_loader, epochs=int(1e5), optimizer=optimizer, checkpoint_epoch=100)

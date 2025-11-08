@@ -32,9 +32,7 @@ class DataLoader:
         """
         self._is_each_step = is_each_step
         self._train_data_ratio = train_data_ratio
-        self._init_train_buffer, self._init_test_buffer = self._split_data(
-            self._load_data(), self._train_data_ratio
-        )
+        self._init_train_buffer, self._init_test_buffer = self._split_data(self._load_data(), self._train_data_ratio)
         self.batch_size = batch_size
         self.train_buffer = []
         self.test_buffer = []
@@ -42,8 +40,8 @@ class DataLoader:
         self.reset()
 
     def get_test_data(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
-        X = []
-        y = []
+        Xs = []
+        ys = []
         for data in self.test_buffer:
             state: StateData = data["state"]
             action: ActionData = data["action"]
@@ -54,14 +52,12 @@ class DataLoader:
             # set x
             for i in range(cmd_count):
                 x[i][0 : BOARD_NUM + INFO_NUM] = set_board_vector(input_data)
-                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(
-                    input_data
-                )[i]
+                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(input_data)[i]
             # set y
             y[action.command_index] = 1.0
-            X.append(x)
-            y.append(y)
-        return X, y
+            Xs.append(x)
+            ys.append(y)
+        return Xs, ys
 
     def get_train_batch_data(
         self,
@@ -93,9 +89,7 @@ class DataLoader:
             # set x
             for i in range(cmd_count):
                 x[i][0 : BOARD_NUM + INFO_NUM] = set_board_vector(input_data)
-                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(
-                    input_data
-                )[i]
+                x[i][BOARD_NUM + INFO_NUM : DNN_INPUT_NUM] = set_action_vector(input_data)[i]
             # set y
             y[action.command_index] = 1.0
             X_batch.append(x)
@@ -117,11 +111,7 @@ class DataLoader:
 
     def _load_data(self) -> list:
         """データの読み込み"""
-        data_list = (
-            self._load_data_each_step()
-            if self._is_each_step
-            else self._load_data_each_episode()
-        )
+        data_list = self._load_data_each_step() if self._is_each_step else self._load_data_each_episode()
         np.random.shuffle(data_list)
         return data_list
 
