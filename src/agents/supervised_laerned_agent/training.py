@@ -16,9 +16,7 @@ def training(
     epochs: int,
     optimizer: torch.optim.Optimizer,
     loss_fn: torch.nn.functional = torch.nn.CrossEntropyLoss(),
-    device: torch.device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu"
-    ),
+    device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
     checkpoint_epoch: int = 100,
 ):
     """
@@ -30,6 +28,7 @@ def training(
         - loss_fn: 損失関数 | default: CrossEntropyLoss
         - device: 学習に使用するデバイス default: cuda
     """
+
     wandb.init(entity="ygo-ai", project="U-Ni-Yo", group="SupervisedLearning")
     print(f"Training on device: {device}")
     model.to(device)
@@ -66,13 +65,9 @@ def training(
             # =============================
             batch_data = data_loader.get_train_batch_data()
         print(f"Epoch: {epoch} | AveLoss: {np.mean(losses)}")
-        wandb.log(
-            {"average_loss": np.mean(losses) if len(losses) > 0 else 0}, step=epoch
-        )
+        wandb.log({"average_loss": np.mean(losses) if len(losses) > 0 else 0}, step=epoch)
         if epoch % checkpoint_epoch == 0:
-            top_k_accuracy_dict = evaluate(
-                model=model, data_loader=data_loader, device=device
-            )
+            top_k_accuracy_dict = evaluate(model=model, data_loader=data_loader, device=device)
             save_torch_model(
                 model=model,
                 save_dir=save_dir,
@@ -114,8 +109,7 @@ def evaluate(
             losses.append(loss.item())
 
     top_k_accuracy_dict = {
-        f"top_{k}_accuracy": v / total_samples[k] if total_samples[k] > 0 else 0
-        for k, v in top_k_accuracy_dict.items()
+        f"top_{k}_accuracy": v / total_samples[k] if total_samples[k] > 0 else 0 for k, v in top_k_accuracy_dict.items()
     }
     loss_dict = {"evaluation_loss": np.mean(losses) if len(losses) > 0 else 0}
     print(top_k_accuracy_dict)
@@ -124,7 +118,7 @@ def evaluate(
 
 if __name__ == "__main__":
     model = Dnn(input_size=DNN_INPUT_NUM, output_size=1)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6)
     data_loader = DataLoader()
     training(
         model=model,

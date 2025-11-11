@@ -1,7 +1,7 @@
 from openai import OpenAI
 import time
 from src.agents.llm_agent.llm_provider.BaseLlmProvider import BaseLlmProvider
-from src.agents.llm_agent.llm_provider.OpneAIProvider.api import (
+from src.agents.llm_agent.llm_provider.OpenAIProvider.api import (
     ApiType,
     API_TYPE_TO_API_KEY,
     API_TYPE_TO_MODEL_NAME,
