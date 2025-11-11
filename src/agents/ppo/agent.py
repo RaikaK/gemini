@@ -15,6 +15,10 @@ from src.env.action_data import ActionData
 from src.agents.ppo.actor_critic_model import Actor, Critic
 from src.agents.ppo.rollout_buffer import RolloutBuffer
 
+from src.common.sample_mlp_model import Dnn
+from src.agents.supervised_laerned_agent.model_loader import load_torch_model
+from src.agents.dqn_agent.replay_buffer import ReplayBuffer
+
 
 class PPOAgent(BaseAgent):
     def __init__(
@@ -27,6 +31,7 @@ class PPOAgent(BaseAgent):
         lr: float = 1e-5,  # 学習率
         c_mse: float = 0.5,  # 状態価値損失の係数
         c_entropy: float = 0.01,  # エントロピーボーナスの係数
+        init_model_params_path: str | None = None,
     ):
         super().__init__()
         self.epochs_on_update = epochs_on_update
@@ -48,7 +53,11 @@ class PPOAgent(BaseAgent):
         self.critic_input_size = (
             BOARD_NUM + INFO_NUM
         )  # 状態価値はアクション情報を含まない
-        self.actor = Actor(input_size=self.actor_input_size)
+        self.actor: torch.nn.Module = (
+            load_torch_model(init_model_params_path)
+            if init_model_params_path is not None
+            else Dnn(input_size=self.actor_input_size, output_size=1)
+        )
         self.critic = Critic(input_size=self.critic_input_size)
 
         self.actor.to(self.device)

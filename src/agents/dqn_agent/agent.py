@@ -19,11 +19,8 @@ from src.agents.dqn_agent.sample_tensors import (
     ACTION_NUM,
     INFO_NUM,
 )
-
-# シミュレータ起動コマンド
-# DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
-
-from src.agents.dqn_agent.deep_q_network import DeepQNetwork
+from src.common.sample_mlp_model import Dnn
+from src.agents.supervised_laerned_agent.model_loader import load_torch_model
 from src.agents.dqn_agent.replay_buffer import ReplayBuffer
 
 
@@ -40,6 +37,7 @@ class DQNAgent(BaseAgent):
         model_save_dir="params",
         model_file_name="simple_dqn_{now}.pth",
         save_model_interval: int = 64,
+        init_model_params_path: str | None = None,
     ):
         print("DQNAgent")
         self.gamma = gamma
@@ -50,10 +48,18 @@ class DQNAgent(BaseAgent):
         # (duel_state_data + command_entry) -> DNN -> Q-value
         self.input_size = BOARD_NUM + INFO_NUM + ACTION_NUM
         self.output_size = 1
-        self.dqn = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
-        self.target_net = DeepQNetwork(input_size=self.input_size, output_size=self.output_size)
+        self.dqn: torch.nn.Module = (
+            load_torch_model(model_path=init_model_params_path)
+            if init_model_params_path is not None
+            else Dnn(input_size=self.input_size, output_size=self.output_size)
+        )
+        self.target_net: torch.nn.Module = (
+            load_torch_model(model_path=init_model_params_path)
+            if init_model_params_path is not None
+            else Dnn(input_size=self.input_size, output_size=self.output_size)
+        )
 
-        # モデルの保存ン関する設定
+        # モデルの保存に関する設定
         self.model_file_name = model_file_name
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.model_save_dir = os.path.join(current_dir, model_save_dir)
@@ -66,10 +72,14 @@ class DQNAgent(BaseAgent):
         self.optimizer = torch.optim.Adam(params=self.dqn.parameters(), lr=self.lr)
 
         # 経験再生
-        self.replay_buffer = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
+        self.replay_buffer = ReplayBuffer(
+            buffer_size=buffer_size, batch_size=batch_size
+        )
 
         # 1episode分のデータを管理して毎回クリアする
-        self.replay_short_memory = ReplayBuffer(buffer_size=buffer_size, batch_size=batch_size)
+        self.replay_short_memory = ReplayBuffer(
+            buffer_size=buffer_size, batch_size=batch_size
+        )
 
         # target_netの更新頻度 (predict()をsync_interval回呼び出した後、更新する)
         self.sync_interval = sync_interval
@@ -91,12 +101,20 @@ class DQNAgent(BaseAgent):
         if is_explore <= self.epsilon:
             cmd_request: CommandRequest = state.command_request
             selected_cmd_entry: CommandEntry = random.choice(cmd_request.commands)
-            action = ActionData(command_request=cmd_request, command_entry=selected_cmd_entry)
+            action = ActionData(
+                command_request=cmd_request, command_entry=selected_cmd_entry
+            )
             return action, None
         else:
             return self._predict(state=state), None
 
-    def update(self, state: StateData, action: ActionData, next_state: StateData, info: dict | None) -> dict | None:
+    def update(
+        self,
+        state: StateData,
+        action: ActionData,
+        next_state: StateData,
+        info: dict | None,
+    ) -> dict | None:
         if action is None:
             return None
 
@@ -104,7 +122,12 @@ class DQNAgent(BaseAgent):
         done = next_state.is_duel_end
 
         self.replay_short_memory.add(
-            state=state, action=action, reward=reward, done=done, next_state=next_state, info=info
+            state=state,
+            action=action,
+            reward=reward,
+            done=done,
+            next_state=next_state,
+            info=info,
         )
 
         if not done:
@@ -152,13 +175,10 @@ class DQNAgent(BaseAgent):
                 next_states.append(next_st)
             input_batch_tensor = torch.stack(input_batch).to(self.device)
 
-            targets = self._calc_targets(next_states=next_states, rewards=rewards, dones=dones)
+            targets = self._calc_targets(
+                next_states=next_states, rewards=rewards, dones=dones
+            )
             targets = targets.to(self.device).unsqueeze(1)
-            # targets = (
-            #     torch.stack([torch.tensor(reward, dtype=torch.float32) for reward in rewards])
-            #     .to(self.device)
-            #     .unsqueeze(1)
-            # )
 
             # 損失を計算
             loss = self.loss_func(self.dqn(input_batch_tensor), targets)
@@ -170,14 +190,22 @@ class DQNAgent(BaseAgent):
 
             losses.append(loss.mean())
 
-        loss = np.average(np.array([l.detach().cpu().numpy() for l in losses])) if len(losses) > 0 else 0
+        loss = (
+            np.average(np.array([l.detach().cpu().numpy() for l in losses]))
+            if len(losses) > 0
+            else 0
+        )
         print(f"mean loss: {loss}")
 
         # target_netを更新
         self._sync_qnet()
         self._save_model_params()
 
-        finish_type = cast(FinishType, next_state.duel_end_data.finish_type) if next_state.duel_end_data else None
+        finish_type = (
+            cast(FinishType, next_state.duel_end_data.finish_type)
+            if next_state.duel_end_data
+            else None
+        )
         log_dict = {"loss": loss, "reward": reward, "finish_type": finish_type}
         return log_dict
 
@@ -203,10 +231,15 @@ class DQNAgent(BaseAgent):
 
         max_qs_index = np.argmax(qs.cpu().detach().numpy())
 
-        action = ActionData(command_request=command_request, command_entry=command_request.commands[max_qs_index])
+        action = ActionData(
+            command_request=command_request,
+            command_entry=command_request.commands[max_qs_index],
+        )
         return action
 
-    def _calc_targets(self, next_states: list[StateData], rewards: list[float], dones: list[bool]) -> torch.Tensor:
+    def _calc_targets(
+        self, next_states: list[StateData], rewards: list[float], dones: list[bool]
+    ) -> torch.Tensor:
         """
         1. 各次状態における選択可能なコマンドの数を保持する辞書を作成
         - next_state_cmd_count = {index_next_state: num_command_entries}
@@ -217,7 +250,10 @@ class DQNAgent(BaseAgent):
         5. 各次状態におけるターゲットを計算し、torch.Tensorとして返す
         """
         # 1.
-        next_state_cmd_count = {i: len(next_state.command_request.commands) for i, next_state in enumerate(next_states)}
+        next_state_cmd_count = {
+            i: len(next_state.command_request.commands)
+            for i, next_state in enumerate(next_states)
+        }
 
         # 2.
         all_cmd_count = sum(list(next_state_cmd_count.values()))
@@ -258,7 +294,9 @@ class DQNAgent(BaseAgent):
             if done:
                 target = torch.tensor(reward, dtype=torch.float32)
             else:
-                target = torch.tensor(reward + self.gamma * next_state_max_q[i], dtype=torch.float32)
+                target = torch.tensor(
+                    reward + self.gamma * next_state_max_q[i], dtype=torch.float32
+                )
             targets.append(target)
         return torch.stack(targets)
 
@@ -273,7 +311,9 @@ class DQNAgent(BaseAgent):
         if self.cnt_save_model_interval % self.save_model_interval == 0:
             now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             save_name = self.model_file_name.format(now=now)
-            torch.save(self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name))
+            torch.save(
+                self.dqn.state_dict(), os.path.join(self.model_save_dir, save_name)
+            )
 
     def _convert_state_like_sample_ai(self, state: StateData) -> list:
         input_ret = [
