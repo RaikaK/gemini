@@ -11,7 +11,7 @@ AVAILABLE_LOCAL_MODELS = {
     # 主要な日本語対応モデル
     "llama3": "meta-llama/Llama-3.1-8B-Instruct",
     "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
-    "SWALLOW": "rinna/weblab-10b-instruction-sft",
+    "SWALLOW": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
     "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
     
     # Llama 3シリーズ
