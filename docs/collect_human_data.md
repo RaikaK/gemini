@@ -50,8 +50,21 @@
 
 ## 4. 終了処理
 
-以下の手順で各プロセスを停止します。
+### GUI と Simulator の停止
 
-1. **インスタンス 2** : GUI を画面右上の`×`ボタンで消します。
-2. **インスタンス 2** : Windows PowerShell で`Ctrl`+`C`を押し、GUI を停止します。
-3. **インスタンス 1** : コマンドプロンプトで`Ctrl`+`C`を押し、Simulator を停止します。（GUI を停止すると、自動で Simulator も停止する場合があります。）
+- **インスタンス 2**
+  - GUI を画面右上の`×`ボタンで消します。
+  - Windows PowerShell で`Ctrl`+`C`を押し、GUI を停止します。
+- **インスタンス 1**
+  - コマンドプロンプトで`Ctrl`+`C`を押し、Simulator を停止します。（GUI を停止すると、自動で Simulator も停止する場合があります。）
+
+### 教師データのアップロード
+
+- **インスタンス 2**
+  - Windows PowerShell で、以下のコマンドを順番に実行し、**教師データ** をアップロードします。
+    ```shell
+    git branch  # mainにいることを一応確認
+    git add .\data\demonstrations
+    git commit -m "Add human demonstration data"
+    git push origin main
+    ```
