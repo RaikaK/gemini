@@ -10,6 +10,7 @@ from src.agents.random.agent import RandomAgent
 from src.agents.dqn_agent.dqn_agent import DQNAgent
 from src.agents.human.agent import HumanAgent
 from src.agents.llm_agent.agent import LLMAgent
+from src.agents.supervised_laerned_agent.agent import SupervisedLearnedAgent
 
 # Instance-1でのDuelSimulatorの起動コマンド
 # DuelSimulator.exe --deck_path0 .\DeckData\SimpleBE.json --deck_path1 .\DeckData\SimpleBE.json --randomize_seed true --loop_num 100000 --exit_with_udi true --connect gRPC --tcp_port0 52010 --tcp_port1 52011 --player_type0 Human --player_type1 Human --play_reverse_duel true --grpc_deadline_seconds 60 --log_level 2 --workdir ./workdir1
@@ -25,7 +26,14 @@ if __name__ == "__main__":
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
     # agent = RandomAgent()
-    agent = LLMAgent()
+    # agent = LLMAgent()
+    agent = SupervisedLearnedAgent(
+        model_path="C:/Users/b1/Desktop/u-ni-yo/src/agents/supervised_laerned_agent/trained_models/2025-11-11_21-10-43/epoch101.pth"
+    )
+
+    # agent = SupervisedLearnedAgent(
+    # model_path="C:/Users/b1/Desktop/u-ni-yo/src/agents/dqn_agent/params/simple_dqn_2025-11-13_01-17-33.pth"
+    # )
 
     episode = 0
     state: StateData = env.reset()
