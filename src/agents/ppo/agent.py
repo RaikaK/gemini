@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+import os
+import datetime
 
 from src.common.sample_tensor import (
     BOARD_NUM,
@@ -15,6 +17,13 @@ from src.env.action_data import ActionData
 from src.agents.ppo.actor_critic_model import Actor, Critic
 from src.agents.ppo.rollout_buffer import RolloutBuffer
 
+from src.common.sample_mlp_model import Dnn
+from src.agents.supervised_laerned_agent.model_loader import (
+    load_torch_model,
+    save_torch_model,
+)
+from src.agents.dqn_agent.replay_buffer import ReplayBuffer
+
 
 class PPOAgent(BaseAgent):
     def __init__(
@@ -27,6 +36,10 @@ class PPOAgent(BaseAgent):
         lr: float = 1e-5,  # 学習率
         c_mse: float = 0.5,  # 状態価値損失の係数
         c_entropy: float = 0.01,  # エントロピーボーナスの係数
+        model_save_dir="params",
+        model_file_name="ppo_actor_{episode}.pth",
+        save_model_interval: int = 100,
+        init_model_params_path: str | None = None,
     ):
         super().__init__()
         self.epochs_on_update = epochs_on_update
@@ -48,7 +61,11 @@ class PPOAgent(BaseAgent):
         self.critic_input_size = (
             BOARD_NUM + INFO_NUM
         )  # 状態価値はアクション情報を含まない
-        self.actor = Actor(input_size=self.actor_input_size)
+        self.actor: torch.nn.Module = (
+            load_torch_model(init_model_params_path)
+            if init_model_params_path is not None
+            else Dnn(input_size=self.actor_input_size, output_size=1)
+        )
         self.critic = Critic(input_size=self.critic_input_size)
 
         self.actor.to(self.device)
@@ -58,6 +75,17 @@ class PPOAgent(BaseAgent):
         self.optim_critic = torch.optim.Adam(self.critic.parameters(), lr=self.lr)
 
         self.mse_loss = torch.nn.MSELoss()
+
+        # episode管理
+        self.episode: int = 0
+
+        # モデルの保存管理
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        start_day = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.save_dir = os.path.join(current_dir, model_save_dir, start_day)
+        os.makedirs(self.save_dir, exist_ok=True)
+        self.save_file_name = model_file_name
+        self.save_interval = save_model_interval
 
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:
         # 入力テンソル
@@ -171,7 +199,6 @@ class PPOAgent(BaseAgent):
                     -torch.min(ratio_unclipped * advantages, ratio_clip * advantages)
                     - self.c_entropy * dist_entropy
                 )
-                loss_actor = loss_actor.mean()
                 self.optim_actor.zero_grad()
                 loss_actor.backward()
                 self.optim_actor.step()
@@ -184,17 +211,22 @@ class PPOAgent(BaseAgent):
                 ).to(self.device)
 
                 loss_critic = self.mse_loss(self.critic(board_tensor), returns)
-                loss_critic = loss_critic.mean()
                 self.optim_critic.zero_grad()
                 loss_critic.backward()
                 self.optim_critic.step()
 
-                # lossesに追加
-                losses_actor.append(loss_actor.cpu().detach().numpy())
-                losses_critic.append(loss_critic.cpu().detach().numpy())
-
         duel_end_data = next_state.duel_end_data
         finish_type = duel_end_data.finish_type if duel_end_data is not None else 0
+
+        # モデルの保存
+        self.episode += 1
+        if self.episode % self.save_interval == 0:
+            save_torch_model(
+                model=self.actor,
+                save_dir=self.save_dir,
+                model_name=self.save_file_name.format(episode=self.episode),
+            )
+
         return {
             "loss_actor": np.average(losses_actor) if len(losses_actor) > 0 else 0,
             "loss_critic": np.average(losses_critic) if len(losses_critic) > 0 else 0,

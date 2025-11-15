@@ -28,8 +28,8 @@ class LLMAgent(BaseAgent):
         super().__init__()
         self.prompt_generator = PromptGenerator()
         # LLM Provider
-        self.provider: BaseLlmProvider = HuggingFaceProvider()
-        # self.provider: BaseLlmProvider = OpenAIProvider(api_type=ApiType.GeminiApi)
+        # self.provider: BaseLlmProvider = HuggingFaceProvider()
+        self.provider: BaseLlmProvider = OpenAIProvider(api_type=ApiType.GeminiApi)
         self.max_try = max_try
 
     def select_action(self, state: StateData) -> tuple[ActionData, dict | None]:

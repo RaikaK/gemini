@@ -7,7 +7,7 @@ from src.env.state_data import StateData
 from src.env.ygo_env import YgoEnv
 
 from src.agents.random.agent import RandomAgent
-from src.agents.dqn_agent.dqn_agent import DQNAgent
+from src.agents.dqn_agent.agent import DQNAgent
 from src.agents.human.agent import HumanAgent
 from src.agents.ppo.agent import PPOAgent
 from src.agents.llm_agent.agent import LLMAgent
@@ -24,8 +24,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # agent = RandomAgent()
-    # agent = DQNAgent()
-    agent = LLMAgent()
+    agent = DQNAgent(
+        init_model_params_path="C:/Users/b1/Desktop/u-ni-yo/src/agents/supervised_laerned_agent/trained_models/2025-11-08_23-35-01/epoch201.pth"
+    )
+    # agent = LLMAgent()
 
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
