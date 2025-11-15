@@ -25,9 +25,9 @@ if __name__ == "__main__":
 
     # agent = RandomAgent()
     agent = DQNAgent(
-        # init_model_params_path="C:/Users/b1/Desktop/u-ni-yo/src/agents/supervised_laerned_agent/trained_models/2025-11-08_23-35-01/epoch201.pth"
+        init_model_params_path="C:/Users/b1/Desktop/u-ni-yo/src/agents/supervised_laerned_agent/trained_models/2025-11-08_23-35-01/epoch201.pth"
     )
-    agent = LLMAgent()
+    # agent = LLMAgent()
 
     env = YgoEnv(tcp_host=args.tcp_host, tcp_port=args.tcp_port, use_grpc=args.connect == "gRPC", use_gui=args.use_gui)
 
