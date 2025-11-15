@@ -45,6 +45,7 @@ def training(
         losses = []
         batch_data = data_loader.get_train_batch_data()
         while batch_data is not None:
+            total_loss = 0
             # === impl here ===============
             # note: now... -> unable to batch learning
             (X_batch, y_batch, hash_batch) = batch_data
@@ -56,11 +57,11 @@ def training(
                 output = torch.softmax(model(input_tensor).reshape((hash,)), dim=0)
                 # breakpoint()
                 loss = loss_fn(output, label_tensor)
-                loss.backward()
-                optimizer.step()
-                # breakpoint()  # lossの値を確認 mean()するかしないか
-
-                losses.append(loss.item())
+                total_loss += loss
+            total_loss.backward()
+            optimizer.step()
+            losses.append(total_loss.item() / len(X_batch))
+            # breakpoint()  # lossの値を確認 mean()するかしないか
 
             # =============================
             batch_data = data_loader.get_train_batch_data()
