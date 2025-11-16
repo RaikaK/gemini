@@ -25,6 +25,9 @@ from src.gui.manager.log import GUILog
 # デバッグフラグ
 DEBUG_MODE = False
 
+# ブレイクポイントフラグ
+BREAKPOINT_MODE = False
+
 # ズーム率
 DEFAULT_FACTOR = 0.8
 
@@ -49,6 +52,7 @@ class GUIFrame(UdiGUIFrame):
         tk.Frame.__init__(self, master)
 
         self.debug_mode: bool = DEBUG_MODE
+        self.breakpoint_mode: bool = BREAKPOINT_MODE
         self.factor: float = DEFAULT_FACTOR
         self.latest_udi_log_data: mdl.UdiLogData | None = None
 
@@ -95,6 +99,16 @@ class GUIFrame(UdiGUIFrame):
         )
         debug_check_button.pack(side=tk.RIGHT, padx=int(5 * self.factor))
 
+        # ブレイクポイントフレーム
+        self.breakpoint_var = tk.BooleanVar(value=BREAKPOINT_MODE)
+        breakpoint_check_button = tk.Checkbutton(
+            self.menu_bar_frame,
+            text="ブレイクポイント",
+            variable=self.breakpoint_var,
+            command=self._toggle_breakpoint,
+        )
+        breakpoint_check_button.pack(side=tk.RIGHT, padx=int(5 * self.factor))
+
         # 試合数フレーム
         match_frame: tk.Frame = tk.Frame(self.menu_bar_frame)
         match_frame.pack(side=tk.TOP, pady=int(5 * self.factor))
@@ -138,6 +152,9 @@ class GUIFrame(UdiGUIFrame):
         """
         self.latest_udi_log_data = udi_log_data
 
+        if self.breakpoint_mode:
+            breakpoint()
+
         # 試合数更新
         if os.path.isdir(config.DEMONSTRATION_DIR):
             count = len([f for f in os.listdir(config.DEMONSTRATION_DIR) if f.endswith(".pkl")])
@@ -158,6 +175,13 @@ class GUIFrame(UdiGUIFrame):
 
             if self.latest_udi_log_data is not None:
                 self.update(self.latest_udi_log_data)
+
+    def _toggle_breakpoint(self) -> None:
+        """
+        ブレイクポイントモードを切り替える。
+        """
+        if self.is_ready:
+            self.breakpoint_mode = self.breakpoint_var.get()
 
     def _zoom_in(self) -> None:
         """
