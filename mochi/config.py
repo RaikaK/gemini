@@ -13,3 +13,13 @@ APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
 MAX_ROUNDS = 5      # 面接ラウンド数
+
+# 知識レベルの設定
+KNOWLEDGE_RETENTION_RATIO = {
+    'low': 0.2,     # 志望度が低い候補者の知識保持率
+    'medium': 0.5,  # 志望度が中程度の候補者の知識保持率
+    'high': 1.0     # 志望度が高い候補者の知識保持率（全て）
+}
+
+# 回答の文字数制限
+MAX_ANSWER_LENGTH = 150  # 学生の回答の最大文字数

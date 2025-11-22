@@ -2,6 +2,7 @@
 
 import random
 from utils import call_openai_api
+import config
 
 class CompanyKnowledgeManager:
     """学生が知っている企業情報を管理するクラス"""
@@ -26,7 +27,7 @@ class CompanyKnowledgeManager:
         else:
             keys_to_keep.update(self.essential_keys)
             other_keys = [k for k in self.all_keys if k not in self.essential_keys]
-            ratio = 0.5 if level == 'medium' else 0.2
+            ratio = config.KNOWLEDGE_RETENTION_RATIO.get(level, 0.2)
             sample_size = int(len(other_keys) * ratio)
             if sample_size > 0:
                 keys_to_keep.update(random.sample(other_keys, sample_size))
@@ -93,7 +94,7 @@ class Applicant:
 "{question}"
 
 ---
-指示: {candidate_profile['name']} として、上記の設定になりきり、就活生として振る舞ってください。回答は150字程度の自然な日本語で出力してください。前置きや説明は不要です。
+指示: {candidate_profile['name']} として、上記の設定になりきり、就活生として振る舞ってください。回答は{config.MAX_ANSWER_LENGTH}字程度の自然な日本語で出力してください。前置きや説明は不要です。
 """
         
         answer, token_info = call_openai_api(self.model_name, prompt)

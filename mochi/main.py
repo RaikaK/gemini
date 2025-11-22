@@ -9,6 +9,13 @@ from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUND
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
 
+# 志望度レベルのマッピング
+ASPIRATION_LEVEL_MAPPING = {
+    'high_90_percent': 'high',
+    'medium_70_percent': 'medium',
+    'low_50_percent': 'low',
+}
+
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
     try:
@@ -37,12 +44,11 @@ def load_data_from_db(set_index=None):
         # 学生のpreparationレベルを設定
         for profile in candidate_profiles:
             aspiration_level = profile.get('aspiration_level', 'medium_70_percent')
-            if 'high_90_percent' in aspiration_level:
-                profile['preparation'] = 'high'
-            elif 'medium_70_percent' in aspiration_level:
-                profile['preparation'] = 'medium'
-            else:
-                profile['preparation'] = 'low'
+            # マッピングから取得、見つからない場合はlowをデフォルトに
+            profile['preparation'] = ASPIRATION_LEVEL_MAPPING.get(
+                aspiration_level, 
+                'low'  # デフォルト値
+            )
         
         random.shuffle(candidate_profiles)
         
