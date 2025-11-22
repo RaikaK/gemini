@@ -5,6 +5,24 @@
 LLM同士が面接のやりとりを行い、3人の候補者の中で面接ロールプレイを実行する最小限のシステムです。
 WebGUIを排除し、必要最小限の機能のみを実装しています。
 
+## クイックスタート
+
+デモを実行してシステムの動作を確認（API呼び出しなし）:
+
+```bash
+cd mochi
+python demo.py
+```
+
+実際の面接シミュレーションを実行:
+
+```bash
+cd mochi
+export OPENAI_API_KEY='your-api-key-here'
+pip install -r requirements.txt
+python main.py
+```
+
 ## 特徴
 
 - **シンプルな構成**: WebGUIなし、CLIベースで実行
@@ -21,6 +39,9 @@ mochi/
 ├── interviewer.py     # 面接官役のクラス
 ├── student.py         # 応募者役のクラス
 ├── main.py            # メイン実行スクリプト
+├── demo.py            # デモスクリプト（API呼び出しなし）
+├── validate_structure.py  # 構造検証スクリプト
+├── requirements.txt   # 依存ライブラリ
 ├── results/           # 結果保存ディレクトリ（自動生成）
 └── README.md          # このファイル
 ```
