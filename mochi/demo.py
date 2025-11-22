@@ -8,6 +8,11 @@
 
 import json
 from pathlib import Path
+import sys
+
+# config をインポート
+sys.path.insert(0, str(Path(__file__).parent))
+from config import ASPIRATION_LEVEL_MAPPING
 
 def run_demo():
     """デモ実行"""
@@ -42,15 +47,18 @@ def run_demo():
         
         print(f"\n候補者情報:")
         for i, student in enumerate(students[:3], 1):
-            prep_level = student.get('aspiration_level', 'unknown')
-            if 'high_90_percent' in prep_level:
-                prep = 'high (志望度高)'
-            elif 'medium_70_percent' in prep_level:
-                prep = 'medium (志望度中)'
-            else:
-                prep = 'low (志望度低)'
+            aspiration_level = student.get('aspiration_level', 'unknown')
+            prep = ASPIRATION_LEVEL_MAPPING.get(aspiration_level, 'low')
             
-            print(f"  {i}. {student.get('name', 'N/A')} - {prep}")
+            # 日本語ラベル
+            prep_labels = {
+                'high': '志望度高',
+                'medium': '志望度中',
+                'low': '志望度低'
+            }
+            prep_label = prep_labels.get(prep, '不明')
+            
+            print(f"  {i}. {student.get('name', 'N/A')} - {prep} ({prep_label})")
         
     except Exception as e:
         print(f"✗ エラー: {e}")

@@ -5,16 +5,9 @@ import datetime
 import random
 from pathlib import Path
 
-from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS
+from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, ASPIRATION_LEVEL_MAPPING
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
-
-# 志望度レベルのマッピング
-ASPIRATION_LEVEL_MAPPING = {
-    'high_90_percent': 'high',
-    'medium_70_percent': 'medium',
-    'low_50_percent': 'low',
-}
 
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""

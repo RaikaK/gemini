@@ -23,3 +23,10 @@ KNOWLEDGE_RETENTION_RATIO = {
 
 # 回答の文字数制限
 MAX_ANSWER_LENGTH = 150  # 学生の回答の最大文字数
+
+# 志望度レベルのマッピング
+ASPIRATION_LEVEL_MAPPING = {
+    'high_90_percent': 'high',
+    'medium_70_percent': 'medium',
+    'low_50_percent': 'low',
+}
