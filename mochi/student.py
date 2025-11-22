@@ -29,6 +29,8 @@ class CompanyKnowledgeManager:
             other_keys = [k for k in self.all_keys if k not in self.essential_keys]
             ratio = config.KNOWLEDGE_RETENTION_RATIO.get(level, config.DEFAULT_KNOWLEDGE_RETENTION_RATIO)
             sample_size = int(len(other_keys) * ratio)
+            # sample_sizeがother_keysの長さを超えないように制限
+            sample_size = min(sample_size, len(other_keys))
             if sample_size > 0:
                 keys_to_keep.update(random.sample(other_keys, sample_size))
         
