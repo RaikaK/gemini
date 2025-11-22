@@ -3,13 +3,18 @@
 
 import json
 from pathlib import Path
+import sys
+
+# config をインポート
+sys.path.insert(0, str(Path(__file__).parent))
+from config import DB_FILE_PATH
 
 def test_load_data():
     """データ読み込みのテスト"""
     print("テスト1: データ読み込み")
     
     try:
-        db_path = Path(__file__).parent.parent / 'experiment_inter' / 'db.json'
+        db_path = Path(__file__).parent / DB_FILE_PATH
         with open(db_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         

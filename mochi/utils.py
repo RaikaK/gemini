@@ -6,7 +6,8 @@ from config import OPENAI_API_KEY
 
 def call_openai_api(model_name, prompt):
     """OpenAI APIを呼び出してテキスト応答を取得"""
-    if not OPENAI_API_KEY or OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE":
+    # APIキーの検証
+    if not OPENAI_API_KEY or not OPENAI_API_KEY.strip() or OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE":
         error_message = "APIキーが設定されていません"
         print(f"エラー: {error_message}")
         return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}

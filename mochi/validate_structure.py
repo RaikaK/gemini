@@ -4,6 +4,11 @@
 import json
 import ast
 from pathlib import Path
+import sys
+
+# config をインポート
+sys.path.insert(0, str(Path(__file__).parent))
+from config import DB_FILE_PATH
 
 def validate_file_exists():
     """必要なファイルの存在確認"""
@@ -37,7 +42,7 @@ def validate_db_json():
     print("\n検証2: db.jsonの読み込み")
     
     try:
-        db_path = Path(__file__).parent.parent / 'experiment_inter' / 'db.json'
+        db_path = Path(__file__).parent / DB_FILE_PATH
         with open(db_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         

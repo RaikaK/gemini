@@ -12,7 +12,7 @@ import sys
 
 # config をインポート
 sys.path.insert(0, str(Path(__file__).parent))
-from config import ASPIRATION_LEVEL_MAPPING
+from config import ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH
 
 def run_demo():
     """デモ実行"""
@@ -29,7 +29,7 @@ def run_demo():
     print("="*60)
     
     try:
-        db_path = Path(__file__).parent.parent / 'experiment_inter' / 'db.json'
+        db_path = Path(__file__).parent / DB_FILE_PATH
         with open(db_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         

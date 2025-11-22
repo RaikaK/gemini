@@ -5,15 +5,15 @@ import datetime
 import random
 from pathlib import Path
 
-from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, ASPIRATION_LEVEL_MAPPING
+from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
 
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
     try:
-        # 親ディレクトリのdb.jsonを探す
-        db_path = Path(__file__).parent.parent / 'experiment_inter' / 'db.json'
+        # configから相対パスを取得
+        db_path = Path(__file__).parent / DB_FILE_PATH
         
         with open(db_path, 'r', encoding='utf-8') as f:
             data = json.load(f)

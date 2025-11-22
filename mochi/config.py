@@ -30,3 +30,9 @@ ASPIRATION_LEVEL_MAPPING = {
     'medium_70_percent': 'medium',
     'low_50_percent': 'low',
 }
+
+# データベースファイルのパス
+DB_FILE_PATH = "../experiment_inter/db.json"  # mochiディレクトリから見た相対パス
+
+# デフォルト値
+DEFAULT_KNOWLEDGE_RETENTION_RATIO = 0.2  # 不明な志望度レベルのデフォルト保持率
