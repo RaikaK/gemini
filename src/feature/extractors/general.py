@@ -43,7 +43,7 @@ class GeneralExtractor:
             feature (np.ndarray): 特徴量埋め込み先
         """
         # 埋め込み
-        cursor = 0
+        cursor: int = 0
 
         # LP
         self._fill_lp(feature[cursor : cursor + self.SIZE_LP, :, :], general_data)
@@ -85,8 +85,8 @@ class GeneralExtractor:
             feature (np.ndarray): 特徴量埋め込み先
             general_data (GeneralData): 局面情報
         """
-        my_lp = float(min(general_data.lp[0], self.MAX_LP))
-        op_lp = float(min(general_data.lp[1], self.MAX_LP))
+        my_lp: float = float(min(general_data.lp[0], self.MAX_LP))
+        op_lp: float = float(min(general_data.lp[1], self.MAX_LP))
 
         feature[0, :, :] = (my_lp / self.MAX_LP) * self.scaling_factor
         feature[1, :, :] = (op_lp / self.MAX_LP) * self.scaling_factor
@@ -124,7 +124,7 @@ class GeneralExtractor:
             feature (np.ndarray): 特徴量埋め込み先
             general_data (GeneralData): 局面情報
         """
-        current_phase = general_data.current_phase
+        current_phase: int = general_data.current_phase
 
         if current_phase == Phase.DRAW or current_phase == Phase.STANDBY:
             feature[0, :, :] = 1.0
@@ -150,7 +150,7 @@ class GeneralExtractor:
             general_data (GeneralData): 局面情報
         """
 
-        current_step = general_data.current_step
+        current_step: int = general_data.current_step
 
         if current_step == StepType.START:
             feature[0, :, :] = 1.0
@@ -172,7 +172,7 @@ class GeneralExtractor:
             feature (np.ndarray): 特徴量埋め込み先
             general_data (GeneralData): 局面情報
         """
-        current_damage_step = general_data.current_damage_step
+        current_damage_step: int = general_data.current_damage_step
 
         if current_damage_step == DmgStepType.START or current_damage_step == DmgStepType.BEFORE_CALC:
             feature[0, :, :] = 1.0
@@ -191,6 +191,6 @@ class GeneralExtractor:
             feature (np.ndarray): 特徴量埋め込み先
             general_data (GeneralData): 局面情報
         """
-        turn_val = float(min(general_data.turn_num + 1, self.MAX_TURN))
+        turn_val: float = float(min(general_data.turn_num + 1, self.MAX_TURN))
 
         feature[0, :, :] = (turn_val / self.MAX_TURN) * self.scaling_factor
