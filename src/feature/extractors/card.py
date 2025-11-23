@@ -140,7 +140,7 @@ class CardExtractor:
 
         if is_bag:
             denom: float = self.MAX_DECK_COUNT if channel_idx == self.CHANNEL_UNKNOWN else self.MAX_CARD_COUNT
-            feature[channel_idx, height, width] += 1.0 / denom
+            feature[channel_idx, height, width] += (1.0 / denom) * self.scaling_factor
         else:
             feature[channel_idx, height, width] = 1.0
 
