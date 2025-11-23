@@ -100,7 +100,7 @@ class CardExtractor:
                 # 存在情報 (Grid & Bag)
                 feature[self.CHANNEL_EMPTY, height, width] = 0.0
 
-                cursor = 0
+                cursor = 1
 
                 # カードID情報 (Grid & Bag)
                 self._fill_card_id(
