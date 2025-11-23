@@ -133,15 +133,10 @@ class CardExtractor:
             is_bag (bool): Bagフラグ
         """
         card_id: int = duel_card.card_id
-        channel_idx: int = -1
+        channel_idx: int = self.CHANNEL_UNKNOWN
 
-        if card_id == 0:
-            channel_idx = self.CHANNEL_UNKNOWN
-        else:
-            if card_id not in self._CARD_MAP:
-                channel_idx = self.CHANNEL_CARD_ID + self._CARD_MAP[card_id]["idx"]
-            else:
-                channel_idx = self.CHANNEL_UNKNOWN
+        if card_id != 0 and card_id in self._CARD_MAP:
+            channel_idx = self.CHANNEL_CARD_ID + self._CARD_MAP[card_id]["idx"]
 
         if is_bag:
             denom: float = self.MAX_DECK_COUNT if channel_idx == self.CHANNEL_UNKNOWN else self.MAX_CARD_COUNT
