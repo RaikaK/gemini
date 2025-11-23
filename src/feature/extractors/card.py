@@ -18,7 +18,7 @@ class CardExtractor:
     MAX_DEF = 2600.0
     MAX_LEVEL = 9.0
 
-    # --- チャンネルインデックス ---
+    # --- チャンネルサイズ ---
     CHANNEL_EMPTY = 0
     SIZE_CARD_ID = 32
     SIZE_ATK = 1
