@@ -15,7 +15,7 @@ class ChainExtractor:
     # --- 正規化用定数 ---
     MAX_CHAIN_NUM = 4.0
 
-    # --- チャンネルサイズ定義 ---
+    # --- チャンネルサイズ ---
     SIZE_IS_CHAINING = 1
     SIZE_CHAIN_STATE = 2
     SIZE_CHAIN_SOURCE = 1
@@ -47,7 +47,6 @@ class ChainExtractor:
             duel_card_table (list[DuelCard]): カード情報リスト
             feature (np.ndarray): 特徴量埋め込み先
         """
-
         # 埋め込み
         cursor: int = 0
 
@@ -66,6 +65,7 @@ class ChainExtractor:
             duel_card_table,
         )
         cursor += self.SIZE_CHAIN_SOURCE
+
         # チェーン対象フラグ
         self._fill_chain_target(
             feature[cursor : cursor + self.SIZE_CHAIN_TARGET, :, :],

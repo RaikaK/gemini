@@ -86,7 +86,6 @@ class CardExtractor:
             duel_card_table (list[DuelCard]): カード情報リスト
             feature (np.ndarray): 特徴量埋め込み先
         """
-
         # 初期化
         feature[self.CHANNEL_EMPTY, :, :] = 1.0
 

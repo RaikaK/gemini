@@ -5,6 +5,7 @@ from src.env.state_data import StateData
 from src.feature.extractors.card import CardExtractor
 from src.feature.extractors.chain import ChainExtractor
 from src.feature.extractors.general import GeneralExtractor
+from src.feature.extractors.request import RequestExtractor
 
 
 class FeatureManager:
@@ -23,10 +24,12 @@ class FeatureManager:
             card_extractor (CardExtractor): カード特徴量抽出器
             general_extractor (GeneralExtractor): 局面特徴量抽出器
             chain_extractor (ChainExtractor): チェーン特徴量抽出器
+            request_extractor (RequestExtractor): 行動要求特徴量抽出器
         """
         self.card_extractor: CardExtractor = CardExtractor(scaling_factor)
         self.general_extractor: GeneralExtractor = GeneralExtractor(scaling_factor)
         self.chain_extractor: ChainExtractor = ChainExtractor(scaling_factor)
+        self.request_extractor: RequestExtractor = RequestExtractor(scaling_factor)
 
     def to_feature(self, state: StateData) -> np.ndarray:
         """
@@ -67,5 +70,12 @@ class FeatureManager:
             feature[cursor : cursor + config.CHANNELS_CHAIN, :, :],
         )
         cursor += config.CHANNELS_CHAIN
+
+        # 行動要求
+        self.request_extractor.extract(
+            state.command_request,
+            feature[cursor : cursor + config.CHANNELS_REQUEST, :, :],
+        )
+        cursor += config.CHANNELS_REQUEST
 
         return feature
