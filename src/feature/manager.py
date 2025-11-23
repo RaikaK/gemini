@@ -3,6 +3,7 @@ import numpy as np
 import src.config as config
 from src.env.state_data import StateData
 from src.feature.extractors.card import CardExtractor
+from src.feature.extractors.general import GeneralExtractor
 
 
 class FeatureManager:
@@ -19,8 +20,10 @@ class FeatureManager:
 
         Attributes:
             card_extractor (CardExtractor): カード特徴量抽出器
+            general_extractor (GeneralExtractor): 局面特徴量抽出器
         """
         self.card_extractor: CardExtractor = CardExtractor(scaling_factor)
+        self.general_extractor: GeneralExtractor = GeneralExtractor(scaling_factor)
 
     def to_feature(self, state: StateData) -> np.ndarray:
         """
@@ -32,15 +35,22 @@ class FeatureManager:
         Returns:
             np.ndarray: 特徴量
         """
-
+        # 初期化
         feature: np.ndarray = np.zeros(
             (config.TOTAL_CHANNELS, config.HEIGHT, config.WIDTH),
             dtype=np.float32,
         )
 
+        # カード
         self.card_extractor.extract(
             state.duel_state_data.duel_card_table,
             feature[0 : config.CHANNELS_CARD, :, :],
+        )
+
+        # 局面
+        self.general_extractor.extract(
+            state.duel_state_data.general_data,
+            feature[config.CHANNELS_CARD : config.CHANNELS_CARD + config.CHANNELS_GENERAL, :, :],
         )
 
         return feature
