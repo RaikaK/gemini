@@ -202,6 +202,7 @@ class CardExtractor:
         if duel_card.pos_id == PosId.HAND:
             if duel_card.card_id in self._CARD_MAP:
                 atk = float(self._CARD_MAP[duel_card.card_id]["atk"])
+
         else:
             atk = float(max(0, duel_card.atk_val))
 
@@ -222,6 +223,7 @@ class CardExtractor:
         if duel_card.pos_id == PosId.HAND:
             if duel_card.card_id in self._CARD_MAP:
                 def_val = float(self._CARD_MAP[duel_card.card_id]["def"])
+
         else:
             def_val = float(max(0, duel_card.def_val))
 
@@ -242,6 +244,7 @@ class CardExtractor:
         if duel_card.pos_id == PosId.HAND:
             if duel_card.card_id in self._CARD_MAP:
                 level_val = float(self._CARD_MAP[duel_card.card_id]["level"])
+
         else:
             level_val = float(max(0, duel_card.level))
 
