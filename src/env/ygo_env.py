@@ -11,7 +11,7 @@ from ygo.udi_io import UdiIO
 
 from src.env.action_data import ActionData
 from src.env.state_data import StateData
-from src.gui.thread import GUIThread
+from src.gui.gui_thread import GUIThread
 
 
 class YgoEnv:
