@@ -1,9 +1,12 @@
 import numpy as np
 
+from ygo.models.command_request import CommandEntry
+
 import src.config as config
 from src.env.state_data import StateData
 from src.feature.extractors.card_extractor import CardExtractor
 from src.feature.extractors.chain_extractor import ChainExtractor
+from src.feature.extractors.entry_extractor import EntryExtractor
 from src.feature.extractors.general_extractor import GeneralExtractor
 from src.feature.extractors.request_extractor import RequestExtractor
 
@@ -13,7 +16,7 @@ class FeatureManager:
     特徴量マネージャー
     """
 
-    def __init__(self, scaling_factor: float) -> None:
+    def __init__(self, scaling_factor: float = 1.0) -> None:
         """
         初期化する。
 
@@ -30,20 +33,21 @@ class FeatureManager:
         self.general_extractor: GeneralExtractor = GeneralExtractor(scaling_factor)
         self.chain_extractor: ChainExtractor = ChainExtractor(scaling_factor)
         self.request_extractor: RequestExtractor = RequestExtractor(scaling_factor)
+        self.entry_extractor: EntryExtractor = EntryExtractor(scaling_factor)
 
-    def to_feature(self, state: StateData) -> np.ndarray:
+    def to_state_feature(self, state: StateData) -> np.ndarray:
         """
-        特徴量を返す。
+        状態の特徴量を返す。
 
         Args:
             state (StateData): 状態データ
 
         Returns:
-            np.ndarray: 特徴量
+            np.ndarray: 状態の特徴量
         """
         # 初期化
         feature: np.ndarray = np.zeros(
-            (config.TOTAL_CHANNELS, config.HEIGHT, config.WIDTH),
+            (config.TOTAL_CHANNELS_STATE, config.HEIGHT, config.WIDTH),
             dtype=np.float32,
         )
 
@@ -79,3 +83,53 @@ class FeatureManager:
         cursor += config.CHANNELS_REQUEST
 
         return feature
+
+    def to_action_feature(self, command_entry: CommandEntry) -> np.ndarray:
+        """
+        行動の特徴量を返す。
+
+        Args:
+            command_entry (CommandEntry): 行動選択情報
+
+        Returns:
+            np.ndarray: 行動の特徴量
+        """
+        # 初期化
+        feature: np.ndarray = np.zeros(
+            (config.TOTAL_CHANNELS_ACTION, config.HEIGHT, config.WIDTH),
+            dtype=np.float32,
+        )
+
+        cursor: int = 0
+
+        # 行動選択
+        self.entry_extractor.extract(command_entry, feature[cursor : cursor + config.CHANNELS_ENTRY, :, :])
+        cursor += config.CHANNELS_ENTRY
+
+        return feature
+
+    def to_state_action_features(self, state: StateData) -> list[np.ndarray]:
+        """
+        状態と行動の結合特徴量リストを返す。
+
+        Args:
+            state (StateData): 状態データ
+
+        Returns:
+            list[np.ndarray]: 結合特徴量リスト
+        """
+        # 状態の特徴量
+        state_feature: np.ndarray = self.to_state_feature(state)
+
+        features: list[np.ndarray] = []
+
+        for command in state.command_request.commands:
+            # 行動の特徴量
+            action_feature: np.ndarray = self.to_action_feature(command)
+
+            # 結合
+            state_action_feature: np.ndarray = np.concatenate([state_feature, action_feature], axis=0)
+
+            features.append(state_action_feature)
+
+        return features
