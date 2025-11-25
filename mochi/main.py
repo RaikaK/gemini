@@ -3,11 +3,25 @@
 import json
 import datetime
 import random
+import argparse
+import sys
 from pathlib import Path
 
-from config import INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH
+from config import (
+    INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, 
+    ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS, ENABLE_SPREADSHEET
+)
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
+import re
+
+# スプレッドシート連携のインポート（オプション）
+try:
+    from spreadsheet_integration import get_spreadsheet_integration
+    SPREADSHEET_AVAILABLE = True
+except ImportError:
+    SPREADSHEET_AVAILABLE = False
+    print("警告: spreadsheet_integrationモジュールが見つかりません。スプレッドシート連携は無効です。")
 
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
@@ -20,7 +34,7 @@ def load_data_from_db(set_index=None):
         
         if not isinstance(data, list) or len(data) == 0:
             print("エラー: db.jsonの形式が不正です")
-            return None, None
+            return None, None, None
         
         # セットインデックスが指定されていない場合はランダムに選択
         if set_index is None:
@@ -49,28 +63,218 @@ def load_data_from_db(set_index=None):
         print(f"企業: {company_profile.get('name', 'N/A')}")
         print(f"学生数: {len(candidate_profiles)}人")
         
-        return company_profile, candidate_profiles[:NUM_CANDIDATES]
+        return company_profile, candidate_profiles[:NUM_CANDIDATES], set_index
         
     except FileNotFoundError:
         print("エラー: db.jsonが見つかりません")
-        return None, None
+        return None, None, None
     except Exception as e:
         print(f"エラー: データ読み込み失敗 - {e}")
-        return None, None
+        return None, None, None
 
 
-def run_interview():
-    """面接シミュレーションを実行"""
+def calculate_ranking_accuracy(candidate_states, ranking_eval):
+    """
+    ランキング評価の精度指標を計算（改良版）
+    正しくランキングが抽出できた場合のみスコアを計算する
+    """
+    try:
+        # 真の志望度ランキングを作成（低い順）
+        true_ranking = []
+        candidate_names = []
+        for i, state in enumerate(candidate_states):
+            profile = state['profile']
+            preparation = profile.get('preparation', 'low')
+            preparation_levels = {'low': 1, 'medium': 2, 'high': 3}
+            motivation_score = preparation_levels.get(preparation, 1)
+            candidate_name = profile.get('name', f'Candidate_{i+1}')
+            true_ranking.append({
+                'name': candidate_name,
+                'score': motivation_score,
+                'preparation': preparation
+            })
+            candidate_names.append(candidate_name)
+        
+        # 真のランキングをスコア順にソート（低い順）
+        true_ranking.sort(key=lambda x: x['score'])
+        true_names = [item['name'] for item in true_ranking]
+        
+        # 予測ランキングを抽出（より柔軟なパターンに対応）
+        predicted_ranking = []
+        if isinstance(ranking_eval, str):
+            # より柔軟なパターンで抽出を試みる
+            # パターン1: "1位: [氏名]" または "1位：[氏名]"
+            # パターン2: "**1 位:** [氏名]" または "**1位:** [氏名]"
+            # パターン3: "1. [氏名]" または "1.[氏名]"
+            # パターン4: 行頭から順位番号と氏名を抽出
+            
+            lines = ranking_eval.split('\n')
+            extracted_names = {}
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                # パターン1: "1位: [氏名]" 形式
+                match1 = re.search(r'(\d+)位\s*[:：]\s*([^\s(]+)', line)
+                if match1:
+                    rank_num = int(match1.group(1))
+                    name = match1.group(2).strip()
+                    # 括弧や特殊文字を除去
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+                        continue
+                
+                # パターン2: "**1 位:** [氏名]" 形式
+                match2 = re.search(r'\*+\s*(\d+)\s*位\s*\*+\s*[:：]\s*([^\s(]+)', line)
+                if match2:
+                    rank_num = int(match2.group(1))
+                    name = match2.group(2).strip()
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+                        continue
+                
+                # パターン3: "1. [氏名]" 形式
+                match3 = re.search(r'^(\d+)\.\s*([^\s(]+)', line)
+                if match3:
+                    rank_num = int(match3.group(1))
+                    name = match3.group(2).strip()
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+                        continue
+                
+                # パターン4: 行頭の数字とその後の名前
+                match4 = re.search(r'^(\d+)\s+([^\s(]+)', line)
+                if match4:
+                    rank_num = int(match4.group(1))
+                    name = match4.group(2).strip()
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+            
+            # 抽出した名前を順位順に並べる
+            for i in range(1, len(candidate_states) + 1):
+                if i in extracted_names:
+                    predicted_ranking.append(extracted_names[i])
+                else:
+                    predicted_ranking.append("不明")
+        else:
+            predicted_ranking = ["不明"] * len(candidate_states)
+        
+        # 候補者名のマッチング（部分一致も許容）
+        def normalize_name(name):
+            """名前を正規化（空白、特殊文字を除去）"""
+            if not name or name == "不明":
+                return None
+            # 空白、括弧、特殊文字を除去
+            normalized = re.sub(r'[\s()（）、,，。*]', '', name)
+            return normalized if normalized else None
+        
+        # 正規化された候補者名リスト
+        normalized_candidate_names = {normalize_name(name): name for name in candidate_names if normalize_name(name)}
+        
+        # 予測ランキングを正規化してマッチング
+        matched_ranking = []
+        for pred_name in predicted_ranking:
+            normalized_pred = normalize_name(pred_name)
+            if normalized_pred and normalized_pred in normalized_candidate_names:
+                matched_ranking.append(normalized_candidate_names[normalized_pred])
+            else:
+                # 部分一致でマッチングを試みる
+                matched = False
+                for norm_cand_name, orig_cand_name in normalized_candidate_names.items():
+                    if normalized_pred and (normalized_pred in norm_cand_name or norm_cand_name in normalized_pred):
+                        matched_ranking.append(orig_cand_name)
+                        matched = True
+                        break
+                if not matched:
+                    matched_ranking.append("不明")
+        
+        # 全ての候補者名が正しく抽出できているか検証
+        is_valid = True
+        if "不明" in matched_ranking:
+            is_valid = False
+        
+        # 重複チェック
+        if len(set(matched_ranking)) != len(matched_ranking):
+            is_valid = False
+        
+        # 正しく抽出できていない場合はスコアを計算しない
+        if not is_valid:
+            return {
+                'accuracy': None,  # スコアを計算しない
+                'is_valid': False,
+                'true_ranking': true_ranking,
+                'predicted_ranking': matched_ranking,
+                'raw_predicted_ranking': predicted_ranking,
+                'message': 'ランキングが正しく抽出できませんでした。スコアは計算されません。'
+            }
+        
+        # 正しく抽出できた場合のみスコアを計算
+        # ペアの順位一致率（Concordant Pair Ratio）を計算
+        total_pairs = 0
+        correct_pairs = 0
+        n = len(true_names)
+        
+        # すべての可能なペア(i, j)を比較 (i < j)
+        for i in range(n):
+            for j in range(i + 1, n):
+                total_pairs += 1
+                
+                # 真の順位: true_names[i] の方が true_names[j] よりも志望度が低い
+                # 予測順位におけるそれぞれの候補者のインデックスを取得
+                try:
+                    pred_idx_i = matched_ranking.index(true_names[i])
+                    pred_idx_j = matched_ranking.index(true_names[j])
+                except ValueError:
+                    # これは発生しないはず（is_validでチェック済み）
+                    continue
+                
+                # 順位が一致するかチェック
+                if pred_idx_i < pred_idx_j:
+                    correct_pairs += 1
+        
+        ranking_accuracy = correct_pairs / total_pairs if total_pairs > 0 else 0
+        correct_positions = sum(1 for true, pred in zip(true_names, matched_ranking) if true == pred)
+        
+        return {
+            'accuracy': ranking_accuracy,
+            'is_valid': True,
+            'true_ranking': true_ranking,
+            'predicted_ranking': matched_ranking,
+            'raw_predicted_ranking': predicted_ranking,
+            'correct_pairs': correct_pairs,
+            'total_pairs': total_pairs,
+            'correct_positions': correct_positions,
+            'total_positions': len(true_names)
+        }
+        
+    except Exception as e:
+        print(f"ランキング精度の計算中にエラーが発生しました: {e}")
+        return {
+            'accuracy': None,
+            'is_valid': False,
+            'error': str(e),
+            'message': f'ランキング精度の計算中にエラーが発生しました: {e}'
+        }
+
+
+def run_single_interview(set_index=None, simulation_num=1):
+    """単一の面接シミュレーションを実行"""
     print("\n" + "="*60)
-    print("面接ロールプレイ実行システム（最小限版）")
+    print(f"面接ロールプレイ実行システム - シミュレーション {simulation_num}")
     print("="*60)
     
     # データ読み込み
-    company_profile, candidate_profiles = load_data_from_db()
+    company_profile, candidate_profiles, actual_set_index = load_data_from_db(set_index)
     
     if company_profile is None or candidate_profiles is None:
         print("データ読み込みに失敗しました")
-        return
+        return None
     
     # 面接官と応募者を初期化
     interviewer = Interviewer(company_profile, INTERVIEWER_MODEL)
@@ -138,13 +342,28 @@ def run_interview():
     ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
     print(f"\n【志望度ランキング（低い順）】\n{ranking_eval}")
     
+    # 評価2: ランキング精度の計算
+    ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+    if ranking_accuracy:
+        if ranking_accuracy.get('is_valid'):
+            print(f"\n【評価2: ランキング精度】")
+            print(f"  精度スコア: {ranking_accuracy['accuracy']:.3f}")
+            print(f"  正解ペア数: {ranking_accuracy['correct_pairs']}/{ranking_accuracy['total_pairs']}")
+            print(f"  完全一致位置数: {ranking_accuracy['correct_positions']}/{ranking_accuracy['total_positions']}")
+        else:
+            print(f"\n【評価2: ランキング精度】")
+            print(f"  警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
+            print(f"  抽出されたランキング: {ranking_accuracy.get('predicted_ranking', [])}")
+    
     # 結果を保存
     results_dir = Path(__file__).parent / 'results'
     results_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     result_data = {
+        'simulation_num': simulation_num,
         'timestamp': datetime.datetime.now().isoformat(),
+        'set_index': actual_set_index,
         'company_profile': company_profile,
         'interview_transcripts': [
             {
@@ -158,17 +377,112 @@ def run_interview():
         'evaluations': {
             'least_motivated': least_motivated_eval,
             'ranking': ranking_eval
-        }
+        },
+        'ranking_accuracy': ranking_accuracy
     }
     
-    result_file = results_dir / f'interview_result_{timestamp}.json'
+    result_file = results_dir / f'interview_result_sim{simulation_num}_{timestamp}.json'
     with open(result_file, 'w', encoding='utf-8') as f:
         json.dump(result_data, f, ensure_ascii=False, indent=2)
     
     print(f"\n{'='*60}")
     print(f"結果を保存しました: {result_file}")
     print(f"{'='*60}\n")
+    
+    return result_data
+
+
+def run_interviews(num_simulations=1, set_index=None):
+    """複数回の面接シミュレーションを実行"""
+    print("\n" + "="*80)
+    print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
+    print("="*80)
+    
+    # スプレッドシート連携の初期化
+    spreadsheet_integration = None
+    if ENABLE_SPREADSHEET and SPREADSHEET_AVAILABLE:
+        try:
+            spreadsheet_integration = get_spreadsheet_integration()
+            if spreadsheet_integration:
+                print("スプレッドシート連携が有効です")
+            else:
+                print("警告: スプレッドシート連携の設定が見つかりません。連携は無効です。")
+        except Exception as e:
+            print(f"警告: スプレッドシート連携の初期化に失敗しました: {e}")
+    
+    # 結果保存用のディレクトリ作成
+    results_dir = Path(__file__).parent / 'results'
+    results_dir.mkdir(exist_ok=True)
+    
+    timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    all_results = []
+    
+    # 複数回のシミュレーションを実行
+    for sim_num in range(1, num_simulations + 1):
+        print(f"\n{'='*80}")
+        print(f"シミュレーション {sim_num}/{num_simulations} を実行中...")
+        print(f"{'='*80}")
+        
+        result = run_single_interview(set_index=set_index, simulation_num=sim_num)
+        
+        if result:
+            all_results.append(result)
+            
+            # スプレッドシートに記録
+            if spreadsheet_integration:
+                try:
+                    print(f"\nスプレッドシートにシミュレーション {sim_num} の結果を記録中...")
+                    record_result = spreadsheet_integration.record_experiment_result(result)
+                    if record_result.get('success'):
+                        print(f"✓ スプレッドシートへの記録が完了しました (行: {record_result.get('row', 'N/A')})")
+                    else:
+                        print(f"✗ スプレッドシートへの記録エラー: {record_result.get('message')}")
+                except Exception as e:
+                    print(f"✗ スプレッドシート記録中にエラーが発生しました: {e}")
+    
+    # 全体結果の保存
+    if all_results:
+        summary_data = {
+            'experiment_summary': {
+                'total_simulations': num_simulations,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'set_index': set_index
+            },
+            'individual_results': all_results
+        }
+        
+        summary_file = results_dir / f'experiment_summary_{timestamp_str}.json'
+        with open(summary_file, 'w', encoding='utf-8') as f:
+            json.dump(summary_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"\n{'='*80}")
+        print(f"全シミュレーション完了")
+        print(f"個別結果: {len(all_results)}件")
+        print(f"サマリーファイル: {summary_file}")
+        print(f"{'='*80}\n")
 
 
 if __name__ == '__main__':
-    run_interview()
+    parser = argparse.ArgumentParser(description='面接ロールプレイ実行システム')
+    parser.add_argument(
+        '-n', '--num-simulations',
+        type=int,
+        default=NUM_SIMULATIONS,
+        help=f'シミュレーション実行回数 (デフォルト: {NUM_SIMULATIONS})'
+    )
+    parser.add_argument(
+        '-s', '--set-index',
+        type=int,
+        default=None,
+        help='使用するデータセットのインデックス（指定しない場合はランダム）'
+    )
+    
+    args = parser.parse_args()
+    
+    # 実行回数の検証
+    if args.num_simulations < 1:
+        print("エラー: シミュレーション実行回数は1以上である必要があります")
+        sys.exit(1)
+    
+    # シミュレーション実行
+    run_interviews(num_simulations=args.num_simulations, set_index=args.set_index)

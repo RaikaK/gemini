@@ -36,3 +36,9 @@ DB_FILE_PATH = "../experiment_inter/db.json"  # mochiディレクトリから見
 
 # デフォルト値
 DEFAULT_KNOWLEDGE_RETENTION_RATIO = 0.2  # 不明な志望度レベルのデフォルト保持率
+
+# --- 複数回シミュレーション設定 ---
+NUM_SIMULATIONS = 1  # デフォルトのシミュレーション実行回数
+
+# --- スプレッドシート連携設定 ---
+ENABLE_SPREADSHEET = False  # スプレッドシート連携を有効にするかどうか

@@ -23,34 +23,53 @@ pip install -r requirements.txt
 python main.py
 ```
 
+複数回のシミュレーションを実行:
+
+```bash
+# 5回実行
+python main.py -n 5
+
+# 特定のデータセットを使用して3回実行
+python main.py -n 3 -s 0
+```
+
 ## 特徴
 
 - **シンプルな構成**: WebGUIなし、CLIベースで実行
 - **3者間ロールプレイ**: 面接官1名 + 応募者3名でシミュレーション
 - **API使用**: OpenAI APIを使用（ローカルモデル非対応）
+- **複数回シミュレーション対応**: コマンドライン引数で実行回数を指定可能
+- **スプレッドシート連携**: オプションでGoogleスプレッドシートに結果を記録
+- **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）
 - **最小限の依存**: 必要なライブラリを最小化
 
 ## ファイル構成
 
 ```
 mochi/
-├── config.py          # 設定ファイル（APIキー、モデル名など）
-├── utils.py           # ユーティリティ関数（API呼び出し）
-├── interviewer.py     # 面接官役のクラス
-├── student.py         # 応募者役のクラス
-├── main.py            # メイン実行スクリプト
-├── demo.py            # デモスクリプト（API呼び出しなし）
-├── validate_structure.py  # 構造検証スクリプト
-├── requirements.txt   # 依存ライブラリ
-├── results/           # 結果保存ディレクトリ（自動生成）
-└── README.md          # このファイル
+├── config.py                  # 設定ファイル（APIキー、モデル名など）
+├── utils.py                   # ユーティリティ関数（API呼び出し）
+├── interviewer.py             # 面接官役のクラス
+├── student.py                 # 応募者役のクラス
+├── main.py                    # メイン実行スクリプト
+├── demo.py                    # デモスクリプト（API呼び出しなし）
+├── spreadsheet_integration.py # スプレッドシート連携モジュール
+├── validate_structure.py      # 構造検証スクリプト
+├── requirements.txt           # 依存ライブラリ
+├── results/                   # 結果保存ディレクトリ（自動生成）
+└── README.md                  # このファイル
 ```
 
 ## セットアップ
 
 1. **依存ライブラリのインストール**
    ```bash
-   pip install openai
+   pip install -r requirements.txt
+   ```
+   
+   または個別にインストール:
+   ```bash
+   pip install openai requests
    ```
 
 2. **APIキーの設定**
@@ -65,7 +84,6 @@ mochi/
    OPENAI_API_KEY = "your-api-key-here"
    ```
    
-   ※ セキュリティのため、環境変数での設定を推奨します
 
 ## 使い方
 
@@ -75,6 +93,25 @@ mochi/
 cd mochi
 python main.py
 ```
+
+### 複数回シミュレーション
+
+```bash
+# 5回実行
+python main.py -n 5
+
+# または
+python main.py --num-simulations 5
+
+# 特定のデータセットを指定して3回実行
+python main.py -n 3 -s 0
+```
+
+### スプレッドシート連携の設定
+
+1. `spreadsheet_config.json`を作成（`spreadsheet_integration.py`を実行するとテンプレートが生成されます）
+2. `config.py`で`ENABLE_SPREADSHEET = True`に設定
+3. Google Apps ScriptのWebアプリURLを`spreadsheet_config.json`に設定
 
 ### 動作の流れ
 
@@ -93,6 +130,8 @@ python main.py
 - `MAX_ROUNDS`: 面接ラウンド数（デフォルト: 5）
 - `INTERVIEWER_MODEL`: 面接官のモデル名（デフォルト: "gpt-4o-mini"）
 - `APPLICANT_MODEL`: 応募者のモデル名（デフォルト: "gpt-4o-mini"）
+- `NUM_SIMULATIONS`: デフォルトのシミュレーション実行回数（デフォルト: 1）
+- `ENABLE_SPREADSHEET`: スプレッドシート連携を有効にするか（デフォルト: False）
 
 ## 出力例
 
@@ -136,8 +175,13 @@ python main.py
 2位: 佐藤花子
 3位: 山田太郎
 
+【評価2: ランキング精度】
+  精度スコア: 1.000
+  正解ペア数: 3/3
+  完全一致位置数: 3/3
+
 ============================================================
-結果を保存しました: results/interview_result_20250122_120000.json
+結果を保存しました: results/interview_result_sim1_20250122_120000.json
 ============================================================
 ```
 
@@ -147,8 +191,9 @@ python main.py
 
 - **WebGUI削除**: Flask、テンプレート、静的ファイルなし
 - **ローカルモデル非対応**: APIのみ使用
-- **スプレッドシート連携削除**: 結果はJSON形式でローカル保存のみ
-- **複数回シミュレーション削除**: 1回のみ実行
+- **スプレッドシート連携**: オプション機能として実装（設定で有効化可能）
+- **複数回シミュレーション**: コマンドライン引数で実行回数を指定可能
+- **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）
 - **統計分析削除**: 基本的な評価のみ
 - **人間面接官モード削除**: LLM同士のみ
 - **動的フロー削除**: 固定ラウンド数のみ
@@ -166,13 +211,3 @@ penguin-paper/
 └── mochi/
     └── main.py
 ```
-
-### API呼び出しエラー
-
-- APIキーが正しく設定されているか確認
-- インターネット接続を確認
-- OpenAIの利用可能残高を確認
-
-## ライセンス
-
-元のプログラムと同じライセンスに従います。
