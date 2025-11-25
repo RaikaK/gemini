@@ -28,6 +28,7 @@ class FeatureManager:
             general_extractor (GeneralExtractor): 局面特徴量抽出器
             chain_extractor (ChainExtractor): チェーン特徴量抽出器
             request_extractor (RequestExtractor): 行動要求特徴量抽出器
+            entry_extractor (EntryExtractor): 行動選択特徴量抽出器
         """
         self.card_extractor: CardExtractor = CardExtractor(scaling_factor)
         self.general_extractor: GeneralExtractor = GeneralExtractor(scaling_factor)
