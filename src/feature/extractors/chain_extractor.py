@@ -4,7 +4,7 @@ from ygo.constants.enums import ChainState
 from ygo.models.chain_data import ChainData
 from ygo.models.duel_card import DuelCard
 
-from src.feature.layout import CardCellLayout
+from src.feature.card_cell_layout import CardCellLayout
 
 
 class ChainExtractor:

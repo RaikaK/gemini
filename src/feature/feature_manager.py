@@ -2,10 +2,10 @@ import numpy as np
 
 import src.config as config
 from src.env.state_data import StateData
-from src.feature.extractors.card import CardExtractor
-from src.feature.extractors.chain import ChainExtractor
-from src.feature.extractors.general import GeneralExtractor
-from src.feature.extractors.request import RequestExtractor
+from src.feature.extractors.card_extractor import CardExtractor
+from src.feature.extractors.chain_extractor import ChainExtractor
+from src.feature.extractors.general_extractor import GeneralExtractor
+from src.feature.extractors.request_extractor import RequestExtractor
 
 
 class FeatureManager:
