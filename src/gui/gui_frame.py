@@ -13,14 +13,14 @@ from ygo.util.card import CardUtil
 from ygo.util.text import TextUtil
 
 import src.config as config
-from src.gui.manager.board import GUIBoard
-from src.gui.manager.dialog import GUIDialog
-from src.gui.manager.card_list import GUICardList
-from src.gui.manager.card_text import GUICardText
-from src.gui.manager.chain import GUIChain
-from src.gui.manager.command import GUICommand
-from src.gui.manager.context import GUIContext
-from src.gui.manager.log import GUILog
+from src.gui.manager.gui_board import GUIBoard
+from src.gui.manager.gui_dialog import GUIDialog
+from src.gui.manager.gui_card_list import GUICardList
+from src.gui.manager.gui_card_text import GUICardText
+from src.gui.manager.gui_chain import GUIChain
+from src.gui.manager.gui_command import GUICommand
+from src.gui.manager.gui_context import GUIContext
+from src.gui.manager.gui_log import GUILog
 
 # デバッグフラグ
 DEBUG_MODE = False

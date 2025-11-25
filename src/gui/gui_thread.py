@@ -2,7 +2,7 @@ from queue import Queue
 
 from ygo.gui.udi_gui_thread import UdiGUIThread
 
-from src.gui.frame import GUIFrame
+from src.gui.gui_frame import GUIFrame
 
 
 class GUIThread(UdiGUIThread):
