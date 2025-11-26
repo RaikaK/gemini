@@ -78,7 +78,7 @@ class EntryExtractor:
         # 埋め込み
         cursor: int = 0
 
-        # 行動の種類
+        # コマンドタイプ
         self._fill_command_type(feature[cursor : cursor + self.SIZE_COMMAND_TYPE, :, :], command_entry)
         cursor += self.SIZE_COMMAND_TYPE
 
@@ -112,7 +112,7 @@ class EntryExtractor:
 
     def _fill_command_type(self, feature: np.ndarray, command_entry: CommandEntry) -> None:
         """
-        行動の種類を埋め込む。
+        コマンドタイプを埋め込む。
 
         Args:
             feature (np.ndarray): 特徴量埋め込み先
