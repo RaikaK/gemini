@@ -42,3 +42,21 @@ NUM_SIMULATIONS = 1  # デフォルトのシミュレーション実行回数
 
 # --- スプレッドシート連携設定 ---
 ENABLE_SPREADSHEET = False  # スプレッドシート連携を有効にするかどうか
+
+# --- ローカルモデル設定 ---
+# 面接官モデルタイプ: 'api' または 'local'
+INTERVIEWER_MODEL_TYPE = 'api'  # デフォルトはAPI
+
+# 利用可能なローカルモデル（model_manager.pyのavailable_modelsと一致）
+AVAILABLE_LOCAL_MODELS = {
+    "llama3": "meta-llama/Llama-3.1-8B-Instruct",
+    "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
+    "SWALLOW": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
+    "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
+    "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "qwen3-4b-instruct-2507": "Qwen/Qwen3-4B-Instruct-2507",
+    "qwen2.5-7b-instruct": "Qwen/Qwen2.5-7B-Instruct",
+}
+
+# デフォルトのローカルモデル
+LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定

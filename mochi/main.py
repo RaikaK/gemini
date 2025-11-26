@@ -9,7 +9,8 @@ from pathlib import Path
 
 from config import (
     INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, 
-    ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS, ENABLE_SPREADSHEET
+    ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS, ENABLE_SPREADSHEET,
+    INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS
 )
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
@@ -22,6 +23,14 @@ try:
 except ImportError:
     SPREADSHEET_AVAILABLE = False
     print("警告: spreadsheet_integrationモジュールが見つかりません。スプレッドシート連携は無効です。")
+
+# ローカルモデル管理のインポート（オプション）
+try:
+    from model_manager import HuggingFaceModelManager
+    MODEL_MANAGER_AVAILABLE = True
+except ImportError:
+    MODEL_MANAGER_AVAILABLE = False
+    print("警告: model_managerモジュールが見つかりません。ローカルモデルは使用できません。")
 
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
@@ -263,7 +272,62 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         }
 
 
-def run_single_interview(set_index=None, simulation_num=1):
+def initialize_local_model(model_key=None):
+    """ローカルモデルを初期化"""
+    if not MODEL_MANAGER_AVAILABLE:
+        print("エラー: ローカルモデル管理モジュールが利用できません")
+        return None, None
+    
+    if model_key is None:
+        model_key = LOCAL_MODEL_NAME
+    
+    print(f"--- ローカルモデル ({model_key}) の初期化を開始 ---")
+    
+    model_manager = HuggingFaceModelManager()
+    
+    # huggingface_hub モジュールの確認
+    if not model_manager.check_hf_cli_installed():
+        print("huggingface_hubがインストールされていません。インストール中...")
+        if not model_manager.install_hf_cli():
+            print("huggingface_hubのインストールに失敗しました")
+            return None, None
+
+    # モデルのダウンロード確認
+    if not model_manager.is_model_downloaded(model_key):
+        model_info = model_manager.get_model_info(model_key)
+        if model_info:
+            print(f"モデル {model_key} が初回選択されました。ダウンロードを開始します...")
+            print(f"モデルサイズ: {model_info['size_gb']}GB")
+            print(f"推奨GPU: {model_info['recommended_gpu']}")
+            print("ダウンロードには時間がかかる場合があります。しばらくお待ちください...")
+            
+            def progress_callback(message):
+                print(f"[ダウンロード進捗] {message}")
+            
+            if not model_manager.download_model(model_key, progress_callback=progress_callback):
+                print(f"モデル {model_key} のダウンロードに失敗しました")
+                return None, None
+            else:
+                print(f"モデル {model_key} のダウンロードが完了しました")
+        else:
+            print(f"モデル {model_key} の情報を取得できませんでした")
+            return None, None
+    else:
+        print(f"モデル {model_key} は既にダウンロード済みです")
+    
+    # モデルの初期化
+    print(f"モデル {model_key} を初期化中...")
+    model, tokenizer = model_manager.initialize_model(model_key)
+    
+    if model and tokenizer:
+        print("--- ローカルモデルの初期化完了 ---")
+    else:
+        print("--- ローカルモデルの初期化に失敗 ---")
+    
+    return model, tokenizer
+
+
+def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None):
     """単一の面接シミュレーションを実行"""
     print("\n" + "="*60)
     print(f"面接ロールプレイ実行システム - シミュレーション {simulation_num}")
@@ -276,8 +340,38 @@ def run_single_interview(set_index=None, simulation_num=1):
         print("データ読み込みに失敗しました")
         return None
     
-    # 面接官と応募者を初期化
-    interviewer = Interviewer(company_profile, INTERVIEWER_MODEL)
+    # モデル設定の決定
+    if interviewer_model_type is None:
+        interviewer_model_type = INTERVIEWER_MODEL_TYPE
+    
+    if interviewer_model_name is None:
+        if interviewer_model_type == 'local':
+            interviewer_model_name = LOCAL_MODEL_NAME
+        else:
+            interviewer_model_name = INTERVIEWER_MODEL
+    
+    # 面接官を初期化
+    if interviewer_model_type == 'local':
+        local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
+        if local_model is None or local_tokenizer is None:
+            print("ローカルモデルの初期化に失敗しました。")
+            return None
+        interviewer = Interviewer(
+            company_profile,
+            model_type='local',
+            model=local_model,
+            tokenizer=local_tokenizer
+        )
+        print(f"--- 面接官タイプ: ローカルモデル ({interviewer_model_name}) ---")
+    else:
+        interviewer = Interviewer(
+            company_profile,
+            model_name=interviewer_model_name,
+            model_type='api'
+        )
+        print(f"--- 面接官タイプ: APIモデル ({interviewer_model_name}) ---")
+    
+    # 応募者を初期化
     applicant = Applicant(APPLICANT_MODEL)
     knowledge_manager = CompanyKnowledgeManager(company_profile)
     
@@ -392,11 +486,22 @@ def run_single_interview(set_index=None, simulation_num=1):
     return result_data
 
 
-def run_interviews(num_simulations=1, set_index=None):
+def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None):
     """複数回の面接シミュレーションを実行"""
     print("\n" + "="*80)
     print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
     print("="*80)
+    
+    # モデル設定の表示
+    if interviewer_model_type is None:
+        interviewer_model_type = INTERVIEWER_MODEL_TYPE
+    if interviewer_model_name is None:
+        if interviewer_model_type == 'local':
+            interviewer_model_name = LOCAL_MODEL_NAME
+        else:
+            interviewer_model_name = INTERVIEWER_MODEL
+    
+    print(f"面接官モデル: {interviewer_model_type} ({interviewer_model_name})")
     
     # スプレッドシート連携の初期化
     spreadsheet_integration = None
@@ -423,7 +528,12 @@ def run_interviews(num_simulations=1, set_index=None):
         print(f"シミュレーション {sim_num}/{num_simulations} を実行中...")
         print(f"{'='*80}")
         
-        result = run_single_interview(set_index=set_index, simulation_num=sim_num)
+        result = run_single_interview(
+            set_index=set_index, 
+            simulation_num=sim_num,
+            interviewer_model_type=interviewer_model_type,
+            interviewer_model_name=interviewer_model_name
+        )
         
         if result:
             all_results.append(result)
@@ -476,13 +586,53 @@ if __name__ == '__main__':
         default=None,
         help='使用するデータセットのインデックス（指定しない場合はランダム）'
     )
+    parser.add_argument(
+        '-t', '--model-type',
+        type=str,
+        choices=['api', 'local'],
+        default=INTERVIEWER_MODEL_TYPE,
+        help=f'面接官モデルタイプ: api または local (デフォルト: {INTERVIEWER_MODEL_TYPE})'
+    )
+    parser.add_argument(
+        '-m', '--model-name',
+        type=str,
+        default=None,
+        help='面接官モデル名（apiの場合はOpenAIモデル名、localの場合はAVAILABLE_LOCAL_MODELSのキー）'
+    )
+    parser.add_argument(
+        '--list-models',
+        action='store_true',
+        help='利用可能なローカルモデル一覧を表示して終了'
+    )
     
     args = parser.parse_args()
+    
+    # ローカルモデル一覧を表示
+    if args.list_models:
+        if MODEL_MANAGER_AVAILABLE:
+            model_manager = HuggingFaceModelManager()
+            model_manager.print_model_status()
+        else:
+            print("ローカルモデル管理モジュールが利用できません")
+        sys.exit(0)
     
     # 実行回数の検証
     if args.num_simulations < 1:
         print("エラー: シミュレーション実行回数は1以上である必要があります")
         sys.exit(1)
     
+    # モデル名の検証
+    if args.model_type == 'local':
+        if args.model_name and args.model_name not in AVAILABLE_LOCAL_MODELS:
+            print(f"エラー: 未知のローカルモデル '{args.model_name}'")
+            print(f"利用可能なモデル: {', '.join(AVAILABLE_LOCAL_MODELS.keys())}")
+            print("利用可能なモデル一覧を表示するには: python main.py --list-models")
+            sys.exit(1)
+    
     # シミュレーション実行
-    run_interviews(num_simulations=args.num_simulations, set_index=args.set_index)
+    run_interviews(
+        num_simulations=args.num_simulations, 
+        set_index=args.set_index,
+        interviewer_model_type=args.model_type,
+        interviewer_model_name=args.model_name
+    )
