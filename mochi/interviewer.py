@@ -76,34 +76,80 @@ class Interviewer:
         else:
             raise ValueError(f"無効なモデルタイプです: {self.model_type}")
     
-    def ask_question(self, conversation_history, asked_questions):
-        """候補者への質問を生成"""
-        
-        # 企業情報の項目リスト
-        company_keys = list(self.company.keys())
-        
-        # これまでの質問履歴
-        history_str = "（なし）"
-        if asked_questions:
-            history_str = "\n".join([f"- {q}" for q in asked_questions])
-        
-        prompt = f"""あなたは採用面接官です。候補者の企業理解度と志望度を測る質問をしてください。
+    def ask_common_question(self, asked_questions):
+        """全候補者に対する全体質問を生成"""
+        all_company_keys = list(self.company.keys())
+        history_str = "\n".join(f"- {q}" for q in asked_questions) if asked_questions else "  (なし)"
 
-# 企業情報の項目リスト
-{company_keys}
+        prompt = f"""あなたは、面接全体を俯瞰し、全候補者の理解度を効率的に測る、戦略的な採用面接官です。
+これから全候補者に対して同じ共通質問をします。
 
-# これまでに行った質問（重複しないように）
+# あなたが質問できる企業情報の項目リスト
+{all_company_keys}
+
+# これまでに行った全ての質問（重複しないように）
 {history_str}
 
-# 質問の目的
-- 候補者が企業についてどれだけ調べているか確認する
-- 志望度の高さを測る
-- 企業理解の深さを探る
+【全体質問の戦略的役割】
+全体質問は以下の目的で使用されます：
+1. **比較基準の確立**: 全候補者が同じ条件で回答するため、公平な比較が可能
+2. **基盤情報の収集**: 候補者間の差別化に必要な基本的な企業理解度を測定
+3. **効率的な情報収集**: 一度の質問で全候補者から情報を収集し、時間を節約
+4. **共通トピックの深掘り**: 特定の重要な企業情報について全員の見解を比較
 
-指示: 上記の目的に沿った効果的な質問を1つ生成してください。質問文のみを出力してください。前置きや説明は不要です。
-"""
+【全体質問を選ぶべき戦略的状況】
+- 候補者間の比較材料が不足している場合
+- 特定の重要な企業情報について全員の理解度を測りたい場合
+- 個別質問で深掘りする前に基盤となる情報が必要な場合
+- 効率的に情報収集を進めたい場合
+
+# 指示
+1.  **全体分析**: 全候補者の会話を俯瞰し、ほとんどの候補者がまだ十分に言及していない「共通の未言及項目」を特定してください。
+2.  **戦略的質問生成**: 特定した項目の中から、候補者たちの企業研究の深さを比較する上で最も重要だと思われるものを1つ選び、それに関する具体的な共通質問を生成してください。
+3.  **比較可能性の確保**: 全候補者が同じ基準で回答できる質問であることを確認してください。
+
+思考プロセスや前置きは一切含めず、質問文だけを出力してください。
+質問:"""
         
-        question, token_info = self._generate_response(prompt)
+        question, token_info = self._generate_response(prompt, max_tokens=512)
+        return question.strip(), token_info
+    
+    def ask_question(self, conversation_history, asked_questions=None):
+        """特定の候補者への個別質問を生成"""
+        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in conversation_history])
+        all_company_keys = list(self.company.keys())
+
+        prompt = f"""あなたは、学生の企業研究の深さを測る、戦略的な採用面接官です。
+# あなたが質問できる企業情報の項目リスト
+{all_company_keys}
+# これまでの会話履歴
+{history_str if history_str else "（まだ会話はありません）"}
+
+【個別質問の戦略的役割】
+個別質問は以下の目的で使用されます：
+1. **深掘り調査**: 特定の候補者の回答をより深く探り、詳細な情報を収集
+2. **個人的動機の探求**: 候補者固有の志望動機や背景を理解
+3. **知識欠損の特定**: この候補者が特に不足している企業知識を特定
+4. **差別化要因の発見**: 他の候補者との違いを明確にする情報を収集
+5. **曖昧な回答の明確化**: 以前の回答で不明確だった部分を明確にする
+
+【個別質問を選ぶべき戦略的状況】
+- 特定の候補者の回答をより深く探る必要がある場合
+- 候補者ごとに異なる角度からの質問が効果的な場合
+- 志望度の判定に必要な個人的な動機を探る必要がある場合
+- 十分な全体質問が既に実施されている場合
+- 情報が不足している候補者が特定されている場合
+
+# 指示
+1.  **分析**: 上記の「項目リスト」と「会話履歴」を比較し、まだ十分に話題に上がっていない項目は何かを特定してください。
+2.  **戦略的質問生成**: 特定した項目の中から、この学生の企業理解度を測るために最も効果的なものを1つ選び、それに関する具体的な質問を生成してください。
+3.  **個別性の確保**: この候補者に特化した、深掘りできる質問であることを確認してください。
+4.  **知識欠損の特定**: この候補者が特に不足している可能性が高い企業知識に焦点を当ててください。
+
+思考プロセスや前置きは一切含めず、質問文だけを出力してください。
+質問:"""
+        
+        question, token_info = self._generate_response(prompt, max_tokens=512)
         return question.strip(), token_info
     
     def select_least_motivated_candidate(self, candidate_states):
@@ -388,13 +434,38 @@ class Interviewer:
         candidate_states_map = {s['profile']['name']: s for s in all_states}
         
         # より柔軟なセクション分割（"- 候補者名:" または "候補者名:" のパターンに対応）
-        # まず "- " で始まる行で分割
-        sections = re.split(r'(?=^-\s+[^\n]+:)', llm_output_text, re.MULTILINE)
+        # まず "- " で始まる行で分割（改行の前後を考慮）
+        sections = re.split(r'(?=\n?-\s+[^\n]+:)', llm_output_text, re.MULTILINE)
+        
         # もし分割できなかったら、候補者名のパターンで分割
         if len(sections) <= 1:
             # 候補者名のパターンで分割（"学生" または "student" で始まる、大文字小文字を区別しない）
             # "学生KKK1:" や "studentKKK1：" のパターンに対応
-            sections = re.split(r'(?=^(?:学生|student)[^\n:]+[：:])', llm_output_text, re.MULTILINE | re.IGNORECASE)
+            sections = re.split(r'(?=\n?(?:学生|student)[^\n:]+[：:])', llm_output_text, re.MULTILINE | re.IGNORECASE)
+        
+        # さらに、より柔軟なパターンで分割を試す
+        if len(sections) <= 1:
+            # "- 候補者名:" または "候補者名:" で始まる行（改行の前後を考慮）
+            sections = re.split(r'(?=\n?-\s*[^\n]+[：:])', llm_output_text, re.MULTILINE)
+        
+        # 最初のセクションが空の場合は削除
+        if sections and not sections[0].strip():
+            sections = sections[1:]
+        
+        # セクションがまだ1つしかない場合、手動で分割を試す
+        if len(sections) <= 1:
+            # "- 学生" で始まる部分を手動で分割
+            parts = re.finditer(r'-\s*([^\n]+?):', llm_output_text)
+            section_starts = []
+            for match in parts:
+                section_starts.append(match.start())
+            
+            if len(section_starts) > 1:
+                sections = []
+                for i in range(len(section_starts)):
+                    start = section_starts[i]
+                    end = section_starts[i + 1] if i + 1 < len(section_starts) else len(llm_output_text)
+                    sections.append(llm_output_text[start:end])
         
         print(f"[デバッグ] セクション数: {len(sections)}")
         print(f"[デバッグ] 候補者名マップ: {list(candidate_states_map.keys())}\n")
