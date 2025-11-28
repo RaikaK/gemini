@@ -117,53 +117,113 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
             # パターン3: "1. [氏名]" または "1.[氏名]"
             # パターン4: 行頭から順位番号と氏名を抽出
             
-            lines = ranking_eval.split('\n')
             extracted_names = {}
+            
+            # まず、全体テキストに対してマークダウン形式のパターンを試す
+            # パターン1: "**数字 位:** 名前" または "**数字位:** 名前"
+            markdown_pattern1 = r'\*{2,}\s*(\d+)\s*位\s*\*{0,}\s*[:：]\s*([^\n\*]+?)(?:\n|$|\*|理由)'
+            for match in re.finditer(markdown_pattern1, ranking_eval):
+                rank_num = int(match.group(1))
+                name = match.group(2).strip()
+                # 括弧内の名前があれば抽出
+                bracket_match = re.search(r'\(([^)]+)\)', name)
+                if bracket_match:
+                    name = bracket_match.group(1).strip()
+                # 候補者Xという形式を除去
+                name = re.sub(r'^候補者\d+\s*', '', name)
+                name = name.strip()
+                if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                    extracted_names[rank_num] = name
+            
+            # パターン2: "**数字. 名前 (説明)**" 形式（例: "**1. 学生CB (志望度の低い順に第1位)**"）
+            markdown_pattern2 = r'\*{2,}\s*(\d+)\.\s*([^\n\(\)\*]+?)(?:\s*\([^)]*\))?\s*\*{0,}'
+            for match in re.finditer(markdown_pattern2, ranking_eval):
+                rank_num = int(match.group(1))
+                name = match.group(2).strip()
+                # 余分な空白や特殊文字を除去
+                name = re.sub(r'^\s+|\s+$', '', name)
+                # 候補者Xという形式を除去
+                name = re.sub(r'^候補者\d+\s*', '', name)
+                name = name.strip()
+                if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                    extracted_names[rank_num] = name
+            
+            # 行単位でも処理（マークダウン形式で抽出できなかった場合のフォールバック）
+            lines = ranking_eval.split('\n')
             
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
                 
-                # パターン1: "1位: [氏名]" 形式
-                match1 = re.search(r'(\d+)位\s*[:：]\s*([^\s(]+)', line)
+                # パターン1: "1位: [氏名]" または "1位: 候補者X (氏名)" 形式
+                # 括弧内の名前を優先的に抽出
+                match1 = re.search(r'(\d+)位\s*[:：]\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
                 if match1:
                     rank_num = int(match1.group(1))
-                    name = match1.group(2).strip()
-                    # 括弧や特殊文字を除去
-                    name = re.sub(r'[()（）、,，。]', '', name)
-                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
-                        extracted_names[rank_num] = name
-                        continue
+                    # 括弧内の名前があればそれを使用、なければ括弧前の名前を使用
+                    name = match1.group(2) or match1.group(3)
+                    if name:
+                        name = name.strip()
+                        # 余分な括弧や特殊文字を除去
+                        name = re.sub(r'[()（）、,，。]', '', name)
+                        if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                            extracted_names[rank_num] = name
+                            continue
                 
-                # パターン2: "**1 位:** [氏名]" 形式
-                match2 = re.search(r'\*+\s*(\d+)\s*位\s*\*+\s*[:：]\s*([^\s(]+)', line)
+                # パターン2: "**1 位:** [氏名]" または "**1位:** [氏名]" 形式
+                # よりシンプルで確実なパターン
+                match2 = re.search(r'\*{2,}\s*(\d+)\s*位\s*\*{0,}\s*[:：]\s*([^\n\*]+?)(?:\s|$|\n|理由)', line)
                 if match2:
                     rank_num = int(match2.group(1))
                     name = match2.group(2).strip()
-                    name = re.sub(r'[()（）、,，。]', '', name)
+                    # 括弧内の名前があれば抽出（例: "候補者1 (学生BP)" → "学生BP"）
+                    bracket_match = re.search(r'\(([^)]+)\)', name)
+                    if bracket_match:
+                        name = bracket_match.group(1).strip()
+                    # 候補者Xという形式を除去
+                    name = re.sub(r'^候補者\d+\s*', '', name)
+                    # 余分な空白を除去
+                    name = name.strip()
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
                         continue
                 
-                # パターン3: "1. [氏名]" 形式
-                match3 = re.search(r'^(\d+)\.\s*([^\s(]+)', line)
+                # パターン3: "**数字. 名前 (説明)**" 形式（マークダウン形式）
+                match3 = re.search(r'\*{2,}\s*(\d+)\.\s*([^\n\(\)\*]+?)(?:\s*\([^)]*\))?\s*\*{0,}', line)
                 if match3:
                     rank_num = int(match3.group(1))
                     name = match3.group(2).strip()
-                    name = re.sub(r'[()（）、,，。]', '', name)
+                    # 余分な空白を除去
+                    name = re.sub(r'^\s+|\s+$', '', name)
+                    # 候補者Xという形式を除去
+                    name = re.sub(r'^候補者\d+\s*', '', name)
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
                         continue
                 
-                # パターン4: 行頭の数字とその後の名前
-                match4 = re.search(r'^(\d+)\s+([^\s(]+)', line)
+                # パターン4: "1. [氏名]" 形式（通常の番号付きリスト）
+                match4 = re.search(r'^(\d+)\.\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
                 if match4:
                     rank_num = int(match4.group(1))
-                    name = match4.group(2).strip()
-                    name = re.sub(r'[()（）、,，。]', '', name)
-                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
-                        extracted_names[rank_num] = name
+                    name = match4.group(2) or match4.group(3)
+                    if name:
+                        name = name.strip()
+                        name = re.sub(r'[()（）、,，。]', '', name)
+                        if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                            extracted_names[rank_num] = name
+                            continue
+                
+                # パターン5: 行頭の数字とその後の名前
+                match5 = re.search(r'^(\d+)\s+(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
+                if match5:
+                    rank_num = int(match5.group(1))
+                    name = match5.group(2) or match5.group(3)
+                    if name:
+                        name = name.strip()
+                        name = re.sub(r'[()（）、,，。]', '', name)
+                        if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                            extracted_names[rank_num] = name
             
             # 抽出した名前を順位順に並べる
             for i in range(1, len(candidate_states) + 1):
@@ -171,6 +231,11 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                     predicted_ranking.append(extracted_names[i])
                 else:
                     predicted_ranking.append("不明")
+            
+            # デバッグ: 抽出結果を表示（開発時のみ）
+            if "不明" in predicted_ranking:
+                print(f"デバッグ: ランキング抽出結果 - extracted_names={extracted_names}, predicted_ranking={predicted_ranking}")
+                print(f"デバッグ: 元のテキスト（最初の500文字）: {ranking_eval[:500]}")
         else:
             predicted_ranking = ["不明"] * len(candidate_states)
         
@@ -428,26 +493,26 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     print("最終評価")
     print(f"{'='*60}\n")
     
-    # 最も志望度が低い候補者を選定
+    # 評価1: 最も志望度が低い候補者を選定
+    print("【評価1: 最も志望度が低い候補者の選定】")
     least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
-    print(f"\n【最も志望度が低い候補者の選定】\n{least_motivated_eval}")
+    print(f"{least_motivated_eval}\n")
     
-    # ランキング
+    # 評価1と評価2の区切り
+    print(f"{'='*60}\n")
+    
+    # 評価2: ランキング
+    print("【評価2: 志望度ランキング（低い順）】")
     ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
-    print(f"\n【志望度ランキング（低い順）】\n{ranking_eval}")
+    print(f"{ranking_eval}\n")
     
     # 評価2: ランキング精度の計算
     ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
     if ranking_accuracy:
         if ranking_accuracy.get('is_valid'):
-            print(f"\n【評価2: ランキング精度】")
-            print(f"  精度スコア: {ranking_accuracy['accuracy']:.3f}")
-            print(f"  正解ペア数: {ranking_accuracy['correct_pairs']}/{ranking_accuracy['total_pairs']}")
-            print(f"  完全一致位置数: {ranking_accuracy['correct_positions']}/{ranking_accuracy['total_positions']}")
+            print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
         else:
-            print(f"\n【評価2: ランキング精度】")
-            print(f"  警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
-            print(f"  抽出されたランキング: {ranking_accuracy.get('predicted_ranking', [])}")
+            print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
     
     # 結果を保存
     results_dir = Path(__file__).parent / 'results'

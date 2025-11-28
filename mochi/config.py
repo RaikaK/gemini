@@ -6,6 +6,21 @@ import os
 # 環境変数から取得、なければプレースホルダー
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "YOUR_OPENAI_API_KEY_HERE")
 
+# APIキーの検証（起動時に警告を表示）
+if OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE" or not OPENAI_API_KEY or not OPENAI_API_KEY.strip():
+    print("=" * 80)
+    print("警告: OPENAI_API_KEYが設定されていません")
+    print("=" * 80)
+    print("環境変数を設定してください:")
+    print("  Windows PowerShell:")
+    print("    $env:OPENAI_API_KEY='your-api-key-here'")
+    print("  Windows CMD:")
+    print("    set OPENAI_API_KEY=your-api-key-here")
+    print("  Linux/Mac:")
+    print("    export OPENAI_API_KEY='your-api-key-here'")
+    print("=" * 80)
+    print()
+
 # 使用するモデル名
 INTERVIEWER_MODEL = "gpt-4o-mini"  # 面接官役
 APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
