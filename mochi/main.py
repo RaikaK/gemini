@@ -451,11 +451,15 @@ def initialize_local_model(model_key=None):
     return model, tokenizer
 
 
-def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None):
+def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None):
     """単一の面接シミュレーションを実行"""
     print("\n" + "="*60)
     print(f"面接ロールプレイ実行システム - シミュレーション {simulation_num}")
     print("="*60)
+    
+    # ラウンド数の設定
+    if max_rounds is None:
+        max_rounds = MAX_ROUNDS
     
     # データ読み込み
     company_profile, candidate_profiles, actual_set_index = load_data_from_db(set_index)
@@ -517,10 +521,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     asked_questions = []
     
     print(f"\n{'='*60}")
-    print(f"面接開始（{MAX_ROUNDS}ラウンド）")
+    print(f"面接開始（{max_rounds}ラウンド）")
     print(f"{'='*60}\n")
     
-    for round_num in range(1, MAX_ROUNDS + 1):
+    # ラウンドごとの評価結果を保存
+    round_evaluations = []
+    
+    for round_num in range(1, max_rounds + 1):
         print(f"\n--- ラウンド {round_num} ---")
         
         # 質問を生成
@@ -546,89 +553,107 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             })
             
             print(f"\n{state['profile']['name']}: {answer}")
-    
-    # 最終評価
-    print(f"\n{'='*60}")
-    print("最終評価")
-    print(f"{'='*60}\n")
-    
-    # 評価1: 最も志望度が低い候補者を選定
-    print("【評価1: 最も志望度が低い候補者の選定】")
-    least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
-    print(f"{least_motivated_eval}\n")
-    
-    # 評価1と評価2の区切り
-    print(f"{'='*60}\n")
-    
-    # 評価2: ランキング
-    print("【評価2: 志望度ランキング（低い順）】")
-    ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
-    print(f"{ranking_eval}\n")
-    
-    # 評価2: ランキング精度の計算
-    ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
-    if ranking_accuracy:
-        if ranking_accuracy.get('is_valid'):
-            print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
-        else:
-            print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
-    
-    # 評価1と評価3の区切り
-    print(f"{'='*60}\n")
-    
-    # 評価3: 知識欠損検出
-    print("【評価3: 知識欠損検出】")
-    knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
-    
-    # 評価3の精度計算
-    knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
-    if knowledge_gaps_metrics:
-        print(f"\n--- 評価3: 全体統計 ---")
-        print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
-        print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
-        print(f"平均Precision: {knowledge_gaps_metrics.get('avg_precision', 0):.3f}")
-        print(f"平均Recall: {knowledge_gaps_metrics.get('avg_recall', 0):.3f}")
         
-        # 各候補者ごとの詳細表示
-        print(f"\n--- 評価3: 各候補者ごとの詳細 ---")
-        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
-        for state in candidate_states:
-            candidate_name = state['profile']['name']
-            preparation = state['profile'].get('preparation', 'low')
+        # ラウンド終了後の評価
+        print(f"\n{'='*60}")
+        print(f"ラウンド {round_num} 終了後の評価")
+        print(f"{'='*60}\n")
+        
+        # 評価1: 最も志望度が低い候補者を選定
+        print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
+        least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
+        print(f"{least_motivated_eval}\n")
+        
+        # 評価1と評価2の区切り
+        print(f"{'='*60}\n")
+        
+        # 評価2: ランキング
+        print(f"【ラウンド {round_num} - 評価2: 志望度ランキング（低い順）】")
+        ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
+        print(f"{ranking_eval}\n")
+        
+        # 評価2: ランキング精度の計算
+        ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+        if ranking_accuracy:
+            if ranking_accuracy.get('is_valid'):
+                print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
+            else:
+                print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
+        
+        # 評価2と評価3の区切り
+        print(f"{'='*60}\n")
+        
+        # 評価3: 知識欠損検出
+        print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
+        knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+        
+        # 評価3の精度計算
+        knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
+        if knowledge_gaps_metrics:
+            print(f"\n--- 評価3: 全体統計 ---")
+            print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
+            print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
+            print(f"平均Precision: {knowledge_gaps_metrics.get('avg_precision', 0):.3f}")
+            print(f"平均Recall: {knowledge_gaps_metrics.get('avg_recall', 0):.3f}")
             
-            if candidate_name in per_candidate:
-                candidate_data = per_candidate[candidate_name]
-                metrics = candidate_data.get('metrics', {})
-                details = candidate_data.get('details', {})
+            # 各候補者ごとの詳細表示
+            print(f"\n--- 評価3: 各候補者ごとの詳細 ---")
+            per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+            for state in candidate_states:
+                candidate_name = state['profile']['name']
+                preparation = state['profile'].get('preparation', 'low')
                 
-                print(f"\n{candidate_name} (準備レベル: {preparation}):")
-                print(f"  精度: {metrics.get('accuracy', 0):.3f}")
-                print(f"  Precision: {metrics.get('precision', 0):.3f}")
-                print(f"  Recall: {metrics.get('recall', 0):.3f}")
-                print(f"  F1スコア: {metrics.get('f1_score', 0):.3f}")
-                print(f"  TP: {metrics.get('true_positives', 0)}, TN: {metrics.get('true_negatives', 0)}, FP: {metrics.get('false_positives', 0)}, FN: {metrics.get('false_negatives', 0)}")
-                
-                if details.get('correctly_detected_gaps (TP)'):
-                    print(f"  正しく検出された欠損 (TP): {details['correctly_detected_gaps (TP)']}")
-                if details.get('incorrectly_detected_gaps (FP)'):
-                    print(f"  誤検出された欠損 (FP): {details['incorrectly_detected_gaps (FP)']}")
-                if details.get('missed_gaps (FN)'):
-                    print(f"  見逃された欠損 (FN): {details['missed_gaps (FN)']}")
-                
-                if 'note' in candidate_data:
-                    print(f"  注意: {candidate_data['note']}")
-            else:
-                print(f"\n{candidate_name} (準備レベル: {preparation}): データなし")
+                if candidate_name in per_candidate:
+                    candidate_data = per_candidate[candidate_name]
+                    metrics = candidate_data.get('metrics', {})
+                    details = candidate_data.get('details', {})
+                    
+                    print(f"\n{candidate_name} (準備レベル: {preparation}):")
+                    print(f"  精度: {metrics.get('accuracy', 0):.3f}")
+                    print(f"  Precision: {metrics.get('precision', 0):.3f}")
+                    print(f"  Recall: {metrics.get('recall', 0):.3f}")
+                    print(f"  F1スコア: {metrics.get('f1_score', 0):.3f}")
+                    print(f"  TP: {metrics.get('true_positives', 0)}, TN: {metrics.get('true_negatives', 0)}, FP: {metrics.get('false_positives', 0)}, FN: {metrics.get('false_negatives', 0)}")
+                    
+                    if details.get('correctly_detected_gaps (TP)'):
+                        print(f"  正しく検出された欠損 (TP): {details['correctly_detected_gaps (TP)']}")
+                    if details.get('incorrectly_detected_gaps (FP)'):
+                        print(f"  誤検出された欠損 (FP): {details['incorrectly_detected_gaps (FP)']}")
+                    if details.get('missed_gaps (FN)'):
+                        print(f"  見逃された欠損 (FN): {details['missed_gaps (FN)']}")
+                    
+                    if 'note' in candidate_data:
+                        print(f"  注意: {candidate_data['note']}")
+                else:
+                    print(f"\n{candidate_name} (準備レベル: {preparation}): データなし")
+            
+            # 志望度レベル別の統計
+            print(f"\n--- 評価3: 志望度レベル別統計 ---")
+            by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+            for level in ['low', 'medium', 'high']:
+                accuracy = by_motivation.get(level)
+                if accuracy is not None:
+                    print(f"  {level}: {accuracy:.3f}")
+                else:
+                    print(f"  {level}: データなし")
         
-        # 志望度レベル別の統計
-        print(f"\n--- 評価3: 志望度レベル別統計 ---")
-        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
-        for level in ['low', 'medium', 'high']:
-            accuracy = by_motivation.get(level)
-            if accuracy is not None:
-                print(f"  {level}: {accuracy:.3f}")
-            else:
-                print(f"  {level}: データなし")
+        # ラウンドの評価結果を保存
+        round_evaluations.append({
+            'round': round_num,
+            'evaluations': {
+                'least_motivated': least_motivated_eval,
+                'ranking': ranking_eval,
+                'knowledge_gaps': knowledge_gaps_eval
+            },
+            'ranking_accuracy': ranking_accuracy,
+            'knowledge_gaps_metrics': knowledge_gaps_metrics
+        })
+        
+        # ラウンド間の区切り
+        if round_num < max_rounds:
+            print(f"\n{'='*60}")
+            print(f"ラウンド {round_num} 完了。次のラウンドに進みます...")
+            print(f"{'='*60}\n")
     
     # 結果を保存
     results_dir = Path(__file__).parent / 'results'
@@ -650,12 +675,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             for state in candidate_states
         ],
         'evaluations': {
-            'least_motivated': least_motivated_eval,
-            'ranking': ranking_eval,
-            'knowledge_gaps': knowledge_gaps_eval
+            'least_motivated': round_evaluations[-1]['evaluations']['least_motivated'] if round_evaluations else None,
+            'ranking': round_evaluations[-1]['evaluations']['ranking'] if round_evaluations else None,
+            'knowledge_gaps': round_evaluations[-1]['evaluations']['knowledge_gaps'] if round_evaluations else None
         },
-        'ranking_accuracy': ranking_accuracy,
-        'knowledge_gaps_metrics': knowledge_gaps_metrics
+        'ranking_accuracy': round_evaluations[-1]['ranking_accuracy'] if round_evaluations else None,
+        'knowledge_gaps_metrics': round_evaluations[-1]['knowledge_gaps_metrics'] if round_evaluations else None,
+        'round_evaluations': round_evaluations  # 全ラウンドの評価結果
     }
     
     result_file = results_dir / f'interview_result_sim{simulation_num}_{timestamp}.json'
@@ -669,11 +695,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     return result_data
 
 
-def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None):
+def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None):
     """複数回の面接シミュレーションを実行"""
     print("\n" + "="*80)
     print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
     print("="*80)
+    
+    # ラウンド数の設定
+    if max_rounds is None:
+        max_rounds = MAX_ROUNDS
     
     # モデル設定の表示
     if interviewer_model_type is None:
@@ -715,7 +745,8 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             set_index=set_index, 
             simulation_num=sim_num,
             interviewer_model_type=interviewer_model_type,
-            interviewer_model_name=interviewer_model_name
+            interviewer_model_name=interviewer_model_name,
+            max_rounds=max_rounds
         )
         
         if result:
@@ -787,6 +818,12 @@ if __name__ == '__main__':
         action='store_true',
         help='利用可能なローカルモデル一覧を表示して終了'
     )
+    parser.add_argument(
+        '-r', '--max-rounds',
+        type=int,
+        default=None,
+        help=f'面接ラウンド数 (デフォルト: {MAX_ROUNDS})'
+    )
     
     args = parser.parse_args()
     
@@ -814,8 +851,9 @@ if __name__ == '__main__':
     
     # シミュレーション実行
     run_interviews(
-        num_simulations=args.num_simulations, 
+        num_simulations=args.num_simulations,
         set_index=args.set_index,
         interviewer_model_type=args.model_type,
-        interviewer_model_name=args.model_name
+        interviewer_model_name=args.model_name,
+        max_rounds=args.max_rounds
     )
