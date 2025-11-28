@@ -143,12 +143,16 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                     for i, name in enumerate(matches, 1):
                         extracted_names[i] = name.strip()
             
-            # パターン1-3: スペース入りの形式（例: "1. 学生 W2"）
+            # パターン1-3: スペース入りの形式（例: "1. 学生 W2" または "1. 學生 Q2"）
             if not extracted_names:
-                space_pattern = r'(\d+)\.\s*(学生\s*[A-Z]{1,3}\s*\d{0,2})'
+                space_pattern = r'(\d+)\.\s*(学生|學生)\s*([A-Z]{1,3})\s*(\d{0,2})'
                 for match in re.finditer(space_pattern, ranking_eval):
                     rank_num = int(match.group(1))
-                    name = match.group(2).replace(' ', '').strip()
+                    prefix = match.group(2)  # "学生" または "學生"
+                    letters = match.group(3)
+                    numbers = match.group(4)
+                    # "学生"に統一し、スペースを除去
+                    name = f"学生{letters}{numbers}".strip()
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
             

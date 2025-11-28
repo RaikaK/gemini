@@ -556,7 +556,21 @@ class Interviewer:
                         print(f"[デバッグ] 抽出されたキー文字列: {keys_str}")
                         # まずJSONとしてパースを試みる
                         try:
-                            detected_missing_keys = set(json.loads(keys_str))
+                            parsed = json.loads(keys_str)
+                            # パース結果がリストの場合、フラット化を試みる
+                            if isinstance(parsed, list):
+                                # 二重リストの場合を処理
+                                flat_list = []
+                                for item in parsed:
+                                    if isinstance(item, list):
+                                        flat_list.extend(item)
+                                    elif isinstance(item, str):
+                                        flat_list.append(item)
+                                detected_missing_keys = set(flat_list)
+                            elif isinstance(parsed, str):
+                                detected_missing_keys = {parsed}
+                            else:
+                                detected_missing_keys = set(parsed) if hasattr(parsed, '__iter__') else {str(parsed)}
                         except json.JSONDecodeError:
                             # JSONパースに失敗した場合、手動で抽出
                             # クォートで囲まれた文字列を抽出
@@ -571,6 +585,8 @@ class Interviewer:
                 except Exception as e:
                     note = f"Detected '欠損項目キー' but failed to parse: {e}"
                     print(f"[デバッグ] パースエラー: {e}")
+                    import traceback
+                    print(f"[デバッグ] トレースバック: {traceback.format_exc()}")
             else:
                 note = "Candidate block found, but '欠損項目キー' line is missing."
                 print(f"[デバッグ] 警告: '欠損項目キー' の行が見つかりません")
