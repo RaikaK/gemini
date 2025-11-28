@@ -2,6 +2,7 @@
 
 import torch
 import json
+import re
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from utils import call_openai_api
@@ -369,3 +370,214 @@ class Interviewer:
         else:
             ranking, token_info = self._generate_response(prompt, max_tokens=512)
             return ranking, token_info
+    
+    def _format_all_conversations(self, all_states):
+        """全候補者の会話ログを整形するヘルパー"""
+        full_log = ""
+        for i, state in enumerate(all_states):
+            profile = state['profile']
+            history_str = "\n".join([f"  面接官: {turn['question']}\n  {profile.get('name')}: {turn['answer']}" for turn in state['conversation_log']])
+            full_log += f"--- 候補者{i+1}: {profile.get('name')} ---\n会話履歴:\n{history_str}\n\n"
+        return full_log.strip()
+    
+    def _calculate_detection_metrics(self, llm_output_text, all_states):
+        """LLMの出力と正解データを比較し、TP/FP/FNなどの性能メトリクスを計算する"""
+        print(f"\n[デバッグ] LLM出力テキスト（最初の1000文字）:\n{llm_output_text[:1000]}\n")
+        
+        evaluation_results = {}
+        candidate_states_map = {s['profile']['name']: s for s in all_states}
+        
+        # より柔軟なセクション分割（"- 候補者名:" または "候補者名:" のパターンに対応）
+        # まず "- " で始まる行で分割
+        sections = re.split(r'(?=^-\s+[^\n]+:)', llm_output_text, re.MULTILINE)
+        # もし分割できなかったら、候補者名のパターンで分割
+        if len(sections) <= 1:
+            # 候補者名のパターンで分割（"学生" または "student" で始まる、大文字小文字を区別しない）
+            # "学生KKK1:" や "studentKKK1：" のパターンに対応
+            sections = re.split(r'(?=^(?:学生|student)[^\n:]+[：:])', llm_output_text, re.MULTILINE | re.IGNORECASE)
+        
+        print(f"[デバッグ] セクション数: {len(sections)}")
+        print(f"[デバッグ] 候補者名マップ: {list(candidate_states_map.keys())}\n")
+        
+        for section in sections:
+            section = section.strip()
+            if not section or ':' not in section:
+                continue
+
+            first_line = section.split('\n', 1)[0]
+            candidate_name_raw = first_line.replace('-', '').strip().split(':', 1)[0].strip()
+            print(f"[デバッグ] 抽出された候補者名（生）: '{candidate_name_raw}'")
+            
+            # 候補者名のマッチング（部分一致も試す）
+            candidate_name = None
+            # 完全一致を試す
+            if candidate_name_raw in candidate_states_map:
+                candidate_name = candidate_name_raw
+            else:
+                # 部分一致を試す（例: "studentKKK1" → "学生KKK1"）
+                for mapped_name in candidate_states_map.keys():
+                    # 数字部分を抽出して比較
+                    raw_numbers = ''.join(re.findall(r'\d+', candidate_name_raw))
+                    mapped_numbers = ''.join(re.findall(r'\d+', mapped_name))
+                    if raw_numbers == mapped_numbers and raw_numbers:
+                        candidate_name = mapped_name
+                        print(f"[デバッグ] 数字部分でマッチ: '{candidate_name_raw}' → '{candidate_name}'")
+                        break
+                    # 名前の一部が含まれているかチェック
+                    if candidate_name_raw in mapped_name or mapped_name in candidate_name_raw:
+                        candidate_name = mapped_name
+                        print(f"[デバッグ] 部分文字列でマッチ: '{candidate_name_raw}' → '{candidate_name}'")
+                        break
+                    # "学生" と "student" の変換を試す
+                    if 'student' in candidate_name_raw.lower() and '学生' in mapped_name:
+                        raw_suffix = candidate_name_raw.lower().replace('student', '').strip()
+                        mapped_suffix = mapped_name.replace('学生', '').strip()
+                        if raw_suffix == mapped_suffix:
+                            candidate_name = mapped_name
+                            print(f"[デバッグ] 英語/日本語変換でマッチ: '{candidate_name_raw}' → '{candidate_name}'")
+                            break
+            
+            if candidate_name is None:
+                print(f"[デバッグ] 警告: 候補者名 '{candidate_name_raw}' が候補者リストに存在しません")
+                print(f"[デバッグ] 利用可能な候補者名: {list(candidate_states_map.keys())}")
+                continue
+            
+            print(f"[デバッグ] 最終的に使用する候補者名: '{candidate_name}'")
+            
+            state = candidate_states_map[candidate_name]
+            note = None
+            detected_missing_keys = set()
+            
+            print(f"[デバッグ] セクション内容（最初の200文字）:\n{section[:200]}\n")
+            
+            key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", section)
+            if key_line_match:
+                try:
+                    keys_str = key_line_match.group(1)
+                    print(f"[デバッグ] 抽出されたキー文字列: {keys_str}")
+                    detected_missing_keys = set(json.loads(keys_str))
+                    print(f"[デバッグ] パース成功: 検出された欠損キー = {detected_missing_keys}")
+                except json.JSONDecodeError as e:
+                    note = f"Detected '欠損項目キー' but failed to parse JSON: {e}"
+                    print(f"[デバッグ] JSONパースエラー: {e}")
+            else:
+                note = "Candidate block found, but '欠損項目キー' line is missing."
+                print(f"[デバッグ] 警告: '欠損項目キー' の行が見つかりません")
+
+            # mochiではknowledgeが辞書形式
+            possessed_knowledge = state['knowledge']
+            actual_missing_keys = {key for key, value in possessed_knowledge.items() if not value}
+            actual_possessed_keys = {key for key, value in possessed_knowledge.items() if value}
+            all_company_keys = set(list(self.company.keys()))
+            detect_possessed_keys = all_company_keys.difference(detected_missing_keys)
+            
+            print(f"[デバッグ] {candidate_name}:")
+            print(f"  実際の欠損キー: {actual_missing_keys}")
+            print(f"  実際の保持キー: {actual_possessed_keys}")
+            print(f"  検出された欠損キー: {detected_missing_keys}")
+            print(f"  全企業キー: {all_company_keys}\n")
+
+            true_positives = actual_missing_keys.intersection(detected_missing_keys)
+            true_negatives = actual_possessed_keys.intersection(detect_possessed_keys)
+            false_positives = detected_missing_keys.difference(actual_missing_keys)
+            false_negatives = actual_missing_keys.difference(detected_missing_keys)
+            tp_count, tn_count, fp_count, fn_count = len(true_positives), len(true_negatives), len(false_positives), len(false_negatives)
+            precision = tp_count / (tp_count + fp_count) if (tp_count + fp_count) > 0 else 0.0
+            recall = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0.0
+            f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+            accuracy = (tp_count + tn_count) / len(all_company_keys) if all_company_keys else 0.0
+
+            result = {
+                "metrics": {
+                    "precision": round(precision, 3),
+                    "recall": round(recall, 3),
+                    "accuracy": round(accuracy, 3),
+                    "f1_score": round(f1_score, 3),
+                    "true_positives": tp_count,
+                    "true_negatives": tn_count,
+                    "false_positives": fp_count,
+                    "false_negatives": fn_count,
+                },
+                "details": {
+                    "correctly_detected_gaps (TP)": list(true_positives),
+                    "correctly_detected_knowns (TN)": list(true_negatives),
+                    "incorrectly_detected_gaps (FP)": list(false_positives),
+                    "missed_gaps (FN)": list(false_negatives),
+                }
+            }
+            if note:
+                result["note"] = note
+            evaluation_results[candidate_name] = result
+            
+            print(f"[デバッグ] {candidate_name} のメトリクス:")
+            print(f"  TP: {tp_count}, TN: {tn_count}, FP: {fp_count}, FN: {fn_count}")
+            print(f"  Precision: {precision:.3f}, Recall: {recall:.3f}, Accuracy: {accuracy:.3f}, F1: {f1_score:.3f}\n")
+
+        for state in all_states:
+            if state['profile']['name'] not in evaluation_results:
+                actual_missing_keys = {key for key, value in state['knowledge'].items() if not value}
+                evaluation_results[state['profile']['name']] = {
+                    "metrics": {
+                        "precision": 0.0,
+                        "recall": 0.0,
+                        "accuracy": 0.0,
+                        "f1_score": 0.0,
+                        "true_positives": 0,
+                        "false_positives": 0,
+                        "false_negatives": len(actual_missing_keys)
+                    },
+                    "details": {
+                        "correctly_detected_gaps (TP)": [],
+                        "incorrectly_detected_gaps (FP)": [],
+                        "missed_gaps (FN)": list(actual_missing_keys)
+                    },
+                    "note": "LLM output for this candidate was not found or failed to parse."
+                }
+        return evaluation_results
+    
+    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval):
+        """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う"""
+        
+        conversation_summary = self._format_all_conversations(all_states)
+        full_company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
+        
+        prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
+以下の「正解の企業情報」、「各候補者の面接記録」を比較し、候補者の知識の穴を特定してください。
+
+# 重要な注意点
+単に候補者が言及しなかったという理由だけで、知識が欠損していると結論づけないでください。質問の流れの中で、その情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりした場合にのみ「知識欠損」と判断してください。
+
+# 正解の企業情報 (キーと値のペア)
+```json
+{full_company_info_str}
+```
+
+# 各候補者の面接記録
+{conversation_summary}
+
+指示:
+各候補者について、以下の思考プロセスに基づき分析し、指定の形式で出力してください。
+1. **思考**: 候補者の各回答を検証します。「この質問に対して、この企業情報（例：'business'）に触れるのが自然だったか？」「回答が具体的か、それとも一般論に終始しているか？」「誤った情報はないか？」といった観点で、知識が欠けていると判断できる「根拠」を探します。
+2. **分析**: 上記の思考に基づき、知識が不足していると判断した理由を簡潔に記述します。
+3. **キーの列挙**: 知識不足の根拠があると判断した情報の「キー」のみをJSONのリスト形式で列挙してください。根拠がなければ、空のリスト `[]` を返してください。
+
+厳格な出力形式:
+- {all_states[0]['profile']['name']}:
+  分析: [ここに分析内容を記述]
+  欠損項目キー: ["キー1", "キー2", ...]
+- {all_states[1]['profile']['name']}:
+  分析: [ここに分析内容を記述]
+  欠損項目キー: ["キーA", "キーB", ...]
+- {all_states[2]['profile']['name']}:
+  分析: [ここに分析内容を記述]
+  欠損項目キー: []
+"""
+
+        llm_analysis_text, token_info = self._generate_response(prompt, max_tokens=8192)
+        
+        performance_metrics = self._calculate_detection_metrics(llm_analysis_text, all_states)
+        
+        return {
+            "llm_qualitative_analysis": llm_analysis_text,
+            "quantitative_performance_metrics": performance_metrics
+        }, token_info

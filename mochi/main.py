@@ -337,6 +337,65 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
         }
 
 
+def calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval):
+    """評価3: 知識欠損検出の精度指標を計算"""
+    try:
+        if not knowledge_gaps_eval or 'quantitative_performance_metrics' not in knowledge_gaps_eval:
+            return None
+        
+        performance_metrics = knowledge_gaps_eval['quantitative_performance_metrics']
+        
+        # 各候補者のメトリクスを集計
+        accuracies = []
+        f1_scores = []
+        precisions = []
+        recalls = []
+        
+        for state in candidate_states:
+            candidate_name = state['profile'].get('name')
+            if candidate_name in performance_metrics:
+                candidate_data = performance_metrics[candidate_name]
+                if 'metrics' in candidate_data:
+                    metrics = candidate_data['metrics']
+                    if 'accuracy' in metrics:
+                        accuracies.append(metrics['accuracy'])
+                    if 'f1_score' in metrics:
+                        f1_scores.append(metrics['f1_score'])
+                    if 'precision' in metrics:
+                        precisions.append(metrics['precision'])
+                    if 'recall' in metrics:
+                        recalls.append(metrics['recall'])
+        
+        # 志望度レベル別の精度
+        kg_accuracy_by_motivation = {
+            'low': None,
+            'medium': None,
+            'high': None
+        }
+        
+        for state in candidate_states:
+            candidate_name = state['profile'].get('name')
+            preparation_level = state['profile'].get('preparation', 'low')
+            
+            if candidate_name in performance_metrics:
+                candidate_data = performance_metrics[candidate_name]
+                if preparation_level in kg_accuracy_by_motivation and 'metrics' in candidate_data and 'accuracy' in candidate_data['metrics']:
+                    kg_accuracy_by_motivation[preparation_level] = candidate_data['metrics']['accuracy']
+        
+        return {
+            'avg_accuracy': sum(accuracies) / len(accuracies) if accuracies else 0.0,
+            'avg_f1_score': sum(f1_scores) / len(f1_scores) if f1_scores else 0.0,
+            'avg_precision': sum(precisions) / len(precisions) if precisions else 0.0,
+            'avg_recall': sum(recalls) / len(recalls) if recalls else 0.0,
+            'knowledge_gaps_metrics_by_motivation': kg_accuracy_by_motivation,
+            'per_candidate_metrics': performance_metrics
+        }
+        
+    except Exception as e:
+        print(f"知識欠損検出精度の計算中にエラーが発生しました: {e}")
+        return None
+
+
 def initialize_local_model(model_key=None):
     """ローカルモデルを初期化"""
     if not MODEL_MANAGER_AVAILABLE:
@@ -514,6 +573,63 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         else:
             print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
     
+    # 評価1と評価3の区切り
+    print(f"{'='*60}\n")
+    
+    # 評価3: 知識欠損検出
+    print("【評価3: 知識欠損検出】")
+    knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+    
+    # 評価3の精度計算
+    knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
+    if knowledge_gaps_metrics:
+        print(f"\n--- 評価3: 全体統計 ---")
+        print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
+        print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
+        print(f"平均Precision: {knowledge_gaps_metrics.get('avg_precision', 0):.3f}")
+        print(f"平均Recall: {knowledge_gaps_metrics.get('avg_recall', 0):.3f}")
+        
+        # 各候補者ごとの詳細表示
+        print(f"\n--- 評価3: 各候補者ごとの詳細 ---")
+        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+        for state in candidate_states:
+            candidate_name = state['profile']['name']
+            preparation = state['profile'].get('preparation', 'low')
+            
+            if candidate_name in per_candidate:
+                candidate_data = per_candidate[candidate_name]
+                metrics = candidate_data.get('metrics', {})
+                details = candidate_data.get('details', {})
+                
+                print(f"\n{candidate_name} (準備レベル: {preparation}):")
+                print(f"  精度: {metrics.get('accuracy', 0):.3f}")
+                print(f"  Precision: {metrics.get('precision', 0):.3f}")
+                print(f"  Recall: {metrics.get('recall', 0):.3f}")
+                print(f"  F1スコア: {metrics.get('f1_score', 0):.3f}")
+                print(f"  TP: {metrics.get('true_positives', 0)}, TN: {metrics.get('true_negatives', 0)}, FP: {metrics.get('false_positives', 0)}, FN: {metrics.get('false_negatives', 0)}")
+                
+                if details.get('correctly_detected_gaps (TP)'):
+                    print(f"  正しく検出された欠損 (TP): {details['correctly_detected_gaps (TP)']}")
+                if details.get('incorrectly_detected_gaps (FP)'):
+                    print(f"  誤検出された欠損 (FP): {details['incorrectly_detected_gaps (FP)']}")
+                if details.get('missed_gaps (FN)'):
+                    print(f"  見逃された欠損 (FN): {details['missed_gaps (FN)']}")
+                
+                if 'note' in candidate_data:
+                    print(f"  注意: {candidate_data['note']}")
+            else:
+                print(f"\n{candidate_name} (準備レベル: {preparation}): データなし")
+        
+        # 志望度レベル別の統計
+        print(f"\n--- 評価3: 志望度レベル別統計 ---")
+        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+        for level in ['low', 'medium', 'high']:
+            accuracy = by_motivation.get(level)
+            if accuracy is not None:
+                print(f"  {level}: {accuracy:.3f}")
+            else:
+                print(f"  {level}: データなし")
+    
     # 結果を保存
     results_dir = Path(__file__).parent / 'results'
     results_dir.mkdir(exist_ok=True)
@@ -535,9 +651,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         ],
         'evaluations': {
             'least_motivated': least_motivated_eval,
-            'ranking': ranking_eval
+            'ranking': ranking_eval,
+            'knowledge_gaps': knowledge_gaps_eval
         },
-        'ranking_accuracy': ranking_accuracy
+        'ranking_accuracy': ranking_accuracy,
+        'knowledge_gaps_metrics': knowledge_gaps_metrics
     }
     
     result_file = results_dir / f'interview_result_sim{simulation_num}_{timestamp}.json'
