@@ -774,20 +774,129 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             print(f"\n{target_candidate_name}: {answer}")
             
-            # 個別質問後の評価（簡易的、またはスキップ）
-            # 個別質問では評価は簡易的に実行（評価1のみ）
+            # 個別質問後の評価（すべての個別質問ラウンドで評価を実行）
             print(f"\n{'='*60}")
-            print(f"ラウンド {round_num} (個別質問) 終了")
+            print(f"ラウンド {round_num} (個別質問) 終了後の評価")
             print(f"{'='*60}\n")
             
-            # 個別質問では評価結果を保存しない（全体質問でのみ評価を保存）
+            # 評価1: 最も志望度が低い候補者を選定
+            print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
+            least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
+            print(f"{least_motivated_eval}\n")
+            
+            # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
+            import re
+            # より柔軟なパターンで候補者名を抽出
+            next_target_candidate_name = None
+            # パターン1: 直接候補者名が含まれている場合
+            for state in candidate_states:
+                candidate_name = state['profile']['name']
+                # 候補者名がテキストに含まれているかチェック
+                if candidate_name in least_motivated_eval:
+                    next_target_candidate_name = candidate_name
+                    target_candidate_for_individual = state
+                    print(f"次の個別質問の対象: {next_target_candidate_name}")
+                    break
+            
+            # パターン2: 正規表現で抽出を試みる
+            if next_target_candidate_name is None:
+                # 「学生」で始まり、英数字が続くパターン
+                match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                if match:
+                    extracted_name = match.group(1)
+                    # 候補者名リストと照合
+                    for state in candidate_states:
+                        if state['profile']['name'] == extracted_name:
+                            next_target_candidate_name = extracted_name
+                            target_candidate_for_individual = state
+                            print(f"次の個別質問の対象: {next_target_candidate_name} (正規表現で抽出)")
+                            break
+            
+            # 評価1と評価2の区切り
+            print(f"{'='*60}\n")
+            
+            # 評価2: ランキング
+            print(f"【ラウンド {round_num} - 評価2: 志望度ランキング（低い順）】")
+            ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
+            print(f"{ranking_eval}\n")
+            
+            # 評価2: ランキング精度の計算
+            ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+            if ranking_accuracy:
+                if ranking_accuracy.get('is_valid'):
+                    print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
+                else:
+                    print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
+            
+            # 評価2と評価3の区切り
+            print(f"{'='*60}\n")
+            
+            # 評価3: 知識欠損検出
+            print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
+            knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            
+            # 評価3の精度計算
+            knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
+            if knowledge_gaps_metrics:
+                print(f"\n--- 評価3: 全体統計 ---")
+                print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
+                print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
+                print(f"平均Precision: {knowledge_gaps_metrics.get('avg_precision', 0):.3f}")
+                print(f"平均Recall: {knowledge_gaps_metrics.get('avg_recall', 0):.3f}")
+                
+                # 各候補者ごとの詳細表示
+                print(f"\n--- 評価3: 各候補者ごとの詳細 ---")
+                per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+                for state in candidate_states:
+                    candidate_name = state['profile']['name']
+                    preparation = state['profile'].get('preparation', 'low')
+                    
+                    if candidate_name in per_candidate:
+                        candidate_data = per_candidate[candidate_name]
+                        metrics = candidate_data.get('metrics', {})
+                        details = candidate_data.get('details', {})
+                        
+                        print(f"\n{candidate_name} (準備レベル: {preparation}):")
+                        print(f"  精度: {metrics.get('accuracy', 0):.3f}")
+                        print(f"  Precision: {metrics.get('precision', 0):.3f}")
+                        print(f"  Recall: {metrics.get('recall', 0):.3f}")
+                        print(f"  F1スコア: {metrics.get('f1_score', 0):.3f}")
+                        print(f"  TP: {metrics.get('true_positives', 0)}, TN: {metrics.get('true_negatives', 0)}, FP: {metrics.get('false_positives', 0)}, FN: {metrics.get('false_negatives', 0)}")
+                        
+                        if details.get('correctly_detected_gaps (TP)'):
+                            print(f"  正しく検出された欠損 (TP): {details['correctly_detected_gaps (TP)']}")
+                        if details.get('incorrectly_detected_gaps (FP)'):
+                            print(f"  誤検出された欠損 (FP): {details['incorrectly_detected_gaps (FP)']}")
+                        if details.get('missed_gaps (FN)'):
+                            print(f"  見逃された欠損 (FN): {details['missed_gaps (FN)']}")
+                        
+                        if 'note' in candidate_data:
+                            print(f"  注意: {candidate_data['note']}")
+                    else:
+                        print(f"\n{candidate_name} (準備レベル: {preparation}): データなし")
+                
+                # 志望度レベル別の統計
+                print(f"\n--- 評価3: 志望度レベル別統計 ---")
+                by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+                for level in ['low', 'medium', 'high']:
+                    accuracy = by_motivation.get(level)
+                    if accuracy is not None:
+                        print(f"  {level}: {accuracy:.3f}")
+                    else:
+                        print(f"  {level}: データなし")
+            
+            # 個別質問ラウンドの評価結果を保存
             round_evaluations.append({
                 'round': round_num,
                 'question_type': 'individual',
                 'target_candidate': target_candidate_name,
-                'evaluations': None,
-                'ranking_accuracy': None,
-                'knowledge_gaps_metrics': None
+                'evaluations': {
+                    'least_motivated': least_motivated_eval,
+                    'ranking': ranking_eval,
+                    'knowledge_gaps': knowledge_gaps_eval
+                },
+                'ranking_accuracy': ranking_accuracy,
+                'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
         
         # ラウンド間の区切り
