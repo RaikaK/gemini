@@ -135,6 +135,23 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                 if name and rank_num >= 1 and rank_num <= len(candidate_states):
                     extracted_names[rank_num] = name
             
+            # パターン1-2: カンマ区切りの形式（例: "学生W3、学生W1、学生W2"）
+            if not extracted_names:
+                comma_pattern = r'(学生[A-Z]{1,3}\d{0,2})[、,，]'
+                matches = re.findall(comma_pattern, ranking_eval)
+                if len(matches) == len(candidate_states):
+                    for i, name in enumerate(matches, 1):
+                        extracted_names[i] = name.strip()
+            
+            # パターン1-3: スペース入りの形式（例: "1. 学生 W2"）
+            if not extracted_names:
+                space_pattern = r'(\d+)\.\s*(学生\s*[A-Z]{1,3}\s*\d{0,2})'
+                for match in re.finditer(space_pattern, ranking_eval):
+                    rank_num = int(match.group(1))
+                    name = match.group(2).replace(' ', '').strip()
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+            
             # パターン2: "**数字. 名前 (説明)**" 形式（例: "**1. 学生CB (志望度の低い順に第1位)**"）
             markdown_pattern2 = r'\*{2,}\s*(\d+)\.\s*([^\n\(\)\*]+?)(?:\s*\([^)]*\))?\s*\*{0,}'
             for match in re.finditer(markdown_pattern2, ranking_eval):
@@ -600,15 +617,31 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             import re
-            match = re.search(r'(学生[A-Z]{2,3}\d?)', least_motivated_eval)
-            if match:
-                target_candidate_name = match.group(1)
-                # 候補者名から該当する候補者を検索
-                for state in candidate_states:
-                    if state['profile']['name'] == target_candidate_name:
-                        target_candidate_for_individual = state
-                        print(f"次の個別質問の対象: {target_candidate_name}")
-                        break
+            # より柔軟なパターンで候補者名を抽出
+            target_candidate_name = None
+            # パターン1: 直接候補者名が含まれている場合
+            for state in candidate_states:
+                candidate_name = state['profile']['name']
+                # 候補者名がテキストに含まれているかチェック
+                if candidate_name in least_motivated_eval:
+                    target_candidate_name = candidate_name
+                    target_candidate_for_individual = state
+                    print(f"次の個別質問の対象: {target_candidate_name}")
+                    break
+            
+            # パターン2: 正規表現で抽出を試みる
+            if target_candidate_name is None:
+                # 「学生」で始まり、英数字が続くパターン
+                match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                if match:
+                    extracted_name = match.group(1)
+                    # 候補者名リストと照合
+                    for state in candidate_states:
+                        if state['profile']['name'] == extracted_name:
+                            target_candidate_name = extracted_name
+                            target_candidate_for_individual = state
+                            print(f"次の個別質問の対象: {target_candidate_name} (正規表現で抽出)")
+                            break
             
             # 評価1と評価2の区切り
             print(f"{'='*60}\n")

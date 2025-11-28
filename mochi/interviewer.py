@@ -472,11 +472,31 @@ class Interviewer:
         
         for section in sections:
             section = section.strip()
-            if not section or ':' not in section:
+            if not section:
                 continue
-
-            first_line = section.split('\n', 1)[0]
-            candidate_name_raw = first_line.replace('-', '').strip().split(':', 1)[0].strip()
+            
+            # 候補者名の抽出をより柔軟に
+            candidate_name_raw = None
+            
+            # パターン1: "- 候補者名:" または "候補者名:" で始まる行
+            first_line = section.split('\n', 1)[0] if '\n' in section else section
+            name_match = re.search(r'[-*]*\s*([^\n:]+?)[：:]', first_line)
+            if name_match:
+                candidate_name_raw = name_match.group(1).strip()
+                # マークダウン記号を除去
+                candidate_name_raw = re.sub(r'[*#\s]+', '', candidate_name_raw)
+            
+            # パターン2: 候補者名パターンを直接検索
+            if not candidate_name_raw:
+                name_pattern = r'(学生[A-Z]{1,3}\d{0,2})'
+                name_match = re.search(name_pattern, first_line)
+                if name_match:
+                    candidate_name_raw = name_match.group(1)
+            
+            if not candidate_name_raw:
+                print(f"[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: {first_line[:100]}")
+                continue
+            
             print(f"[デバッグ] 抽出された候補者名（生）: '{candidate_name_raw}'")
             
             # 候補者名のマッチング（部分一致も試す）
@@ -521,16 +541,36 @@ class Interviewer:
             
             print(f"[デバッグ] セクション内容（最初の200文字）:\n{section[:200]}\n")
             
-            key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", section)
+            # より柔軟なパターンでキー行を検索
+            key_line_match = re.search(r"欠損項目キー:\s*(\[.*?\])", section, re.DOTALL)
+            if not key_line_match:
+                # 別のパターン: 改行を含む可能性がある
+                key_line_match = re.search(r"欠損項目キー:\s*\[(.*?)\]", section, re.DOTALL)
+            
             if key_line_match:
                 try:
-                    keys_str = key_line_match.group(1)
-                    print(f"[デバッグ] 抽出されたキー文字列: {keys_str}")
-                    detected_missing_keys = set(json.loads(keys_str))
-                    print(f"[デバッグ] パース成功: 検出された欠損キー = {detected_missing_keys}")
-                except json.JSONDecodeError as e:
-                    note = f"Detected '欠損項目キー' but failed to parse JSON: {e}"
-                    print(f"[デバッグ] JSONパースエラー: {e}")
+                    if key_line_match.lastindex >= 1:
+                        keys_content = key_line_match.group(1)
+                        # JSON配列形式に変換を試みる
+                        keys_str = f"[{keys_content}]"
+                        print(f"[デバッグ] 抽出されたキー文字列: {keys_str}")
+                        # まずJSONとしてパースを試みる
+                        try:
+                            detected_missing_keys = set(json.loads(keys_str))
+                        except json.JSONDecodeError:
+                            # JSONパースに失敗した場合、手動で抽出
+                            # クォートで囲まれた文字列を抽出
+                            key_matches = re.findall(r'["\']([^"\']+)["\']', keys_content)
+                            if key_matches:
+                                detected_missing_keys = set(key_matches)
+                            else:
+                                # クォートがない場合、カンマ区切りで抽出
+                                keys_list = [k.strip() for k in keys_content.split(',') if k.strip()]
+                                detected_missing_keys = set(keys_list)
+                        print(f"[デバッグ] パース成功: 検出された欠損キー = {detected_missing_keys}")
+                except Exception as e:
+                    note = f"Detected '欠損項目キー' but failed to parse: {e}"
+                    print(f"[デバッグ] パースエラー: {e}")
             else:
                 note = "Candidate block found, but '欠損項目キー' line is missing."
                 print(f"[デバッグ] 警告: '欠損項目キー' の行が見つかりません")
