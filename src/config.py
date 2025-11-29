@@ -8,7 +8,7 @@ PROJECT_ROOT = SRC_ROOT.parent
 # --- ディレクトリ ---
 DATA_DIR = PROJECT_ROOT / "data"
 DEMONSTRATION_DIR = DATA_DIR / "demonstrations"
-MODELS_DIR = DATA_DIR / "models"
+MODELS_DIR = PROJECT_ROOT / "models"
 
 # --- 特徴量 ---
 CHANNELS_CARD = 43  # チャンネル数 (カード)
