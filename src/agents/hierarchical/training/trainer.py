@@ -69,7 +69,6 @@ def setup_experiment(args: argparse.Namespace) -> tuple[Path, torch.device]:
         group=args.group,
         name=args.name,
         config={k: v for k, v in vars(params).items() if not k.startswith("__")},
-        settings=wandb.Settings(silent=True),
     )
 
     # ログ出力
