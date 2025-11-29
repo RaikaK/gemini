@@ -497,8 +497,18 @@ def _get_last_common_question_knowledge_gaps_metrics(round_evaluations):
             return eval_data.get('knowledge_gaps_metrics')
     return None
 
-def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None):
-    """単一の面接シミュレーションを実行"""
+def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, local_model=None, local_tokenizer=None):
+    """単一の面接シミュレーションを実行
+    
+    Args:
+        set_index: データセットのインデックス
+        simulation_num: シミュレーション番号
+        interviewer_model_type: 面接官モデルのタイプ ('local' または 'api')
+        interviewer_model_name: 面接官モデル名
+        max_rounds: 最大ラウンド数
+        local_model: 再利用するローカルモデル（オプション、提供されない場合は新規初期化）
+        local_tokenizer: 再利用するローカルトークナイザー（オプション、提供されない場合は新規初期化）
+    """
     print("\n" + "="*60)
     print(f"面接ロールプレイ実行システム - シミュレーション {simulation_num}")
     print("="*60)
@@ -526,10 +536,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     
     # 面接官を初期化
     if interviewer_model_type == 'local':
-        local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
+        # 既に初期化されたモデルが提供されている場合は再利用、そうでない場合は新規初期化
         if local_model is None or local_tokenizer is None:
-            print("ローカルモデルの初期化に失敗しました。")
-            return None
+            local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
+            if local_model is None or local_tokenizer is None:
+                print("ローカルモデルの初期化に失敗しました。")
+                return None
+        else:
+            print(f"--- ローカルモデル ({interviewer_model_name}) を再利用 ---")
+        
         interviewer = Interviewer(
             company_profile,
             model_type='local',
@@ -981,6 +996,18 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     all_results = []
     
+    # ローカルモデルの場合、最初の1回だけ初期化して以降は再利用
+    shared_local_model = None
+    shared_local_tokenizer = None
+    
+    if interviewer_model_type == 'local':
+        print(f"\n--- ローカルモデル ({interviewer_model_name}) を初期化します（全シミュレーションで再利用） ---")
+        shared_local_model, shared_local_tokenizer = initialize_local_model(interviewer_model_name)
+        if shared_local_model is None or shared_local_tokenizer is None:
+            print("ローカルモデルの初期化に失敗しました。")
+            return
+        print(f"--- ローカルモデルの初期化完了 ---\n")
+    
     # 複数回のシミュレーションを実行
     for sim_num in range(1, num_simulations + 1):
         print(f"\n{'='*80}")
@@ -992,7 +1019,9 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             simulation_num=sim_num,
             interviewer_model_type=interviewer_model_type,
             interviewer_model_name=interviewer_model_name,
-            max_rounds=max_rounds
+            max_rounds=max_rounds,
+            local_model=shared_local_model,
+            local_tokenizer=shared_local_tokenizer
         )
         
         if result:
