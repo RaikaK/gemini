@@ -205,15 +205,15 @@ def _calculate_metrics(
         topk_indices = torch.topk(action_scores, k=k).indices
 
         # Top-1
-        if k >= 1 and correct_idx == topk_indices[:1]:
+        if correct_idx in topk_indices[:1]:
             correct_top1 += 1
 
         # Top-2
-        if k >= 2 and correct_idx in topk_indices[:2]:
+        if correct_idx in topk_indices[:2]:
             correct_top2 += 1
 
         # Top-3
-        if k >= 3 and correct_idx in topk_indices[:3]:
+        if correct_idx in topk_indices[:3]:
             correct_top3 += 1
 
     return correct_top1, correct_top2, correct_top3
