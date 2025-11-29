@@ -20,21 +20,21 @@ class HierarchicalLoss(nn.Module):
 
     def forward(
         self,
-        predictions: dict[str, torch.Tensor],
+        model_output: dict[str, torch.Tensor],
         targets: dict[str, torch.Tensor],
     ) -> torch.Tensor:
         """
         合計損失を計算する。
 
         Args:
-            predictions (dict[str, torch.Tensor]): モデルの予測 (各Headのロジット)
+            model_output (dict[str, torch.Tensor]): モデルの出力 (各Headのロジット)
             targets (dict[str, torch.Tensor]): 正解行動ラベル (各Headのインデックス)
 
         Returns:
             torch.Tensor: 合計損失
         """
         # デバイス取得
-        device: torch.device = predictions[ActionHeads.COMMAND_TYPE.name].device
+        device: torch.device = model_output[ActionHeads.COMMAND_TYPE.name].device
         total_loss: torch.Tensor = torch.tensor(0.0, device=device)
 
         # 合計損失を計算
@@ -42,7 +42,7 @@ class HierarchicalLoss(nn.Module):
             head_name: str = action_head.name
 
             # 予測と正解を取得
-            prediction: torch.Tensor = predictions[head_name]
+            prediction: torch.Tensor = model_output[head_name]
             target: torch.Tensor = targets[head_name]
 
             # 各Headの損失を計算
