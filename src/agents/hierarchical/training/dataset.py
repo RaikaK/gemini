@@ -4,7 +4,7 @@ import random
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, default_collate
 from tqdm import tqdm
 from ygo.constants.enums import CommandType
 from ygo.models.command_request import CommandEntry, CommandRequest
@@ -75,6 +75,34 @@ class HierarchicalDataset(Dataset):
         action_label = {key: torch.tensor(val, dtype=torch.long) for key, val in self.action_labels[idx].items()}
 
         return state_feature, action_label, self.command_requests[idx], self.correct_indices[idx]
+
+
+def hierarchical_collate_fn(
+    batch: list[tuple[torch.Tensor, dict[str, torch.Tensor], CommandRequest, int]],
+) -> tuple[torch.Tensor, dict[str, torch.Tensor], list[CommandRequest], torch.Tensor]:
+    """
+    階層型collate関数。
+
+    Args:
+        batch (list[tuple[torch.Tensor, dict[str, torch.Tensor], CommandRequest, int]]): バッチデータのリスト
+
+    Returns:
+        tuple[torch.Tensor, dict[str, torch.Tensor], list[CommandRequest], torch.Tensor]: バッチ化された (状態特徴量, 正解行動ラベル, コマンドリクエスト, 正解インデックス)
+
+    """
+
+    # 要素ごとに分解
+    state_features: list[torch.Tensor] = [item[0] for item in batch]
+    action_labels: list[dict[str, torch.Tensor]] = [item[1] for item in batch]
+    command_requests: list[CommandRequest] = [item[2] for item in batch]
+    correct_indices: list[int] = [item[3] for item in batch]
+
+    # バッチ化
+    batched_state_features: torch.Tensor = default_collate(state_features)
+    batched_action_labels: dict[str, torch.Tensor] = default_collate(action_labels)
+    batched_correct_indices: torch.Tensor = default_collate(correct_indices)
+
+    return batched_state_features, batched_action_labels, command_requests, batched_correct_indices
 
 
 def _process_single_file(

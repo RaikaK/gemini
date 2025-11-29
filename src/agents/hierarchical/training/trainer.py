@@ -16,7 +16,7 @@ from ygo.models.command_request import CommandRequest
 from src.agents.hierarchical.models.action_scorer import ActionScorer
 from src.agents.hierarchical.models.cnn import HierarchicalCNN
 import src.agents.hierarchical.params as params
-from src.agents.hierarchical.training.dataset import create_hierarchical_datasets
+from src.agents.hierarchical.training.dataset import create_hierarchical_datasets, hierarchical_collate_fn
 from src.agents.hierarchical.training.loss import HierarchicalLoss
 import src.config as config
 from src.feature.feature_manager import FeatureManager
@@ -107,6 +107,7 @@ def prepare_data() -> tuple[DataLoader, DataLoader]:
         shuffle=True,
         num_workers=max((os.cpu_count() or 1) // 2, 1),
         pin_memory=True,
+        collate_fn=hierarchical_collate_fn,
     )
     valid_loader: DataLoader = DataLoader(
         valid_dataset,
@@ -114,6 +115,7 @@ def prepare_data() -> tuple[DataLoader, DataLoader]:
         shuffle=False,
         num_workers=max((os.cpu_count() or 1) // 2, 1),
         pin_memory=True,
+        collate_fn=hierarchical_collate_fn,
     )
 
     # ログ出力
