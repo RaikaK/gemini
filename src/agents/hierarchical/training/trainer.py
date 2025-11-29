@@ -303,7 +303,7 @@ def valid_step(
     Returns:
         float: (平均損失, Top-1正解率, Top-2正解率, Top-3正解率)
     """
-    # 検証モード
+    # 評価モード
     model.eval()
     total_loss = 0.0
     total_correct_top1 = 0
