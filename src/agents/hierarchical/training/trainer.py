@@ -104,7 +104,7 @@ def prepare_data() -> tuple[DataLoader, DataLoader]:
         train_dataset,
         batch_size=params.BATCH_SIZE,
         shuffle=True,
-        num_workers=max((os.cpu_count() or 1) // 2, 1),
+        num_workers=0,
         pin_memory=True,
         collate_fn=hierarchical_collate_fn,
     )
@@ -112,7 +112,7 @@ def prepare_data() -> tuple[DataLoader, DataLoader]:
         valid_dataset,
         batch_size=params.BATCH_SIZE,
         shuffle=False,
-        num_workers=max((os.cpu_count() or 1) // 2, 1),
+        num_workers=0,
         pin_memory=True,
         collate_fn=hierarchical_collate_fn,
     )
