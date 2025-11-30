@@ -409,13 +409,13 @@ def run_training(
         # モデル保存
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            print(f"  {'Best Valid Loss':>20}: {best_valid_loss:.4f}")
+            print(f"  Best Valid Loss     | {best_valid_loss:.4f}")
             wandb.log({"best_valid_loss_epoch": epoch, "best_valid_loss": best_valid_loss})
             torch.save(model.state_dict(), save_dir / "best_loss_model.pth")
 
         if valid_accuracy_top1 > best_valid_accuracy:
             best_valid_accuracy = valid_accuracy_top1
-            print(f"  {'Best Valid Accuracy':>20}: {best_valid_accuracy:.4f}")
+            print(f"  Best Valid Accuracy | {best_valid_accuracy:.4f}")
             wandb.log({"best_valid_accuracy_epoch": epoch, "best_valid_accuracy": best_valid_accuracy})
             torch.save(model.state_dict(), save_dir / "best_accuracy_model.pth")
 
