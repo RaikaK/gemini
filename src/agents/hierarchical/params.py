@@ -20,19 +20,19 @@ VALID_RATIO = 0.1
 # =============================================================================
 
 # ResNetブロック数
-NUM_BLOCKS = 10
+NUM_BLOCKS = 20
 
 # 隠れ層の次元数
-HIDDEN_DIM = 128
+HIDDEN_DIM = 256
 
 # 圧縮層の次元数
-REDUCTION_DIM = 32
+REDUCTION_DIM = 128
 
 # コンテキストベクトルの次元数
 CONTEXT_DIM = 1024
 
 # ドロップアウト率
-DROPOUT = 0.5
+DROPOUT = 0.1
 
 # =============================================================================
 # 学習
@@ -45,7 +45,7 @@ BATCH_SIZE = 128
 LEARNING_RATE = 1e-4
 
 # 重み減衰
-WEIGHT_DECAY = 0.0
+WEIGHT_DECAY = 1e-4
 
 # エポック数
-NUM_EPOCHS = 50
+NUM_EPOCHS = 1000
