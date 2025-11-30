@@ -370,6 +370,9 @@ def run_training(
     )
 
     # 学習ループ
+    best_loss = float("inf")
+    best_accuracy = 0.0
+
     for epoch in range(1, params.NUM_EPOCHS + 1):
         # 訓練
         train_loss, train_accuracy_top1, train_accuracy_top2, train_accuracy_top3 = train_step(
@@ -404,7 +407,15 @@ def run_training(
         )
 
         # モデル保存
-        torch.save(model.state_dict(), save_dir / f"epoch_{epoch:03d}.pth")
+        if valid_loss < best_loss:
+            best_loss = valid_loss
+            print(f"  {'Best Loss':>20}: {best_loss:.4f}")
+            torch.save(model.state_dict(), save_dir / "best_loss_model.pth")
+
+        if valid_accuracy_top1 > best_accuracy:
+            best_accuracy = valid_accuracy_top1
+            print(f"  {'Best Accuracy':>20}: {best_accuracy:.4f}")
+            torch.save(model.state_dict(), save_dir / "best_accuracy_model.pth")
 
 
 def main() -> None:
