@@ -145,7 +145,7 @@ def build_model(device: torch.device) -> torch.nn.Module:
     """
     # モデル構築
     model: torch.nn.Module = HierarchicalCNN(
-        channels=config.TOTAL_CHANNELS,
+        channels=config.TOTAL_CHANNELS_STATE,
         image_size=(config.HEIGHT, config.WIDTH),
         num_block=params.NUM_BLOCKS,
         hidden_dim=params.HIDDEN_DIM,
@@ -162,7 +162,7 @@ def build_model(device: torch.device) -> torch.nn.Module:
         model,
         input_size=(
             params.BATCH_SIZE,
-            config.TOTAL_CHANNELS,
+            config.TOTAL_CHANNELS_STATE,
             config.HEIGHT,
             config.WIDTH,
         ),

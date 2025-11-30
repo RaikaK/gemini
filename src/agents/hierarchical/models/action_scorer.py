@@ -52,6 +52,10 @@ class ActionScorer:
 
                 action_scores.append(action_score)
 
-            batch_action_scores.append(torch.stack(action_scores))
+            if action_scores:
+                batch_action_scores.append(torch.stack(action_scores))
+
+            else:
+                batch_action_scores.append(torch.tensor([], device=device))
 
         return batch_action_scores

@@ -41,7 +41,7 @@ class HierarchicalAgent(BaseAgent):
 
         # モデル構築
         self.model: torch.nn.Module = HierarchicalCNN(
-            channels=config.TOTAL_CHANNELS,
+            channels=config.TOTAL_CHANNELS_STATE,
             image_size=(config.HEIGHT, config.WIDTH),
             num_block=params.NUM_BLOCKS,
             hidden_dim=params.HIDDEN_DIM,
