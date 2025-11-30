@@ -19,6 +19,7 @@ def main() -> None:
     parser.add_argument("--tcp_port", type=int, default=52000)
     parser.add_argument("--connect", choices=["Socket", "gRPC"], default="gRPC")
     parser.add_argument("--use_gui", action="store_true")
+    parser.add_argument("--no_wandb", action="store_true")
     parser.add_argument("--group", type=str, default="vs_CPU")
     parser.add_argument("--name", type=str, default=datetime.now().strftime("%Y%m%d_%H%M%S"))
     args = parser.parse_args()
@@ -32,13 +33,14 @@ def main() -> None:
     state: StateData = env.reset()
 
     # wandb初期化
-    wandb.init(
-        entity=config.WANDB_ENTITY,
-        project=config.WANDB_PROJECT,
-        group=args.group,
-        name=args.name,
-        config={"model_path": str(model_path)},
-    )
+    if not args.no_wandb:
+        wandb.init(
+            entity=config.WANDB_ENTITY,
+            project=config.WANDB_PROJECT,
+            group=args.group,
+            name=args.name,
+            config={"model_path": str(model_path)},
+        )
 
     # デュエルループ
     episode = 0
@@ -55,7 +57,7 @@ def main() -> None:
         log: dict | None = agent.update(state=state, action=action, next_state=next_state, info=info)
 
         # ログ記録
-        if log is not None:
+        if log is not None and not args.no_wandb:
             wandb.log(log)
 
         state = next_state
@@ -77,7 +79,8 @@ def main() -> None:
             )
 
             # ログ記録
-            wandb.log({"episode": episode, "win_rate": win_rate, "is_win": is_win})
+            if not args.no_wandb:
+                wandb.log({"episode": episode, "win_rate": win_rate, "is_win": is_win})
 
             state = env.reset()
 
