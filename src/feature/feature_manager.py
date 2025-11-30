@@ -48,7 +48,7 @@ class FeatureManager:
         """
         # 初期化
         feature: np.ndarray = np.zeros(
-            (config.TOTAL_CHANNELS_STATE_ACTION, config.HEIGHT, config.WIDTH),
+            (config.TOTAL_CHANNELS, config.HEIGHT, config.WIDTH),
             dtype=np.float32,
         )
 
