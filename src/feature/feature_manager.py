@@ -48,7 +48,7 @@ class FeatureManager:
         """
         # 初期化
         feature: np.ndarray = np.zeros(
-            (config.TOTAL_CHANNELS_STATE, config.HEIGHT, config.WIDTH),
+            (config.TOTAL_CHANNELS_STATE_ACTION, config.HEIGHT, config.WIDTH),
             dtype=np.float32,
         )
 
@@ -82,6 +82,15 @@ class FeatureManager:
             feature[cursor : cursor + config.CHANNELS_REQUEST, :, :],
         )
         cursor += config.CHANNELS_REQUEST
+
+        # 行動選択
+        for command in state.command_request.commands:
+            self.entry_extractor.extract(
+                command,
+                feature[cursor : cursor + config.CHANNELS_ENTRY, :, :],
+            )
+
+        cursor += config.CHANNELS_ENTRY
 
         return feature
 
