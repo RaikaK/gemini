@@ -25,7 +25,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # エージェント初期化
-    model_path = config.MODELS_DIR / "hierarchical-agent_sl" / "2025-12-01_00-00-00" / "epoch001.pth"
+    model_path = config.MODELS_DIR / "hierarchical-agent_sl" / "20251201_000000" / "epoch_0001.pth"
     agent = HierarchicalAgent(model_path=model_path)
 
     # 環境初期化
