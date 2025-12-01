@@ -80,7 +80,7 @@ def main() -> None:
 
             # ログ記録
             if not args.no_wandb:
-                wandb.log({"episode": episode, "win_rate": win_rate, "is_win": is_win})
+                wandb.log({"episode": episode, "win_rate": win_rate, "is_win": int(is_win)})
 
             state = env.reset()
 
