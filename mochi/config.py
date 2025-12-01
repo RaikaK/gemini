@@ -75,3 +75,8 @@ AVAILABLE_LOCAL_MODELS = {
 
 # デフォルトのローカルモデル
 LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定
+
+# --- wandb設定 ---
+ENABLE_WANDB = False  # wandbログを有効にするかどうか
+WANDB_PROJECT = "penguin-paper-interviews"  # wandbプロジェクト名
+WANDB_ENTITY = None  # wandbエンティティ（Noneの場合はデフォルト）

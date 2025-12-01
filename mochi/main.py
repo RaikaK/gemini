@@ -10,7 +10,8 @@ from pathlib import Path
 from config import (
     INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, 
     ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS, ENABLE_SPREADSHEET,
-    INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS
+    INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS,
+    ENABLE_WANDB, WANDB_PROJECT, WANDB_ENTITY
 )
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
@@ -31,6 +32,14 @@ try:
 except ImportError:
     MODEL_MANAGER_AVAILABLE = False
     print("警告: model_managerモジュールが見つかりません。ローカルモデルは使用できません。")
+
+# wandbのインポート（オプション）
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("警告: wandbモジュールが見つかりません。wandbログは無効です。")
 
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
@@ -592,6 +601,32 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     # 直前の全体質問で最も志望度が低いと判断された候補者（個別質問の対象）
     target_candidate_for_individual = None
     
+    # wandbの初期化
+    wandb_run = None
+    if ENABLE_WANDB and WANDB_AVAILABLE:
+        try:
+            wandb.init(
+                project=WANDB_PROJECT,
+                entity=WANDB_ENTITY,
+                name=f"simulation_{simulation_num}_set_{actual_set_index}",
+                config={
+                    'simulation_num': simulation_num,
+                    'set_index': actual_set_index,
+                    'interviewer_model_type': interviewer_model_type,
+                    'interviewer_model_name': interviewer_model_name,
+                    'max_rounds': max_rounds,
+                    'num_candidates': len(candidate_states),
+                    'company_name': company_profile.get('name', 'Unknown'),
+                    'candidate_preparations': [s['profile']['preparation'] for s in candidate_states]
+                },
+                reinit=True
+            )
+            wandb_run = wandb.run
+            print(f"--- wandbログを開始しました (run: {wandb_run.name}) ---")
+        except Exception as e:
+            print(f"警告: wandbの初期化に失敗しました: {e}")
+            wandb_run = None
+    
     for round_num in range(1, max_rounds + 1):
         is_common_question = (round_num % 2 == 1)  # 奇数のラウンドは全体質問
         
@@ -747,6 +782,47 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
+            
+            # wandbにログ
+            if wandb_run:
+                try:
+                    log_dict = {
+                        f'round_{round_num}/question_type': 'common',
+                        f'round_{round_num}/ranking_accuracy': ranking_accuracy.get('accuracy', 0.0) if ranking_accuracy and ranking_accuracy.get('is_valid') else None,
+                    }
+                    
+                    # 評価3のメトリクス
+                    if knowledge_gaps_metrics:
+                        log_dict.update({
+                            f'round_{round_num}/eval3_avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
+                            f'round_{round_num}/eval3_avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
+                            f'round_{round_num}/eval3_avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
+                            f'round_{round_num}/eval3_avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
+                        })
+                        
+                        # 志望度レベル別の精度
+                        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+                        for level in ['low', 'medium', 'high']:
+                            if level in by_motivation and by_motivation[level] is not None:
+                                log_dict[f'round_{round_num}/eval3_accuracy_{level}'] = by_motivation[level]
+                        
+                        # 各候補者ごとのメトリクス
+                        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+                        for state in candidate_states:
+                            candidate_name = state['profile']['name']
+                            if candidate_name in per_candidate:
+                                candidate_data = per_candidate[candidate_name]
+                                metrics = candidate_data.get('metrics', {})
+                                log_dict.update({
+                                    f'round_{round_num}/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                })
+                    
+                    wandb_run.log(log_dict, step=round_num)
+                except Exception as e:
+                    print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
             
         else:
             # 個別質問
@@ -913,6 +989,48 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
+            
+            # wandbにログ
+            if wandb_run:
+                try:
+                    log_dict = {
+                        f'round_{round_num}/question_type': 'individual',
+                        f'round_{round_num}/target_candidate': target_candidate_name,
+                        f'round_{round_num}/ranking_accuracy': ranking_accuracy.get('accuracy', 0.0) if ranking_accuracy and ranking_accuracy.get('is_valid') else None,
+                    }
+                    
+                    # 評価3のメトリクス
+                    if knowledge_gaps_metrics:
+                        log_dict.update({
+                            f'round_{round_num}/eval3_avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
+                            f'round_{round_num}/eval3_avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
+                            f'round_{round_num}/eval3_avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
+                            f'round_{round_num}/eval3_avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
+                        })
+                        
+                        # 志望度レベル別の精度
+                        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+                        for level in ['low', 'medium', 'high']:
+                            if level in by_motivation and by_motivation[level] is not None:
+                                log_dict[f'round_{round_num}/eval3_accuracy_{level}'] = by_motivation[level]
+                        
+                        # 各候補者ごとのメトリクス
+                        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+                        for state in candidate_states:
+                            candidate_name = state['profile']['name']
+                            if candidate_name in per_candidate:
+                                candidate_data = per_candidate[candidate_name]
+                                metrics = candidate_data.get('metrics', {})
+                                log_dict.update({
+                                    f'round_{round_num}/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
+                                    f'round_{round_num}/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                })
+                    
+                    wandb_run.log(log_dict, step=round_num)
+                except Exception as e:
+                    print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
         
         # ラウンド間の区切り
         if round_num < max_rounds:
@@ -952,6 +1070,59 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     print(f"\n{'='*60}")
     print(f"結果を保存しました: {result_file}")
     print(f"{'='*60}\n")
+    
+    # wandbに最終サマリーをログ
+    if wandb_run:
+        try:
+            final_ranking_accuracy = _get_last_common_question_ranking_accuracy(round_evaluations)
+            final_knowledge_gaps_metrics = _get_last_common_question_knowledge_gaps_metrics(round_evaluations)
+            
+            summary_dict = {}
+            
+            # 最終ランキング精度
+            if final_ranking_accuracy and final_ranking_accuracy.get('is_valid'):
+                summary_dict['final/ranking_accuracy'] = final_ranking_accuracy.get('accuracy', 0.0)
+            
+            # 最終評価3メトリクス
+            if final_knowledge_gaps_metrics:
+                summary_dict.update({
+                    'final/eval3_avg_accuracy': final_knowledge_gaps_metrics.get('avg_accuracy', 0.0),
+                    'final/eval3_avg_f1': final_knowledge_gaps_metrics.get('avg_f1_score', 0.0),
+                    'final/eval3_avg_precision': final_knowledge_gaps_metrics.get('avg_precision', 0.0),
+                    'final/eval3_avg_recall': final_knowledge_gaps_metrics.get('avg_recall', 0.0),
+                })
+                
+                # 志望度レベル別の最終精度
+                by_motivation = final_knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
+                for level in ['low', 'medium', 'high']:
+                    if level in by_motivation and by_motivation[level] is not None:
+                        summary_dict[f'final/eval3_accuracy_{level}'] = by_motivation[level]
+            
+            # 全ラウンドの平均メトリクス
+            common_rounds = [e for e in round_evaluations if e.get('question_type') == 'common']
+            if common_rounds:
+                ranking_accuracies = [e.get('ranking_accuracy', {}).get('accuracy', 0.0) 
+                                    for e in common_rounds 
+                                    if e.get('ranking_accuracy', {}).get('is_valid')]
+                if ranking_accuracies:
+                    summary_dict['avg/ranking_accuracy'] = sum(ranking_accuracies) / len(ranking_accuracies)
+                
+                eval3_accuracies = [e.get('knowledge_gaps_metrics', {}).get('avg_accuracy', 0.0)
+                                  for e in common_rounds
+                                  if e.get('knowledge_gaps_metrics')]
+                if eval3_accuracies:
+                    summary_dict['avg/eval3_accuracy'] = sum(eval3_accuracies) / len(eval3_accuracies)
+            
+            wandb_run.log(summary_dict)
+            wandb_run.finish()
+            print(f"--- wandbログを完了しました ---")
+        except Exception as e:
+            print(f"警告: wandb最終ログの記録中にエラーが発生しました: {e}")
+            if wandb_run:
+                try:
+                    wandb_run.finish()
+                except:
+                    pass
     
     return result_data
 
