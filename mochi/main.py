@@ -558,7 +558,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             company_profile,
             model_type='local',
             model=local_model,
-            tokenizer=local_tokenizer
+            tokenizer=local_tokenizer,
+            local_model_key=interviewer_model_name
         )
         print(f"--- 面接官タイプ: ローカルモデル ({interviewer_model_name}) ---")
     else:

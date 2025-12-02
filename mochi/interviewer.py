@@ -8,6 +8,13 @@ from pydantic import BaseModel, Field
 from utils import call_openai_api
 import config
 
+# MODEL_TYPE_MAPPINGをインポート（config.pyから直接取得）
+try:
+    from config import MODEL_TYPE_MAPPING
+except ImportError:
+    # フォールバック: configモジュールから直接取得
+    MODEL_TYPE_MAPPING = getattr(config, 'MODEL_TYPE_MAPPING', {})
+
 # outlinesのインポート（オプション）
 try:
     import outlines
@@ -19,7 +26,7 @@ except ImportError:
 class Interviewer:
     """面接官役のLLM（ローカルモデルとAPIモデルの両方に対応）"""
     
-    def __init__(self, company_profile, model_name=None, model_type='api', model=None, tokenizer=None):
+    def __init__(self, company_profile, model_name=None, model_type='api', model=None, tokenizer=None, local_model_key=None):
         """
         Args:
             company_profile (dict): 企業情報
@@ -27,12 +34,21 @@ class Interviewer:
             model_type (str): 'api' または 'local'（デフォルト: 'api'）
             model (AutoModelForCausalLM, optional): ローカルモデル（model_type='local'の場合）
             tokenizer (AutoTokenizer, optional): ローカルモデル用トークナイザ（model_type='local'の場合）
+            local_model_key (str, optional): ローカルモデルのキー（例: "llama3", "ELYZA-japanese-Llama-2"）
         """
         self.company = company_profile
         self.model_type = model_type
         self.model_name = model_name or config.INTERVIEWER_MODEL
         self.model = model
         self.tokenizer = tokenizer
+        self.local_model_key = local_model_key
+        
+        # モデルタイプを決定（チャットテンプレートの形式を決定するため）
+        if self.model_type == 'local' and local_model_key:
+            model_type_mapping = getattr(config, 'MODEL_TYPE_MAPPING', {})
+            self.chat_template_type = model_type_mapping.get(local_model_key, "llama3")
+        else:
+            self.chat_template_type = "llama3"  # デフォルト
         
         if self.model_type == 'local' and (not self.model or not self.tokenizer):
             raise ValueError("ローカルモデルタイプには 'model' と 'tokenizer' が必要です。")
@@ -41,14 +57,51 @@ class Interviewer:
         """モデルタイプに応じて応答を生成する"""
         if self.model_type == 'local':
             # ローカルモデルでの生成ロジック
-            messages = [
-                {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
-                {"role": "user", "content": prompt}
-            ]
+            system_content = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
             
-            inputs = self.tokenizer.apply_chat_template(
-                messages, add_generation_prompt=True, return_tensors="pt"
-            ).to(self.model.device)
+            # モデルタイプに応じてメッセージ形式を変更
+            if self.chat_template_type == "llama2":
+                # Llama-2系モデル（ELYZA-japanese-Llama-2など）の形式
+                # Llama-2系はsystemロールをサポートしていない場合があるため、userメッセージに統合
+                messages = [
+                    {"role": "user", "content": f"{system_content}\n\n{prompt}"}
+                ]
+                # Llama-2系ではadd_generation_promptをFalseにする場合がある
+                try:
+                    encoded = self.tokenizer.apply_chat_template(
+                        messages, add_generation_prompt=True, return_tensors="pt", tokenize=True
+                    )
+                    # BatchEncodingまたはTensorのどちらかが返される可能性がある
+                    if isinstance(encoded, dict) and 'input_ids' in encoded:
+                        inputs = encoded['input_ids'].to(self.model.device)
+                    elif hasattr(encoded, 'input_ids'):
+                        inputs = encoded.input_ids.to(self.model.device)
+                    else:
+                        # Tensorが直接返された場合
+                        inputs = encoded.to(self.model.device)
+                except Exception as e:
+                    # フォールバック: 直接プロンプトをエンコード
+                    full_prompt = f"{system_content}\n\n{prompt}"
+                    encoded = self.tokenizer(full_prompt, return_tensors="pt")
+                    inputs = encoded['input_ids'].to(self.model.device)
+            else:
+                # Llama-3系やその他のモデル（デフォルト）
+                messages = [
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                encoded = self.tokenizer.apply_chat_template(
+                    messages, add_generation_prompt=True, return_tensors="pt", tokenize=True
+                )
+                # BatchEncodingまたはTensorのどちらかが返される可能性がある
+                if isinstance(encoded, dict) and 'input_ids' in encoded:
+                    inputs = encoded['input_ids'].to(self.model.device)
+                elif hasattr(encoded, 'input_ids'):
+                    inputs = encoded.input_ids.to(self.model.device)
+                else:
+                    # Tensorが直接返された場合
+                    inputs = encoded.to(self.model.device)
             
             attention_mask = torch.ones_like(inputs).to(self.model.device)
             
@@ -193,8 +246,26 @@ class Interviewer:
         if self.model_type == 'local' and OUTLINES_AVAILABLE:
             try:
                 # outlinesで構造化生成
-                outlines_model = outlines.models.transformers(self.model, self.tokenizer)
-                generator = outlines.generate.json(outlines_model, LeastMotivatedResult)
+                # outlines.models.transformersはモジュールなので、正しいクラスを使用
+                try:
+                    from outlines.models import transformers as outlines_transformers
+                    outlines_model = outlines_transformers.Transformers(self.model, self.tokenizer)
+                except (AttributeError, ImportError, TypeError):
+                    # フォールバック: 直接インポートを試みる
+                    import outlines.models.transformers as outlines_transformers
+                    outlines_model = outlines_transformers(self.model, self.tokenizer)
+                # outlinesのバージョンによってAPIが異なる可能性があるため、複数の方法を試す
+                try:
+                    # 新しいAPI（outlines 0.0.40以降）
+                    generator = outlines.generate.json(outlines_model, LeastMotivatedResult)
+                except AttributeError:
+                    try:
+                        # 代替API
+                        from outlines import generate
+                        generator = generate.json(outlines_model, LeastMotivatedResult)
+                    except (AttributeError, ImportError):
+                        # フォールバック: outlinesを使わずに通常の生成を使用
+                        raise AttributeError("outlines.generate is not available")
                 
                 messages = [
                     {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
@@ -202,9 +273,15 @@ class Interviewer:
                 ]
                 
                 # チャットテンプレートを適用してプロンプトを作成
-                formatted_prompt = self.tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
-                )
+                # Llama-2系の場合はチャットテンプレートの処理を調整
+                if self.chat_template_type == "llama2":
+                    # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
+                    user_message = f"{messages[0]['content']}"
+                    formatted_prompt = user_message
+                else:
+                    formatted_prompt = self.tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True
+                    )
                 
                 # JSON形式で生成
                 result = generator(formatted_prompt, max_tokens=256)
@@ -335,8 +412,26 @@ class Interviewer:
             try:
                 # outlinesで構造化生成
                 # outlines.models.transformersでモデルをラップ
-                outlines_model = outlines.models.transformers(self.model, self.tokenizer)
-                generator = outlines.generate.json(outlines_model, RankingResult)
+                try:
+                    from outlines.models import transformers as outlines_transformers
+                    outlines_model = outlines_transformers.Transformers(self.model, self.tokenizer)
+                except (AttributeError, ImportError, TypeError):
+                    # フォールバック: 直接インポートを試みる
+                    import outlines.models.transformers as outlines_transformers
+                    outlines_model = outlines_transformers(self.model, self.tokenizer)
+                
+                # outlinesのバージョンによってAPIが異なる可能性があるため、複数の方法を試す
+                try:
+                    # 新しいAPI（outlines 0.0.40以降）
+                    generator = outlines.generate.json(outlines_model, RankingResult)
+                except AttributeError:
+                    try:
+                        # 代替API
+                        from outlines import generate
+                        generator = generate.json(outlines_model, RankingResult)
+                    except (AttributeError, ImportError):
+                        # フォールバック: outlinesを使わずに通常の生成を使用
+                        raise AttributeError("outlines.generate is not available")
                 
                 messages = [
                     {"role": "system", "content": "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"},
@@ -344,9 +439,15 @@ class Interviewer:
                 ]
                 
                 # チャットテンプレートを適用してプロンプトを作成
-                formatted_prompt = self.tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
-                )
+                # Llama-2系の場合はチャットテンプレートの処理を調整
+                if self.chat_template_type == "llama2":
+                    # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
+                    user_message = f"{messages[0]['content']}"
+                    formatted_prompt = user_message
+                else:
+                    formatted_prompt = self.tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True
+                    )
                 
                 # JSON形式で生成
                 result = generator(formatted_prompt, max_tokens=512)
