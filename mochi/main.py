@@ -144,12 +144,15 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                 if name and rank_num >= 1 and rank_num <= len(candidate_states):
                     extracted_names[rank_num] = name
             
-            # パターン1-2: カンマ区切りの形式（例: "学生W3、学生W1、学生W2"）
+            # パターン1-2: カンマ区切りの形式（例: "学生W3、学生W1、学生W2" または "學生C3, 學生C2"）
             if not extracted_names:
-                comma_pattern = r'(学生[A-Z]{1,3}\d{0,2})[、,，]'
+                # 「学生」と「學生」（繁体字）の両方に対応
+                comma_pattern = r'((?:学生|學生)[A-Z]{1,3}\d{0,2})[、,，\s]*'
                 matches = re.findall(comma_pattern, ranking_eval)
-                if len(matches) == len(candidate_states):
-                    for i, name in enumerate(matches, 1):
+                if len(matches) >= len(candidate_states):
+                    # 「學生」を「学生」に統一
+                    normalized_matches = [m.replace('學生', '学生') for m in matches[:len(candidate_states)]]
+                    for i, name in enumerate(normalized_matches, 1):
                         extracted_names[i] = name.strip()
             
             # パターン1-3: スペース入りの形式（例: "1. 学生 W2" または "1. 學生 Q2"）
@@ -187,14 +190,16 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                     continue
                 
                 # パターン1: "1位: [氏名]" または "1位: 候補者X (氏名)" 形式
-                # 括弧内の名前を優先的に抽出
-                match1 = re.search(r'(\d+)位\s*[:：]\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
+                # 括弧内の名前を優先的に抽出（「学生」と「學生」の両方に対応）
+                match1 = re.search(r'(\d+)位\s*[:：]\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|((?:学生|學生)[A-Z]{1,3}\d{0,2}))', line)
                 if match1:
                     rank_num = int(match1.group(1))
                     # 括弧内の名前があればそれを使用、なければ括弧前の名前を使用
                     name = match1.group(2) or match1.group(3)
                     if name:
                         name = name.strip()
+                        # 「學生」を「学生」に統一
+                        name = name.replace('學生', '学生')
                         # 余分な括弧や特殊文字を除去
                         name = re.sub(r'[()（）、,，。]', '', name)
                         if name and rank_num >= 1 and rank_num <= len(candidate_states):
@@ -202,7 +207,7 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                             continue
                 
                 # パターン2: "**1 位:** [氏名]" または "**1位:** [氏名]" 形式
-                # よりシンプルで確実なパターン
+                # よりシンプルで確実なパターン（「学生」と「學生」の両方に対応）
                 match2 = re.search(r'\*{2,}\s*(\d+)\s*位\s*\*{0,}\s*[:：]\s*([^\n\*]+?)(?:\s|$|\n|理由)', line)
                 if match2:
                     rank_num = int(match2.group(1))
@@ -213,13 +218,15 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                         name = bracket_match.group(1).strip()
                     # 候補者Xという形式を除去
                     name = re.sub(r'^候補者\d+\s*', '', name)
+                    # 「學生」を「学生」に統一
+                    name = name.replace('學生', '学生')
                     # 余分な空白を除去
                     name = name.strip()
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
                         continue
                 
-                # パターン3: "**数字. 名前 (説明)**" 形式（マークダウン形式）
+                # パターン3: "**数字. 名前 (説明)**" 形式（マークダウン形式）（「学生」と「學生」の両方に対応）
                 match3 = re.search(r'\*{2,}\s*(\d+)\.\s*([^\n\(\)\*]+?)(?:\s*\([^)]*\))?\s*\*{0,}', line)
                 if match3:
                     rank_num = int(match3.group(1))
@@ -228,32 +235,50 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                     name = re.sub(r'^\s+|\s+$', '', name)
                     # 候補者Xという形式を除去
                     name = re.sub(r'^候補者\d+\s*', '', name)
+                    # 「學生」を「学生」に統一
+                    name = name.replace('學生', '学生')
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
                         continue
                 
-                # パターン4: "1. [氏名]" 形式（通常の番号付きリスト）
-                match4 = re.search(r'^(\d+)\.\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
+                # パターン4: "1. [氏名]" 形式（通常の番号付きリスト）（「学生」と「學生」の両方に対応）
+                match4 = re.search(r'^(\d+)\.\s*(?:候補者\d+\s*)?(?:\(([^)]+)\)|((?:学生|學生)[A-Z]{1,3}\d{0,2}))', line)
                 if match4:
                     rank_num = int(match4.group(1))
                     name = match4.group(2) or match4.group(3)
                     if name:
                         name = name.strip()
+                        # 「學生」を「学生」に統一
+                        name = name.replace('學生', '学生')
                         name = re.sub(r'[()（）、,，。]', '', name)
                         if name and rank_num >= 1 and rank_num <= len(candidate_states):
                             extracted_names[rank_num] = name
                             continue
                 
-                # パターン5: 行頭の数字とその後の名前
-                match5 = re.search(r'^(\d+)\s+(?:候補者\d+\s*)?(?:\(([^)]+)\)|([^\s(]+))', line)
+                # パターン5: 行頭の数字とその後の名前（「学生」と「學生」の両方に対応）
+                match5 = re.search(r'^(\d+)\s+(?:候補者\d+\s*)?(?:\(([^)]+)\)|((?:学生|學生)[A-Z]{1,3}\d{0,2}))', line)
                 if match5:
                     rank_num = int(match5.group(1))
                     name = match5.group(2) or match5.group(3)
                     if name:
                         name = name.strip()
+                        # 「學生」を「学生」に統一
+                        name = name.replace('學生', '学生')
                         name = re.sub(r'[()（）、,，。]', '', name)
                         if name and rank_num >= 1 and rank_num <= len(candidate_states):
                             extracted_names[rank_num] = name
+                
+                # パターン6: カンマ区切りの形式を直接行から抽出（例: "学生C2, 學生C3, 學生C1"）
+                if not any(rank_num in extracted_names for rank_num in range(1, len(candidate_states) + 1)):
+                    # 行内にカンマ区切りの候補者名がある場合
+                    comma_line_pattern = r'((?:学生|學生)[A-Z]{1,3}\d{0,2})[、,，\s]*'
+                    line_matches = re.findall(comma_line_pattern, line)
+                    if len(line_matches) >= len(candidate_states):
+                        # 「學生」を「学生」に統一
+                        normalized_line_matches = [m.replace('學生', '学生') for m in line_matches[:len(candidate_states)]]
+                        for i, name in enumerate(normalized_line_matches, 1):
+                            if i not in extracted_names:
+                                extracted_names[i] = name.strip()
             
             # 抽出した名前を順位順に並べる
             for i in range(1, len(candidate_states) + 1):

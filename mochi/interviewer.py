@@ -84,6 +84,30 @@ class Interviewer:
                     full_prompt = f"{system_content}\n\n{prompt}"
                     encoded = self.tokenizer(full_prompt, return_tensors="pt")
                     inputs = encoded['input_ids'].to(self.model.device)
+            elif self.chat_template_type == "qwen":
+                # Qwen系モデル（Qwen3-4B-Instructなど）の形式
+                # Qwen系はsystemロールをサポートしているが、形式が異なる場合がある
+                messages = [
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": prompt}
+                ]
+                try:
+                    encoded = self.tokenizer.apply_chat_template(
+                        messages, add_generation_prompt=True, return_tensors="pt", tokenize=True
+                    )
+                    # BatchEncodingまたはTensorのどちらかが返される可能性がある
+                    if isinstance(encoded, dict) and 'input_ids' in encoded:
+                        inputs = encoded['input_ids'].to(self.model.device)
+                    elif hasattr(encoded, 'input_ids'):
+                        inputs = encoded.input_ids.to(self.model.device)
+                    else:
+                        # Tensorが直接返された場合
+                        inputs = encoded.to(self.model.device)
+                except Exception as e:
+                    # フォールバック: 直接プロンプトをエンコード
+                    full_prompt = f"{system_content}\n\n{prompt}"
+                    encoded = self.tokenizer(full_prompt, return_tensors="pt")
+                    inputs = encoded['input_ids'].to(self.model.device)
             else:
                 # Llama-3系やその他のモデル（デフォルト）
                 messages = [
@@ -273,11 +297,16 @@ class Interviewer:
                 ]
                 
                 # チャットテンプレートを適用してプロンプトを作成
-                # Llama-2系の場合はチャットテンプレートの処理を調整
+                # モデルタイプに応じてチャットテンプレートの処理を調整
                 if self.chat_template_type == "llama2":
                     # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
                     user_message = f"{messages[0]['content']}"
                     formatted_prompt = user_message
+                elif self.chat_template_type == "qwen":
+                    # Qwen系は通常のチャットテンプレートを使用
+                    formatted_prompt = self.tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True
+                    )
                 else:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
@@ -295,10 +324,15 @@ class Interviewer:
                 print(f"警告: outlinesでの構造化生成に失敗しました: {e}")
                 print("フォールバック: 通常の生成方法を使用します。")
                 # フォールバック: 通常の生成方法
-                evaluation, token_info = self._generate_response(prompt, max_tokens=256)
-                # フォールバック時は候補者名を抽出を試みる
-                extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
-                return extracted_name if extracted_name else evaluation, token_info
+                try:
+                    evaluation, token_info = self._generate_response(prompt, max_tokens=256)
+                    # フォールバック時は候補者名を抽出を試みる
+                    extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
+                    return extracted_name if extracted_name else evaluation, token_info
+                except Exception as fallback_error:
+                    print(f"警告: フォールバック生成も失敗しました: {fallback_error}")
+                    # 最後の手段: 最初の候補者を返す
+                    return candidate_names[0] if candidate_names else "不明", None
         
         # APIモデルの場合、JSONモードを使用
         elif self.model_type == 'api':
@@ -351,18 +385,33 @@ class Interviewer:
     def _extract_candidate_name_from_text(self, text, candidate_names):
         """テキストから候補者名を抽出する（フォールバック用）"""
         import re
+        # テキスト内の「學生」を「学生」に統一
+        normalized_text = text.replace('學生', '学生')
+        
         # 正規化された候補者名リスト
         normalized_names = {re.sub(r'[\s()（）、,，。*]', '', name): name for name in candidate_names}
         
         # テキストから候補者名を探す
         for norm_name, orig_name in normalized_names.items():
-            if norm_name in re.sub(r'[\s()（）、,，。*]', '', text):
+            if norm_name in re.sub(r'[\s()（）、,，。*]', '', normalized_text):
                 return orig_name
         
-        # 部分一致で探す
-        for norm_name, orig_name in normalized_names.items():
-            if norm_name[:3] in text or orig_name in text:
+        # 部分一致で探す（「学生」+ 英数字のパターン）
+        for orig_name in candidate_names:
+            # 「学生」+ 英数字のパターンを抽出
+            pattern = orig_name.replace('学生', r'(?:学生|學生)')
+            if re.search(pattern, normalized_text):
                 return orig_name
+        
+        # さらに柔軟なマッチング: 英数字部分のみでマッチ
+        for orig_name in candidate_names:
+            # 英数字部分を抽出（例: "学生C2" -> "C2"）
+            match = re.search(r'([A-Z]{1,3}\d{0,2})', orig_name)
+            if match:
+                code = match.group(1)
+                # テキスト内にこのコードが含まれているか
+                if code in normalized_text:
+                    return orig_name
         
         return None
     
@@ -439,11 +488,16 @@ class Interviewer:
                 ]
                 
                 # チャットテンプレートを適用してプロンプトを作成
-                # Llama-2系の場合はチャットテンプレートの処理を調整
+                # モデルタイプに応じてチャットテンプレートの処理を調整
                 if self.chat_template_type == "llama2":
                     # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
                     user_message = f"{messages[0]['content']}"
                     formatted_prompt = user_message
+                elif self.chat_template_type == "qwen":
+                    # Qwen系は通常のチャットテンプレートを使用
+                    formatted_prompt = self.tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True
+                    )
                 else:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
