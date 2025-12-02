@@ -809,46 +809,85 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
             
-            # wandbにログ
+            # wandbにログ（時系列グラフ用に統一されたメトリクス名で記録）
             if wandb_run:
                 try:
-                    log_dict = {
-                        f'round_{round_num}/question_type': 'common',
-                        f'round_{round_num}/ranking_accuracy': ranking_accuracy.get('accuracy', 0.0) if ranking_accuracy and ranking_accuracy.get('is_valid') else None,
-                    }
+                    log_dict = {}
                     
-                    # 評価3のメトリクス
+                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
+                    # 真の最も志望度が低い候補者を特定
+                    true_least_motivated = None
+                    for state in candidate_states:
+                        if state['profile'].get('preparation', 'low') == 'low':
+                            true_least_motivated = state['profile']['name']
+                            break
+                    
+                    # 予測された最も志望度が低い候補者を抽出
+                    predicted_least_motivated = None
+                    if least_motivated_eval:
+                        # 候補者名を抽出
+                        for state in candidate_states:
+                            candidate_name = state['profile']['name']
+                            if candidate_name in least_motivated_eval:
+                                predicted_least_motivated = candidate_name
+                                break
+                        # 抽出できなかった場合、正規表現で試す
+                        if predicted_least_motivated is None:
+                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                            if match:
+                                extracted_name = match.group(1)
+                                for state in candidate_states:
+                                    if state['profile']['name'] == extracted_name:
+                                        predicted_least_motivated = extracted_name
+                                        break
+                    
+                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
+                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                        true_least_motivated == predicted_least_motivated) else 0.0
+                    log_dict['eval1/least_motivated_accuracy'] = eval1_score
+                    
+                    # 評価2: ランキング精度
+                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                        log_dict['eval2/ranking_accuracy'] = ranking_accuracy.get('accuracy', 0.0)
+                    else:
+                        log_dict['eval2/ranking_accuracy'] = None
+                    
+                    # 評価3: 知識欠損検出のメトリクス
                     if knowledge_gaps_metrics:
                         log_dict.update({
-                            f'round_{round_num}/eval3_avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
-                            f'round_{round_num}/eval3_avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
-                            f'round_{round_num}/eval3_avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
-                            f'round_{round_num}/eval3_avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
+                            'eval3/avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
+                            'eval3/avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
+                            'eval3/avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
+                            'eval3/avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
                         })
                         
                         # 志望度レベル別の精度
                         by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
                         for level in ['low', 'medium', 'high']:
                             if level in by_motivation and by_motivation[level] is not None:
-                                log_dict[f'round_{round_num}/eval3_accuracy_{level}'] = by_motivation[level]
+                                log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
                         
                         # 各候補者ごとのメトリクス
                         per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
+                            preparation = state['profile'].get('preparation', 'low')
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
                                 log_dict.update({
-                                    f'round_{round_num}/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                    f'eval3/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'eval3/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
+                                    f'eval3/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
+                                    f'eval3/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
                                 })
                     
+                    # stepパラメータでラウンド番号を指定（時系列グラフ用）
                     wandb_run.log(log_dict, step=round_num)
                 except Exception as e:
                     print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
+                    import traceback
+                    traceback.print_exc()
             
         else:
             # 個別質問
@@ -1016,47 +1055,85 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
             
-            # wandbにログ
+            # wandbにログ（時系列グラフ用に統一されたメトリクス名で記録）
             if wandb_run:
                 try:
-                    log_dict = {
-                        f'round_{round_num}/question_type': 'individual',
-                        f'round_{round_num}/target_candidate': target_candidate_name,
-                        f'round_{round_num}/ranking_accuracy': ranking_accuracy.get('accuracy', 0.0) if ranking_accuracy and ranking_accuracy.get('is_valid') else None,
-                    }
+                    log_dict = {}
                     
-                    # 評価3のメトリクス
+                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
+                    # 真の最も志望度が低い候補者を特定
+                    true_least_motivated = None
+                    for state in candidate_states:
+                        if state['profile'].get('preparation', 'low') == 'low':
+                            true_least_motivated = state['profile']['name']
+                            break
+                    
+                    # 予測された最も志望度が低い候補者を抽出
+                    predicted_least_motivated = None
+                    if least_motivated_eval:
+                        # 候補者名を抽出
+                        for state in candidate_states:
+                            candidate_name = state['profile']['name']
+                            if candidate_name in least_motivated_eval:
+                                predicted_least_motivated = candidate_name
+                                break
+                        # 抽出できなかった場合、正規表現で試す
+                        if predicted_least_motivated is None:
+                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                            if match:
+                                extracted_name = match.group(1)
+                                for state in candidate_states:
+                                    if state['profile']['name'] == extracted_name:
+                                        predicted_least_motivated = extracted_name
+                                        break
+                    
+                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
+                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                        true_least_motivated == predicted_least_motivated) else 0.0
+                    log_dict['eval1/least_motivated_accuracy'] = eval1_score
+                    
+                    # 評価2: ランキング精度
+                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                        log_dict['eval2/ranking_accuracy'] = ranking_accuracy.get('accuracy', 0.0)
+                    else:
+                        log_dict['eval2/ranking_accuracy'] = None
+                    
+                    # 評価3: 知識欠損検出のメトリクス
                     if knowledge_gaps_metrics:
                         log_dict.update({
-                            f'round_{round_num}/eval3_avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
-                            f'round_{round_num}/eval3_avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
-                            f'round_{round_num}/eval3_avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
-                            f'round_{round_num}/eval3_avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
+                            'eval3/avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
+                            'eval3/avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
+                            'eval3/avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
+                            'eval3/avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
                         })
                         
                         # 志望度レベル別の精度
                         by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
                         for level in ['low', 'medium', 'high']:
                             if level in by_motivation and by_motivation[level] is not None:
-                                log_dict[f'round_{round_num}/eval3_accuracy_{level}'] = by_motivation[level]
+                                log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
                         
                         # 各候補者ごとのメトリクス
                         per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
+                            preparation = state['profile'].get('preparation', 'low')
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
                                 log_dict.update({
-                                    f'round_{round_num}/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
-                                    f'round_{round_num}/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                    f'eval3/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'eval3/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
+                                    f'eval3/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
+                                    f'eval3/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
                                 })
                     
+                    # stepパラメータでラウンド番号を指定（時系列グラフ用）
                     wandb_run.log(log_dict, step=round_num)
                 except Exception as e:
                     print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
+                    import traceback
+                    traceback.print_exc()
         
         # ラウンド間の区切り
         if round_num < max_rounds:
