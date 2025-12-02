@@ -632,6 +632,9 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     wandb_run = None
     if ENABLE_WANDB and WANDB_AVAILABLE:
         try:
+            # wandbモジュールがインポートされていることを確認
+            if 'wandb' not in sys.modules:
+                import wandb
             wandb.init(
                 project=WANDB_PROJECT,
                 entity=WANDB_ENTITY,
@@ -652,6 +655,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             print(f"--- wandbログを開始しました (run: {wandb_run.name}) ---")
         except Exception as e:
             print(f"警告: wandbの初期化に失敗しました: {e}")
+            import traceback
+            traceback.print_exc()
             wandb_run = None
     
     # プロンプトと回答を記録するためのリスト（wandb用）
@@ -1450,9 +1455,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             wandb_run.log(summary_dict)
             
             # プロンプトと回答をwandbのTableに記録
-            if prompt_logs and WANDB_AVAILABLE:
+            if prompt_logs and WANDB_AVAILABLE and wandb_run:
                 try:
-                    import wandb
+                    # wandbモジュールがインポートされていることを確認
+                    if 'wandb' not in globals() and 'wandb' not in sys.modules:
+                        import wandb
                     # Tableの列を定義
                     columns = ['round', 'step', 'type', 'candidate', 'prompt', 'response', 'time_seconds', 'prompt_tokens', 'completion_tokens', 'total_tokens']
                     table_data = []
