@@ -5,6 +5,7 @@ import datetime
 import random
 import argparse
 import sys
+import time
 from pathlib import Path
 
 from config import (
@@ -201,10 +202,10 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                         # 「學生」を「学生」に統一
                         name = name.replace('學生', '学生')
                         # 余分な括弧や特殊文字を除去
-                        name = re.sub(r'[()（）、,，。]', '', name)
-                        if name and rank_num >= 1 and rank_num <= len(candidate_states):
-                            extracted_names[rank_num] = name
-                            continue
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
+                        continue
                 
                 # パターン2: "**1 位:** [氏名]" または "**1位:** [氏名]" 形式
                 # よりシンプルで確実なパターン（「学生」と「學生」の両方に対応）
@@ -250,9 +251,9 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                         name = name.strip()
                         # 「學生」を「学生」に統一
                         name = name.replace('學生', '学生')
-                        name = re.sub(r'[()（）、,，。]', '', name)
-                        if name and rank_num >= 1 and rank_num <= len(candidate_states):
-                            extracted_names[rank_num] = name
+                    name = re.sub(r'[()（）、,，。]', '', name)
+                    if name and rank_num >= 1 and rank_num <= len(candidate_states):
+                        extracted_names[rank_num] = name
                             continue
                 
                 # パターン5: 行頭の数字とその後の名前（「学生」と「學生」の両方に対応）
@@ -572,10 +573,10 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     if interviewer_model_type == 'local':
         # 既に初期化されたモデルが提供されている場合は再利用、そうでない場合は新規初期化
         if local_model is None or local_tokenizer is None:
-            local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
-            if local_model is None or local_tokenizer is None:
-                print("ローカルモデルの初期化に失敗しました。")
-                return None
+        local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
+        if local_model is None or local_tokenizer is None:
+            print("ローカルモデルの初期化に失敗しました。")
+            return None
         else:
             print(f"--- ローカルモデル ({interviewer_model_name}) を再利用 ---")
         
@@ -653,7 +654,17 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             print(f"警告: wandbの初期化に失敗しました: {e}")
             wandb_run = None
     
+    # プロンプトと回答を記録するためのリスト（wandb用）
+    prompt_logs = []
+    
     for round_num in range(1, max_rounds + 1):
+        round_start_time = time.time()
+        round_token_info = {
+            'prompt_tokens': 0,
+            'completion_tokens': 0,
+            'total_tokens': 0
+        }
+        
         is_common_question = (round_num % 2 == 1)  # 奇数のラウンドは全体質問
         
         if is_common_question:
@@ -661,39 +672,101 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             print(f"\n--- ラウンド {round_num} (全体質問) ---")
             
             # 全体質問を生成
-            question, _ = interviewer.ask_common_question(asked_common_questions)
+            question_start_time = time.time()
+            question, question_token_info = interviewer.ask_common_question(asked_common_questions)
+            question_time = time.time() - question_start_time
+            
+            # token数を集計
+            if question_token_info:
+                round_token_info['prompt_tokens'] += question_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += question_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += question_token_info.get('total_tokens', 0)
+            
             asked_common_questions.append(question)
             print(f"\n面接官の質問（全員へ）: {question}")
             
-            # 各候補者が回答
-            for state in candidate_states:
-                answer, token_info = applicant.generate_answer(
-                    state['profile'],
-                    state['knowledge'],
-                    state['conversation_log'],
-                    question
-                )
-                
-                # 会話ログに記録
-                state['conversation_log'].append({
-                    'round': round_num,
-                    'question_type': 'common',
-                    'question': question,
-                    'answer': answer,
-                    'token_info': token_info
-                })
-                
-                print(f"\n{state['profile']['name']}: {answer}")
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'question_generation',
+                'type': 'common',
+                'candidate': 'all',
+                'prompt': f'Generate common question (round {round_num})',
+                'response': question,
+                'time_seconds': question_time,
+                'token_info': question_token_info
+            })
+        
+        # 各候補者が回答
+        for state in candidate_states:
+            answer_start_time = time.time()
+            answer, token_info = applicant.generate_answer(
+                state['profile'],
+                state['knowledge'],
+                state['conversation_log'],
+                question
+            )
+            answer_time = time.time() - answer_start_time
             
+            # token数を集計
+            if token_info:
+                round_token_info['prompt_tokens'] += token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += token_info.get('total_tokens', 0)
+            
+            # 会話ログに記録
+            state['conversation_log'].append({
+                'round': round_num,
+                'question_type': 'common' if is_common_question else 'individual',
+                'question': question,
+                'answer': answer,
+                'token_info': token_info
+            })
+            
+            print(f"\n{state['profile']['name']}: {answer}")
+    
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'candidate_answer',
+                'type': 'common' if is_common_question else 'individual',
+                'candidate': state['profile']['name'],
+                'prompt': question,
+                'response': answer,
+                'time_seconds': answer_time,
+                'token_info': token_info
+            })
+    
             # 全体質問後の評価（評価1、2、3を実行）
-            print(f"\n{'='*60}")
+    print(f"\n{'='*60}")
             print(f"ラウンド {round_num} (全体質問) 終了後の評価")
-            print(f"{'='*60}\n")
-            
+    print(f"{'='*60}\n")
+    
             # 評価1: 最も志望度が低い候補者を選定
             print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
-            least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
+            eval1_start_time = time.time()
+            least_motivated_eval, eval1_token_info = interviewer.select_least_motivated_candidate(candidate_states)
+            eval1_time = time.time() - eval1_start_time
+            
+            # token数を集計
+            if eval1_token_info:
+                round_token_info['prompt_tokens'] += eval1_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval1_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
+            
             print(f"{least_motivated_eval}\n")
+            
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval1_least_motivated',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Select least motivated candidate',
+                'response': least_motivated_eval,
+                'time_seconds': eval1_time,
+                'token_info': eval1_token_info
+            })
             
             # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             import re
@@ -728,15 +801,36 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価2: ランキング
             print(f"【ラウンド {round_num} - 評価2: 志望度ランキング（低い順）】")
-            ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
+            eval2_start_time = time.time()
+            ranking_eval, eval2_token_info = interviewer.rank_candidates_by_motivation(candidate_states)
+            eval2_time = time.time() - eval2_start_time
+            
+            # token数を集計
+            if eval2_token_info:
+                round_token_info['prompt_tokens'] += eval2_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval2_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval2_token_info.get('total_tokens', 0)
+            
             print(f"{ranking_eval}\n")
             
-            # 評価2: ランキング精度の計算
-            ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
-            if ranking_accuracy:
-                if ranking_accuracy.get('is_valid'):
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval2_ranking',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Rank candidates by motivation',
+                'response': ranking_eval,
+                'time_seconds': eval2_time,
+                'token_info': eval2_token_info
+            })
+    
+    # 評価2: ランキング精度の計算
+    ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+    if ranking_accuracy:
+        if ranking_accuracy.get('is_valid'):
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
-                else:
+        else:
                     print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
             
             # 評価2と評価3の区切り
@@ -872,14 +966,16 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
                             preparation = state['profile'].get('preparation', 'low')
+                            # preparationをwandb用のメトリクス名に変換（medium -> middle）
+                            preparation_label = 'middle' if preparation == 'medium' else preparation
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
                                 log_dict.update({
-                                    f'eval3/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'eval3/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
-                                    f'eval3/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
-                                    f'eval3/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_f1': metrics.get('f1_score', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_precision': metrics.get('precision', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_recall': metrics.get('recall', 0.0),
                                 })
                     
                     # stepパラメータでラウンド番号を指定（時系列グラフ用）
@@ -902,22 +998,51 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             print(f"対象候補者: {target_candidate_name}")
             
             # 個別質問を生成（対象候補者の会話履歴を使用）
-            question, _ = interviewer.ask_question(
+            question_start_time = time.time()
+            question, question_token_info = interviewer.ask_question(
                 target_candidate_for_individual['conversation_log']
             )
+            question_time = time.time() - question_start_time
+            
+            # token数を集計
+            if question_token_info:
+                round_token_info['prompt_tokens'] += question_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += question_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += question_token_info.get('total_tokens', 0)
+            
             asked_individual_questions.append({
                 'candidate': target_candidate_name,
                 'question': question
             })
             print(f"\n面接官の質問（{target_candidate_name}へ）: {question}")
             
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'question_generation',
+                'type': 'individual',
+                'candidate': target_candidate_name,
+                'prompt': f'Generate individual question for {target_candidate_name} (round {round_num})',
+                'response': question,
+                'time_seconds': question_time,
+                'token_info': question_token_info
+            })
+            
             # 対象候補者のみ回答
+            answer_start_time = time.time()
             answer, token_info = applicant.generate_answer(
                 target_candidate_for_individual['profile'],
                 target_candidate_for_individual['knowledge'],
                 target_candidate_for_individual['conversation_log'],
                 question
             )
+            answer_time = time.time() - answer_start_time
+            
+            # token数を集計
+            if token_info:
+                round_token_info['prompt_tokens'] += token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += token_info.get('total_tokens', 0)
             
             # 会話ログに記録
             target_candidate_for_individual['conversation_log'].append({
@@ -930,6 +1055,18 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             print(f"\n{target_candidate_name}: {answer}")
             
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'candidate_answer',
+                'type': 'individual',
+                'candidate': target_candidate_name,
+                'prompt': question,
+                'response': answer,
+                'time_seconds': answer_time,
+                'token_info': token_info
+            })
+            
             # 個別質問後の評価（すべての個別質問ラウンドで評価を実行）
             print(f"\n{'='*60}")
             print(f"ラウンド {round_num} (個別質問) 終了後の評価")
@@ -937,8 +1074,29 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価1: 最も志望度が低い候補者を選定
             print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
-            least_motivated_eval, _ = interviewer.select_least_motivated_candidate(candidate_states)
+            eval1_start_time = time.time()
+            least_motivated_eval, eval1_token_info = interviewer.select_least_motivated_candidate(candidate_states)
+            eval1_time = time.time() - eval1_start_time
+            
+            # token数を集計
+            if eval1_token_info:
+                round_token_info['prompt_tokens'] += eval1_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval1_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
+            
             print(f"{least_motivated_eval}\n")
+            
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval1_least_motivated',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Select least motivated candidate',
+                'response': least_motivated_eval,
+                'time_seconds': eval1_time,
+                'token_info': eval1_token_info
+            })
             
             # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
             import re
@@ -973,9 +1131,30 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価2: ランキング
             print(f"【ラウンド {round_num} - 評価2: 志望度ランキング（低い順）】")
-            ranking_eval, _ = interviewer.rank_candidates_by_motivation(candidate_states)
+            eval2_start_time = time.time()
+            ranking_eval, eval2_token_info = interviewer.rank_candidates_by_motivation(candidate_states)
+            eval2_time = time.time() - eval2_start_time
+            
+            # token数を集計
+            if eval2_token_info:
+                round_token_info['prompt_tokens'] += eval2_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval2_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval2_token_info.get('total_tokens', 0)
+            
             print(f"{ranking_eval}\n")
             
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval2_ranking',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Rank candidates by motivation',
+                'response': ranking_eval,
+                'time_seconds': eval2_time,
+                'token_info': eval2_token_info
+            })
+    
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
             if ranking_accuracy:
@@ -989,7 +1168,27 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価3: 知識欠損検出
             print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
-            knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            eval3_start_time = time.time()
+            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            eval3_time = time.time() - eval3_start_time
+            
+            # token数を集計
+            if eval3_token_info:
+                round_token_info['prompt_tokens'] += eval3_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval3_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval3_token_info.get('total_tokens', 0)
+            
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval3_knowledge_gaps',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Detect knowledge gaps',
+                'response': knowledge_gaps_eval,
+                'time_seconds': eval3_time,
+                'token_info': eval3_token_info
+            })
             
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
@@ -1118,15 +1317,26 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
                             preparation = state['profile'].get('preparation', 'low')
+                            # preparationをwandb用のメトリクス名に変換（medium -> middle）
+                            preparation_label = 'middle' if preparation == 'medium' else preparation
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
                                 log_dict.update({
-                                    f'eval3/candidate_{candidate_name}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'eval3/candidate_{candidate_name}_f1': metrics.get('f1_score', 0.0),
-                                    f'eval3/candidate_{candidate_name}_precision': metrics.get('precision', 0.0),
-                                    f'eval3/candidate_{candidate_name}_recall': metrics.get('recall', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_accuracy': metrics.get('accuracy', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_f1': metrics.get('f1_score', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_precision': metrics.get('precision', 0.0),
+                                    f'eval3/candidate_{candidate_name}_{preparation_label}_recall': metrics.get('recall', 0.0),
                                 })
+                    
+                    # 実行時間とtoken数を追加
+                    round_time = time.time() - round_start_time
+                    log_dict.update({
+                        'timing/round_duration_seconds': round_time,
+                        'tokens/prompt_tokens': round_token_info['prompt_tokens'],
+                        'tokens/completion_tokens': round_token_info['completion_tokens'],
+                        'tokens/total_tokens': round_token_info['total_tokens'],
+                    })
                     
                     # stepパラメータでラウンド番号を指定（時系列グラフ用）
                     wandb_run.log(log_dict, step=round_num)
@@ -1217,6 +1427,37 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     summary_dict['avg/eval3_accuracy'] = sum(eval3_accuracies) / len(eval3_accuracies)
             
             wandb_run.log(summary_dict)
+            
+            # プロンプトと回答をwandbのTableに記録
+            if prompt_logs and WANDB_AVAILABLE:
+                try:
+                    import wandb
+                    # Tableの列を定義
+                    columns = ['round', 'step', 'type', 'candidate', 'prompt', 'response', 'time_seconds', 'prompt_tokens', 'completion_tokens', 'total_tokens']
+                    table_data = []
+                    for log_entry in prompt_logs:
+                        token_info = log_entry.get('token_info', {}) or {}
+                        table_data.append([
+                            log_entry.get('round', 0),
+                            log_entry.get('step', ''),
+                            log_entry.get('type', ''),
+                            log_entry.get('candidate', ''),
+                            str(log_entry.get('prompt', ''))[:500],  # 長いプロンプトは切り詰め
+                            str(log_entry.get('response', ''))[:1000],  # 長い回答は切り詰め
+                            log_entry.get('time_seconds', 0.0),
+                            token_info.get('prompt_tokens', 0),
+                            token_info.get('completion_tokens', 0),
+                            token_info.get('total_tokens', 0),
+                        ])
+                    
+                    prompt_table = wandb.Table(columns=columns, data=table_data)
+                    wandb_run.log({f"prompts/simulation_{simulation_num}": prompt_table})
+                    print(f"--- プロンプトログをwandbに記録しました ({len(prompt_logs)}件) ---")
+                except Exception as e:
+                    print(f"警告: プロンプトログの記録中にエラーが発生しました: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
             wandb_run.finish()
             print(f"--- wandbログを完了しました ---")
         except Exception as e:
@@ -1250,6 +1491,29 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             interviewer_model_name = INTERVIEWER_MODEL
     
     print(f"面接官モデル: {interviewer_model_type} ({interviewer_model_name})")
+    
+    # wandbの全体実行用runを初期化（複数セット実行時）
+    overall_wandb_run = None
+    if ENABLE_WANDB and WANDB_AVAILABLE and num_simulations > 1:
+        try:
+            import wandb
+            overall_wandb_run = wandb.init(
+                project=WANDB_PROJECT,
+                entity=WANDB_ENTITY,
+                name=f"overall_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                config={
+                    'num_simulations': num_simulations,
+                    'set_index': set_index,
+                    'interviewer_model_type': interviewer_model_type,
+                    'interviewer_model_name': interviewer_model_name,
+                    'max_rounds': max_rounds,
+                },
+                reinit=True
+            )
+            print(f"--- 全体実行用wandb runを開始しました (run: {overall_wandb_run.name}) ---")
+        except Exception as e:
+            print(f"警告: 全体実行用wandb runの初期化に失敗しました: {e}")
+            overall_wandb_run = None
     
     # スプレッドシート連携の初期化
     spreadsheet_integration = None
@@ -1301,6 +1565,53 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
         if result:
             all_results.append(result)
             
+            # 全体実行用wandb runに各シミュレーションの結果を記録
+            if overall_wandb_run and result.get('evaluations'):
+                try:
+                    eval1_score = 0.0
+                    eval2_score = 0.0
+                    eval3_score = 0.0
+                    
+                    # 評価1のスコアを計算（最終評価から）
+                    least_motivated = result.get('evaluations', {}).get('least_motivated', '')
+                    if least_motivated:
+                        # 真の最も志望度が低い候補者を特定
+                        true_least_motivated = None
+                        for state in result.get('interview_transcripts', []):
+                            if state.get('preparation') == 'low':
+                                true_least_motivated = state.get('candidate')
+                                break
+                        
+                        # 予測された最も志望度が低い候補者を抽出
+                        predicted_least_motivated = None
+                        for state in result.get('interview_transcripts', []):
+                            candidate_name = state.get('candidate')
+                            if candidate_name and candidate_name in least_motivated:
+                                predicted_least_motivated = candidate_name
+                                break
+                        
+                        eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                           true_least_motivated == predicted_least_motivated) else 0.0
+                    
+                    # 評価2のスコア
+                    ranking_accuracy = result.get('ranking_accuracy', {})
+                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                        eval2_score = ranking_accuracy.get('accuracy', 0.0)
+                    
+                    # 評価3のスコア
+                    knowledge_gaps_metrics = result.get('knowledge_gaps_metrics', {})
+                    if knowledge_gaps_metrics:
+                        eval3_score = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
+                    
+                    # 全体実行用wandb runに記録
+                    overall_wandb_run.log({
+                        f'simulation_{sim_num}/eval1_score': eval1_score,
+                        f'simulation_{sim_num}/eval2_score': eval2_score,
+                        f'simulation_{sim_num}/eval3_score': eval3_score,
+                    }, step=sim_num)
+                except Exception as e:
+                    print(f"警告: 全体実行用wandbログの記録中にエラーが発生しました: {e}")
+            
             # スプレッドシートに記録
             if spreadsheet_integration:
                 try:
@@ -1333,6 +1644,63 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
         print(f"個別結果: {len(all_results)}件")
         print(f"サマリーファイル: {summary_file}")
         print(f"{'='*80}\n")
+        
+        # 全体実行用wandb runに最終サマリーを記録
+        if overall_wandb_run and len(all_results) > 0:
+            try:
+                # 各評価の平均スコアを計算
+                eval1_scores = []
+                eval2_scores = []
+                eval3_scores = []
+                
+                for result in all_results:
+                    # 評価1のスコア
+                    least_motivated = result.get('evaluations', {}).get('least_motivated', '')
+                    if least_motivated:
+                        true_least_motivated = None
+                        for state in result.get('interview_transcripts', []):
+                            if state.get('preparation') == 'low':
+                                true_least_motivated = state.get('candidate')
+                                break
+                        
+                        predicted_least_motivated = None
+                        for state in result.get('interview_transcripts', []):
+                            candidate_name = state.get('candidate')
+                            if candidate_name and candidate_name in least_motivated:
+                                predicted_least_motivated = candidate_name
+                                break
+                        
+                        score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                       true_least_motivated == predicted_least_motivated) else 0.0
+                        eval1_scores.append(score)
+                    
+                    # 評価2のスコア
+                    ranking_accuracy = result.get('ranking_accuracy', {})
+                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                        eval2_scores.append(ranking_accuracy.get('accuracy', 0.0))
+                    
+                    # 評価3のスコア
+                    knowledge_gaps_metrics = result.get('knowledge_gaps_metrics', {})
+                    if knowledge_gaps_metrics:
+                        eval3_scores.append(knowledge_gaps_metrics.get('avg_accuracy', 0.0))
+                
+                # 平均を計算して記録
+                if eval1_scores:
+                    overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)})
+                if eval2_scores:
+                    overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)})
+                if eval3_scores:
+                    overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)})
+                
+                overall_wandb_run.finish()
+                print(f"--- 全体実行用wandbログを完了しました ---")
+            except Exception as e:
+                print(f"警告: 全体実行用wandb最終ログの記録中にエラーが発生しました: {e}")
+                if overall_wandb_run:
+                    try:
+                        overall_wandb_run.finish()
+                    except:
+                        pass
 
 
 if __name__ == '__main__':
@@ -1400,7 +1768,7 @@ if __name__ == '__main__':
     
     # シミュレーション実行
     run_interviews(
-        num_simulations=args.num_simulations,
+        num_simulations=args.num_simulations, 
         set_index=args.set_index,
         interviewer_model_type=args.model_type,
         interviewer_model_name=args.model_name,
