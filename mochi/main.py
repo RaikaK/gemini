@@ -574,9 +574,9 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         # 既に初期化されたモデルが提供されている場合は再利用、そうでない場合は新規初期化
         if local_model is None or local_tokenizer is None:
             local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
-        if local_model is None or local_tokenizer is None:
-            print("ローカルモデルの初期化に失敗しました。")
-            return None
+            if local_model is None or local_tokenizer is None:
+                print("ローカルモデルの初期化に失敗しました。")
+                return None
         else:
             print(f"--- ローカルモデル ({interviewer_model_name}) を再利用 ---")
         
@@ -729,7 +729,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             })
             
             print(f"\n{state['profile']['name']}: {answer}")
-            
+    
             # プロンプトログに記録
             prompt_logs.append({
                 'round': round_num,
@@ -1004,8 +1004,21 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                                     f'eval3/candidate_{candidate_name}_{preparation_label}_recall': metrics.get('recall', 0.0),
                                 })
                     
+                    # 実行時間とtoken数を追加
+                    round_time = time.time() - round_start_time
+                    log_dict.update({
+                        'timing/round_duration_seconds': round_time,
+                        'tokens/prompt_tokens': round_token_info['prompt_tokens'],
+                        'tokens/completion_tokens': round_token_info['completion_tokens'],
+                        'tokens/total_tokens': round_token_info['total_tokens'],
+                    })
+                    
                     # stepパラメータでラウンド番号を指定（時系列グラフ用）
-                    wandb_run.log(log_dict, step=round_num)
+                    if wandb_run:
+                        wandb_run.log(log_dict, step=round_num)
+                        print(f"デバッグ: ラウンド {round_num} (全体質問) のwandbログを記録しました（メトリクス数: {len(log_dict)}）")
+                    else:
+                        print(f"警告: wandb_runがNoneです。ラウンド {round_num} のログを記録できませんでした。")
                 except Exception as e:
                     print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
                     import traceback
@@ -1365,7 +1378,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     })
                     
                     # stepパラメータでラウンド番号を指定（時系列グラフ用）
-                    wandb_run.log(log_dict, step=round_num)
+                    if wandb_run:
+                        wandb_run.log(log_dict, step=round_num)
+                        print(f"デバッグ: ラウンド {round_num} (個別質問) のwandbログを記録しました（メトリクス数: {len(log_dict)}）")
+                    else:
+                        print(f"警告: wandb_runがNoneです。ラウンド {round_num} のログを記録できませんでした。")
                 except Exception as e:
                     print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
                     import traceback
