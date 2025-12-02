@@ -254,7 +254,7 @@ def calculate_ranking_accuracy(candidate_states, ranking_eval):
                     name = re.sub(r'[()（）、,，。]', '', name)
                     if name and rank_num >= 1 and rank_num <= len(candidate_states):
                         extracted_names[rank_num] = name
-                            continue
+                        continue
                 
                 # パターン5: 行頭の数字とその後の名前（「学生」と「學生」の両方に対応）
                 match5 = re.search(r'^(\d+)\s+(?:候補者\d+\s*)?(?:\(([^)]+)\)|((?:学生|學生)[A-Z]{1,3}\d{0,2}))', line)
@@ -573,7 +573,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     if interviewer_model_type == 'local':
         # 既に初期化されたモデルが提供されている場合は再利用、そうでない場合は新規初期化
         if local_model is None or local_tokenizer is None:
-        local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
+            local_model, local_tokenizer = initialize_local_model(interviewer_model_name)
         if local_model is None or local_tokenizer is None:
             print("ローカルモデルの初期化に失敗しました。")
             return None
@@ -724,7 +724,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             })
             
             print(f"\n{state['profile']['name']}: {answer}")
-    
+            
             # プロンプトログに記録
             prompt_logs.append({
                 'round': round_num,
@@ -736,12 +736,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'time_seconds': answer_time,
                 'token_info': token_info
             })
-    
-            # 全体質問後の評価（評価1、2、3を実行）
-    print(f"\n{'='*60}")
+        
+        # 全体質問後の評価（評価1、2、3を実行）
+        if is_common_question:
+            print(f"\n{'='*60}")
             print(f"ラウンド {round_num} (全体質問) 終了後の評価")
-    print(f"{'='*60}\n")
-    
+            print(f"{'='*60}\n")
+            
             # 評価1: 最も志望度が低い候補者を選定
             print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
             eval1_start_time = time.time()
@@ -824,13 +825,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'time_seconds': eval2_time,
                 'token_info': eval2_token_info
             })
-    
-    # 評価2: ランキング精度の計算
-    ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
-    if ranking_accuracy:
-        if ranking_accuracy.get('is_valid'):
+            
+            # 評価2: ランキング精度の計算
+            ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+            if ranking_accuracy:
+                if ranking_accuracy.get('is_valid'):
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
-        else:
+                else:
                     print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
             
             # 評価2と評価3の区切り
@@ -838,7 +839,27 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価3: 知識欠損検出
             print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
-            knowledge_gaps_eval, _ = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            eval3_start_time = time.time()
+            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            eval3_time = time.time() - eval3_start_time
+            
+            # token数を集計
+            if eval3_token_info:
+                round_token_info['prompt_tokens'] += eval3_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval3_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval3_token_info.get('total_tokens', 0)
+            
+            # プロンプトログに記録
+            prompt_logs.append({
+                'round': round_num,
+                'step': 'eval3_knowledge_gaps',
+                'type': 'evaluation',
+                'candidate': 'all',
+                'prompt': 'Detect knowledge gaps',
+                'response': knowledge_gaps_eval,
+                'time_seconds': eval3_time,
+                'token_info': eval3_token_info
+            })
             
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
