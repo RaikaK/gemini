@@ -1586,9 +1586,69 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
         if result:
             all_results.append(result)
             
-            # 全体実行用wandb runに各シミュレーションの結果を記録
-            if overall_wandb_run and result.get('evaluations'):
+            # 全体実行用wandb runに各シミュレーションの結果を記録（各ラウンドごと）
+            if overall_wandb_run:
                 try:
+                    # round_evaluationsから各ラウンドごとのデータを取得
+                    round_evaluations = result.get('round_evaluations', [])
+                    
+                    # 各ラウンドごとの評価を記録
+                    for eval_data in round_evaluations:
+                        round_num = eval_data.get('round', 0)
+                        question_type = eval_data.get('question_type', '')
+                        
+                        # 全体質問ラウンドのみ記録（個別質問ラウンドも評価は行っているが、全体質問ラウンドの方が重要）
+                        if question_type == 'common':
+                            log_dict = {}
+                            
+                            # 評価1のスコアを計算
+                            least_motivated_eval = eval_data.get('evaluations', {}).get('least_motivated', '')
+                            if least_motivated_eval:
+                                # 真の最も志望度が低い候補者を特定
+                                true_least_motivated = None
+                                for state in result.get('interview_transcripts', []):
+                                    if state.get('preparation') == 'low':
+                                        true_least_motivated = state.get('candidate')
+                                        break
+                                
+                                # 予測された最も志望度が低い候補者を抽出
+                                predicted_least_motivated = None
+                                for state in result.get('interview_transcripts', []):
+                                    candidate_name = state.get('candidate')
+                                    if candidate_name and candidate_name in least_motivated_eval:
+                                        predicted_least_motivated = candidate_name
+                                        break
+                                
+                                # 抽出できなかった場合、正規表現で試す
+                                if predicted_least_motivated is None:
+                                    import re
+                                    match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                                    if match:
+                                        extracted_name = match.group(1)
+                                        for state in result.get('interview_transcripts', []):
+                                            if state.get('candidate') == extracted_name:
+                                                predicted_least_motivated = extracted_name
+                                                break
+                                
+                                eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                                   true_least_motivated == predicted_least_motivated) else 0.0
+                                log_dict[f'simulation_{sim_num}/eval1_score'] = eval1_score
+                            
+                            # 評価2のスコア
+                            ranking_accuracy = eval_data.get('ranking_accuracy', {})
+                            if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                                log_dict[f'simulation_{sim_num}/eval2_score'] = ranking_accuracy.get('accuracy', 0.0)
+                            
+                            # 評価3のスコア
+                            knowledge_gaps_metrics = eval_data.get('knowledge_gaps_metrics', {})
+                            if knowledge_gaps_metrics:
+                                log_dict[f'simulation_{sim_num}/eval3_score'] = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
+                            
+                            # ラウンドごとに記録（step=round_num）
+                            if log_dict:
+                                overall_wandb_run.log(log_dict, step=round_num)
+                    
+                    # 最終結果も記録（step=sim_numで最終ステップとして）
                     eval1_score = 0.0
                     eval2_score = 0.0
                     eval3_score = 0.0
@@ -1624,14 +1684,19 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                     if knowledge_gaps_metrics:
                         eval3_score = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
                     
-                    # 全体実行用wandb runに記録
-                    overall_wandb_run.log({
-                        f'simulation_{sim_num}/eval1_score': eval1_score,
-                        f'simulation_{sim_num}/eval2_score': eval2_score,
-                        f'simulation_{sim_num}/eval3_score': eval3_score,
-                    }, step=sim_num)
+                    # 最終結果も記録（最終ラウンドのstep番号で記録）
+                    # 最終ラウンド番号を取得
+                    if round_evaluations:
+                        final_round = max(eval_data.get('round', 0) for eval_data in round_evaluations)
+                        overall_wandb_run.log({
+                            f'simulation_{sim_num}/final_eval1_score': eval1_score,
+                            f'simulation_{sim_num}/final_eval2_score': eval2_score,
+                            f'simulation_{sim_num}/final_eval3_score': eval3_score,
+                        }, step=final_round + 1)  # 最終ラウンドの次のstep番号で記録
                 except Exception as e:
                     print(f"警告: 全体実行用wandbログの記録中にエラーが発生しました: {e}")
+                    import traceback
+                    traceback.print_exc()
             
             # スプレッドシートに記録
             if spreadsheet_integration:
