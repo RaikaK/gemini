@@ -24,46 +24,47 @@ class CardExtractor:
     SIZE_ATK = 1
     SIZE_DEF = 1
     SIZE_LEVEL = 1
+    SIZE_CATEGORY = 5
     SIZE_POSITION = 2
     SIZE_TURN_PASSED = 1
-    SIZE_EFFECT_USED = 1
+    SIZE_EFFECT_USED = 3
     SIZE_IS_ATTACKING = 1
     SIZE_IS_ATTACKED = 1
     SIZE_EQUIP_TARGET = 1
 
     # --- カードマップ ---
     _CARD_MAP: dict[int, dict[str, int]] = {
-        1001: {"idx": 1, "atk": 1300, "def": 2000, "level": 4},  # 洞窟に潜む竜
-        1002: {"idx": 2, "atk": 1900, "def": 1600, "level": 4},  # サファイアドラゴン
-        1003: {"idx": 3, "atk": 2000, "def": 100, "level": 4},  # アレキサンドライドラゴン
-        1004: {"idx": 4, "atk": 3000, "def": 2500, "level": 8},  # 青眼の白龍
-        1005: {"idx": 5, "atk": 1800, "def": 1000, "level": 4},  # アサルトワイバーン
-        1006: {"idx": 6, "atk": 0, "def": 0, "level": 0},  # 強欲な壺
-        1007: {"idx": 7, "atk": 0, "def": 0, "level": 0},  # 大嵐
-        1008: {"idx": 8, "atk": 0, "def": 0, "level": 0},  # ライトニング・ボルテックス
-        1009: {"idx": 9, "atk": 0, "def": 0, "level": 0},  # 早すぎた埋葬
-        1010: {"idx": 10, "atk": 0, "def": 0, "level": 0},  # サイクロン
-        1011: {"idx": 11, "atk": 0, "def": 0, "level": 0},  # 収縮
-        1012: {"idx": 12, "atk": 0, "def": 0, "level": 0},  # 銀龍の轟咆
-        1013: {"idx": 13, "atk": 0, "def": 0, "level": 0},  # 聖なるバリア
-        1014: {"idx": 14, "atk": 0, "def": 0, "level": 0},  # 砂塵の大竜巻
-        1015: {"idx": 15, "atk": 0, "def": 0, "level": 0},  # 激流葬
-        1016: {"idx": 16, "atk": 0, "def": 0, "level": 0},  # 強化蘇生
-        1017: {"idx": 17, "atk": 1400, "def": 1100, "level": 3},  # 仮面竜
-        1018: {"idx": 18, "atk": 1000, "def": 0, "level": 3},  # ボマー・ドラゴン
-        1019: {"idx": 19, "atk": 100, "def": 200, "level": 3},  # コドモドラゴン
-        1020: {"idx": 20, "atk": 1400, "def": 1000, "level": 4},  # センジュ・ゴッド
-        1021: {"idx": 21, "atk": 1400, "def": 1000, "level": 4},  # ソニックバード
-        1022: {"idx": 22, "atk": 1400, "def": 1000, "level": 4},  # マンジュ・ゴッド
-        1023: {"idx": 23, "atk": 1800, "def": 600, "level": 4},  # 創世の竜騎士
-        1024: {"idx": 24, "atk": 1900, "def": 1200, "level": 4},  # 白竜の聖騎士
-        1025: {"idx": 25, "atk": 0, "def": 0, "level": 0},  # 死者蘇生
-        1026: {"idx": 26, "atk": 0, "def": 0, "level": 0},  # 白竜降臨
-        1027: {"idx": 27, "atk": 0, "def": 0, "level": 0},  # 高等儀式術
-        1028: {"idx": 28, "atk": 0, "def": 0, "level": 0},  # 月の書
-        1029: {"idx": 29, "atk": 0, "def": 0, "level": 0},  # 禁じられた聖槍
-        1030: {"idx": 30, "atk": 0, "def": 0, "level": 0},  # 戦線復帰
-        1031: {"idx": 31, "atk": 0, "def": 0, "level": 0},  # リビングデッド
+        1001: {"idx": 1, "atk": 1300, "def": 2000, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
+        1002: {"idx": 2, "atk": 1900, "def": 1600, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
+        1003: {"idx": 3, "atk": 2000, "def": 100, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
+        1004: {"idx": 4, "atk": 3000, "def": 2500, "level": 8, "dragon": 1, "normal": 1, "ritual": 0},
+        1005: {"idx": 5, "atk": 1800, "def": 1000, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
+        1006: {"idx": 6, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1007: {"idx": 7, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1008: {"idx": 8, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1009: {"idx": 9, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1010: {"idx": 10, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1011: {"idx": 11, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1012: {"idx": 12, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1013: {"idx": 13, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1014: {"idx": 14, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1015: {"idx": 15, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1016: {"idx": 16, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1017: {"idx": 17, "atk": 1400, "def": 1100, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
+        1018: {"idx": 18, "atk": 1000, "def": 0, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
+        1019: {"idx": 19, "atk": 100, "def": 200, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
+        1020: {"idx": 20, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
+        1021: {"idx": 21, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
+        1022: {"idx": 22, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
+        1023: {"idx": 23, "atk": 1800, "def": 600, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
+        1024: {"idx": 24, "atk": 1900, "def": 1200, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
+        1025: {"idx": 25, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1026: {"idx": 26, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 1},
+        1027: {"idx": 27, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 1},
+        1028: {"idx": 28, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1029: {"idx": 29, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1030: {"idx": 30, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
+        1031: {"idx": 31, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
     }
 
     def __init__(self, scaling_factor: float) -> None:
@@ -124,6 +125,10 @@ class CardExtractor:
                     # レベル
                     self._fill_level(feature[cursor : cursor + self.SIZE_LEVEL, :, :], height, width, duel_card)
                     cursor += self.SIZE_LEVEL
+
+                    # カテゴリ
+                    self._fill_category(feature[cursor : cursor + self.SIZE_CATEGORY, :, :], height, width, duel_card)
+                    cursor += self.SIZE_CATEGORY
 
                     # 表示形式
                     self._fill_position(feature[cursor : cursor + self.SIZE_POSITION, :, :], height, width, duel_card)
@@ -250,6 +255,41 @@ class CardExtractor:
 
         feature[0, height, width] = (level_val / self.MAX_LEVEL) * self.scaling_factor
 
+    def _fill_category(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
+        """
+        カテゴリを埋め込む。
+
+        Args:
+            feature (np.ndarray): 特徴量埋め込み先
+            height (int): height
+            width (int): width
+            duel_card (DuelCard): カード情報
+        """
+        card_id: int = duel_card.card_id
+
+        if card_id in self._CARD_MAP:
+            card_info: dict[str, int] = self._CARD_MAP[card_id]
+
+            # ドラゴン族
+            if card_info["dragon"] == 1:
+                feature[0, height, width] = 1.0
+
+            # 通常モンスター
+            if card_info["normal"] == 1:
+                feature[1, height, width] = 1.0
+
+            # ATK 1500 以下
+            if card_info["level"] > 0 and card_info["atk"] <= 1500:
+                feature[2, height, width] = 1.0
+
+            # レベル 4
+            if card_info["level"] == 4:
+                feature[3, height, width] = 1.0
+
+            # 儀式魔法
+            if card_info["ritual"] == 1:
+                feature[4, height, width] = 1.0
+
     def _fill_position(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
         """
         表示形式を埋め込む。
@@ -297,8 +337,14 @@ class CardExtractor:
             width (int): width
             duel_card (DuelCard): カード情報
         """
-        if duel_card.used_effect1 == 1 or duel_card.used_effect2 == 1 or duel_card.used_effect3 == 1:
+        if duel_card.used_effect1 == 1:
             feature[0, height, width] = 1.0
+
+        if duel_card.used_effect2 == 1:
+            feature[1, height, width] = 1.0
+
+        if duel_card.used_effect3 == 1:
+            feature[2, height, width] = 1.0
 
     def _fill_is_attacking(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
         """
@@ -340,7 +386,7 @@ class CardExtractor:
             duel_card (DuelCard): カード情報 (装備魔法)
             duel_cards (list[DuelCard]): カード情報リスト (対象モンスター)
         """
-        if duel_card.card_id == 1009 and duel_card.equip_target != -1:
+        if duel_card.equip_target != -1:
             target_idx: int = duel_card.equip_target
 
             if 0 <= target_idx < len(duel_cards):
