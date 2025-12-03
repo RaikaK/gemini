@@ -1658,64 +1658,76 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             # 全体実行用wandb runに各シミュレーションの結果を記録（各ラウンドごと）
             if overall_wandb_run:
                 try:
-                    # round_evaluationsから各ラウンドごとのデータを取得
-                    round_evaluations = result.get('round_evaluations', [])
-                    
-                    # 各ラウンドごとの評価を記録
-                    for eval_data in round_evaluations:
-                        round_num = eval_data.get('round', 0)
-                        question_type = eval_data.get('question_type', '')
+                    # runがアクティブかどうかをチェック
+                    if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
+                        print(f"警告: wandb runが既に終了しています。シミュレーション {sim_num} のログをスキップします。")
+                    else:
+                        # round_evaluationsから各ラウンドごとのデータを取得
+                        round_evaluations = result.get('round_evaluations', [])
                         
-                        # 全体質問ラウンドのみ記録（個別質問ラウンドも評価は行っているが、全体質問ラウンドの方が重要）
-                        if question_type == 'common':
-                            log_dict = {}
+                        # 各ラウンドごとの評価を記録
+                        for eval_data in round_evaluations:
+                            round_num = eval_data.get('round', 0)
+                            question_type = eval_data.get('question_type', '')
                             
-                            # 評価1のスコアを計算
-                            least_motivated_eval = eval_data.get('evaluations', {}).get('least_motivated', '')
-                            if least_motivated_eval:
-                                # 真の最も志望度が低い候補者を特定
-                                true_least_motivated = None
-                                for state in result.get('interview_transcripts', []):
-                                    if state.get('preparation') == 'low':
-                                        true_least_motivated = state.get('candidate')
-                                        break
+                            # 全体質問ラウンドのみ記録（個別質問ラウンドも評価は行っているが、全体質問ラウンドの方が重要）
+                            if question_type == 'common':
+                                log_dict = {}
                                 
-                                # 予測された最も志望度が低い候補者を抽出
-                                predicted_least_motivated = None
-                                for state in result.get('interview_transcripts', []):
-                                    candidate_name = state.get('candidate')
-                                    if candidate_name and candidate_name in least_motivated_eval:
-                                        predicted_least_motivated = candidate_name
-                                        break
+                                # 評価1のスコアを計算
+                                least_motivated_eval = eval_data.get('evaluations', {}).get('least_motivated', '')
+                                if least_motivated_eval:
+                                    # 真の最も志望度が低い候補者を特定
+                                    true_least_motivated = None
+                                    for state in result.get('interview_transcripts', []):
+                                        if state.get('preparation') == 'low':
+                                            true_least_motivated = state.get('candidate')
+                                            break
+                                    
+                                    # 予測された最も志望度が低い候補者を抽出
+                                    predicted_least_motivated = None
+                                    for state in result.get('interview_transcripts', []):
+                                        candidate_name = state.get('candidate')
+                                        if candidate_name and candidate_name in least_motivated_eval:
+                                            predicted_least_motivated = candidate_name
+                                            break
+                                    
+                                    # 抽出できなかった場合、正規表現で試す
+                                    if predicted_least_motivated is None:
+                                        import re
+                                        match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                                        if match:
+                                            extracted_name = match.group(1)
+                                            for state in result.get('interview_transcripts', []):
+                                                if state.get('candidate') == extracted_name:
+                                                    predicted_least_motivated = extracted_name
+                                                    break
+                                    
+                                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
+                                                       true_least_motivated == predicted_least_motivated) else 0.0
+                                    log_dict[f'simulation_{sim_num}/eval1_score'] = eval1_score
                                 
-                                # 抽出できなかった場合、正規表現で試す
-                                if predicted_least_motivated is None:
-                                    import re
-                                    match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                                    if match:
-                                        extracted_name = match.group(1)
-                                        for state in result.get('interview_transcripts', []):
-                                            if state.get('candidate') == extracted_name:
-                                                predicted_least_motivated = extracted_name
-                                                break
+                                # 評価2のスコア
+                                ranking_accuracy = eval_data.get('ranking_accuracy', {})
+                                if ranking_accuracy and ranking_accuracy.get('is_valid'):
+                                    log_dict[f'simulation_{sim_num}/eval2_score'] = ranking_accuracy.get('accuracy', 0.0)
                                 
-                                eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                                   true_least_motivated == predicted_least_motivated) else 0.0
-                                log_dict[f'simulation_{sim_num}/eval1_score'] = eval1_score
-                            
-                            # 評価2のスコア
-                            ranking_accuracy = eval_data.get('ranking_accuracy', {})
-                            if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                                log_dict[f'simulation_{sim_num}/eval2_score'] = ranking_accuracy.get('accuracy', 0.0)
-                            
-                            # 評価3のスコア
-                            knowledge_gaps_metrics = eval_data.get('knowledge_gaps_metrics', {})
-                            if knowledge_gaps_metrics:
-                                log_dict[f'simulation_{sim_num}/eval3_score'] = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
-                            
-                            # ラウンドごとに記録（step=round_num）
-                            if log_dict:
-                                overall_wandb_run.log(log_dict, step=round_num)
+                                # 評価3のスコア
+                                knowledge_gaps_metrics = eval_data.get('knowledge_gaps_metrics', {})
+                                if knowledge_gaps_metrics:
+                                    log_dict[f'simulation_{sim_num}/eval3_score'] = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
+                                
+                                # ラウンドごとに記録（step=round_num）
+                                if log_dict:
+                                    try:
+                                        overall_wandb_run.log(log_dict, step=round_num)
+                                    except Exception as log_error:
+                                        error_str = str(log_error)
+                                        if "finished" in error_str.lower() or "active" in error_str.lower():
+                                            print(f"警告: wandb runが終了しています。ラウンド {round_num} のログをスキップします。")
+                                            break  # ループを抜ける（以降のラウンドも記録できないため）
+                                        else:
+                                            raise  # その他のエラーは再発生させる
                     
                     # 最終結果も記録（step=sim_numで各シミュレーションごとに記録）
                     eval1_score = 0.0
@@ -1755,12 +1767,16 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                     
                     # 各シミュレーションの最終スコアをstep=sim_numで記録（グラフで見やすくするため）
                     try:
-                        overall_wandb_run.log({
-                            'overall/eval1_score': eval1_score,
-                            'overall/eval2_score': eval2_score,
-                            'overall/eval3_score': eval3_score,
-                        }, step=sim_num)
-                        print(f"デバッグ: シミュレーション {sim_num} の最終スコアをwandbに記録しました (eval1={eval1_score}, eval2={eval2_score}, eval3={eval3_score})")
+                        # runがアクティブかどうかを再チェック
+                        if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
+                            print(f"警告: wandb runが既に終了しています。シミュレーション {sim_num} の最終スコアを記録できませんでした。")
+                        else:
+                            overall_wandb_run.log({
+                                'overall/eval1_score': eval1_score,
+                                'overall/eval2_score': eval2_score,
+                                'overall/eval3_score': eval3_score,
+                            }, step=sim_num)
+                            print(f"デバッグ: シミュレーション {sim_num} の最終スコアをwandbに記録しました (eval1={eval1_score}, eval2={eval2_score}, eval3={eval3_score})")
                     except Exception as log_error:
                         # wandb runが終了している場合など
                         error_str = str(log_error)
@@ -1847,16 +1863,22 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                 
                 # 平均を計算して記録（最終ステップとして）
                 try:
-                    # 最終ステップ番号を取得（シミュレーション数 + 1）
-                    final_step = num_simulations + 1
-                    if eval1_scores:
-                        overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)}, step=final_step)
-                    if eval2_scores:
-                        overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)}, step=final_step)
-                    if eval3_scores:
-                        overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)}, step=final_step)
+                    # runがアクティブかどうかをチェック
+                    if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
+                        print(f"警告: wandb runが既に終了しています。最終ログを記録できませんでした。")
+                    else:
+                        # 最終ステップ番号を取得（シミュレーション数 + 1）
+                        final_step = num_simulations + 1
+                        if eval1_scores:
+                            overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)}, step=final_step)
+                        if eval2_scores:
+                            overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)}, step=final_step)
+                        if eval3_scores:
+                            overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)}, step=final_step)
                     
-                    overall_wandb_run.finish()
+                    # runがアクティブな場合のみfinishを呼ぶ
+                    if not (hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None):
+                        overall_wandb_run.finish()
                 except Exception as log_error:
                     # wandb runが終了している場合など
                     error_str = str(log_error)
@@ -1865,7 +1887,9 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                     else:
                         print(f"警告: wandb最終ログの記録中にエラーが発生しました: {log_error}")
                     try:
-                        overall_wandb_run.finish()
+                        # runがアクティブな場合のみfinishを呼ぶ
+                        if not (hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None):
+                            overall_wandb_run.finish()
                     except:
                         pass
                 print(f"--- 全体実行用wandbログを完了しました ---")
