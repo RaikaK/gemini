@@ -72,9 +72,9 @@ AVAILABLE_LOCAL_MODELS = {
     "SWALLOW": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
     "qwen3-4b-instruct-2507": "Qwen/Qwen3-4B-Instruct-2507",
     "qwen2.5-7b-instruct": "Qwen/Qwen2.5-7B-Instruct",
+    # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
     # "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
-    # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
 }
 
 # モデルタイプのマッピング（チャットテンプレートの形式を決定）
@@ -84,7 +84,7 @@ MODEL_TYPE_MAPPING = {
     "qwen3-4b-instruct-2507": "qwen",
     "ELYZA-japanese-Llama-2": "llama2",
     "llama3-elyza-jp": "llama3",
-    "tinyllama": "other",
+    # "tinyllama": "llama2",  # TinyLlamaはLlama-2ベースのためllama2形式を使用
     "qwen2.5-7b-instruct": "qwen",
 }
 

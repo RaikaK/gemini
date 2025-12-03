@@ -674,7 +674,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         if is_common_question:
             # 全体質問
             print(f"\n--- ラウンド {round_num} (全体質問) ---")
-            
+        
             # 全体質問を生成
             question_start_time = time.time()
             question, question_token_info = interviewer.ask_common_question(asked_common_questions)
@@ -829,7 +829,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'time_seconds': eval2_time,
                 'token_info': eval2_token_info
             })
-            
+    
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
             if ranking_accuracy:
@@ -1671,7 +1671,7 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                             if log_dict:
                                 overall_wandb_run.log(log_dict, step=round_num)
                     
-                    # 最終結果も記録（step=sim_numで最終ステップとして）
+                    # 最終結果も記録（step=sim_numで各シミュレーションごとに記録）
                     eval1_score = 0.0
                     eval2_score = 0.0
                     eval3_score = 0.0
@@ -1707,15 +1707,21 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                     if knowledge_gaps_metrics:
                         eval3_score = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
                     
-                    # 最終結果も記録（最終ラウンドのstep番号で記録）
-                    # 最終ラウンド番号を取得
-                    if round_evaluations:
-                        final_round = max(eval_data.get('round', 0) for eval_data in round_evaluations)
+                    # 各シミュレーションの最終スコアをstep=sim_numで記録（グラフで見やすくするため）
+                    try:
                         overall_wandb_run.log({
-                            f'simulation_{sim_num}/final_eval1_score': eval1_score,
-                            f'simulation_{sim_num}/final_eval2_score': eval2_score,
-                            f'simulation_{sim_num}/final_eval3_score': eval3_score,
-                        }, step=final_round + 1)  # 最終ラウンドの次のstep番号で記録
+                            'overall/eval1_score': eval1_score,
+                            'overall/eval2_score': eval2_score,
+                            'overall/eval3_score': eval3_score,
+                        }, step=sim_num)
+                        print(f"デバッグ: シミュレーション {sim_num} の最終スコアをwandbに記録しました (eval1={eval1_score}, eval2={eval2_score}, eval3={eval3_score})")
+                    except Exception as log_error:
+                        # wandb runが終了している場合など
+                        error_str = str(log_error)
+                        if "finished" in error_str.lower() or "active" in error_str.lower():
+                            print(f"警告: wandb runが終了しています。シミュレーション {sim_num} のログを記録できませんでした。")
+                        else:
+                            print(f"警告: wandbログの記録中にエラーが発生しました: {log_error}")
                 except Exception as e:
                     print(f"警告: 全体実行用wandbログの記録中にエラーが発生しました: {e}")
                     import traceback
@@ -1793,15 +1799,29 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                     if knowledge_gaps_metrics:
                         eval3_scores.append(knowledge_gaps_metrics.get('avg_accuracy', 0.0))
                 
-                # 平均を計算して記録
-                if eval1_scores:
-                    overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)})
-                if eval2_scores:
-                    overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)})
-                if eval3_scores:
-                    overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)})
-                
-                overall_wandb_run.finish()
+                # 平均を計算して記録（最終ステップとして）
+                try:
+                    # 最終ステップ番号を取得（シミュレーション数 + 1）
+                    final_step = num_simulations + 1
+                    if eval1_scores:
+                        overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)}, step=final_step)
+                    if eval2_scores:
+                        overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)}, step=final_step)
+                    if eval3_scores:
+                        overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)}, step=final_step)
+                    
+                    overall_wandb_run.finish()
+                except Exception as log_error:
+                    # wandb runが終了している場合など
+                    error_str = str(log_error)
+                    if "finished" in error_str.lower() or "active" in error_str.lower():
+                        print(f"警告: wandb runが既に終了しています。最終ログを記録できませんでした。")
+                    else:
+                        print(f"警告: wandb最終ログの記録中にエラーが発生しました: {log_error}")
+                    try:
+                        overall_wandb_run.finish()
+                    except:
+                        pass
                 print(f"--- 全体実行用wandbログを完了しました ---")
             except Exception as e:
                 print(f"警告: 全体実行用wandb最終ログの記録中にエラーが発生しました: {e}")
