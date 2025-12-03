@@ -986,8 +986,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                             if level in by_motivation and by_motivation[level] is not None:
                                 log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
                         
-                        # 各候補者ごとのメトリクス
+                        # 各候補者ごとのメトリクスを準備レベルごとに集約
                         per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+                        # 準備レベルごとにメトリクスを集約する辞書
+                        metrics_by_preparation = {
+                            'low': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
+                            'middle': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
+                            'high': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []}
+                        }
+                        
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
                             preparation = state['profile'].get('preparation', 'low')
@@ -996,12 +1003,28 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
-                                log_dict.update({
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_f1': metrics.get('f1_score', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_precision': metrics.get('precision', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_recall': metrics.get('recall', 0.0),
-                                })
+                                # 準備レベルごとにメトリクスを集約
+                                if preparation_label in metrics_by_preparation:
+                                    if metrics.get('accuracy') is not None:
+                                        metrics_by_preparation[preparation_label]['accuracy'].append(metrics.get('accuracy', 0.0))
+                                    if metrics.get('f1_score') is not None:
+                                        metrics_by_preparation[preparation_label]['f1'].append(metrics.get('f1_score', 0.0))
+                                    if metrics.get('precision') is not None:
+                                        metrics_by_preparation[preparation_label]['precision'].append(metrics.get('precision', 0.0))
+                                    if metrics.get('recall') is not None:
+                                        metrics_by_preparation[preparation_label]['recall'].append(metrics.get('recall', 0.0))
+                        
+                        # 準備レベルごとの平均を計算して記録
+                        for prep_label in ['low', 'middle', 'high']:
+                            prep_metrics = metrics_by_preparation[prep_label]
+                            if prep_metrics['accuracy']:
+                                log_dict[f'eval3/candidate_{prep_label}_accuracy'] = sum(prep_metrics['accuracy']) / len(prep_metrics['accuracy'])
+                            if prep_metrics['f1']:
+                                log_dict[f'eval3/candidate_{prep_label}_f1'] = sum(prep_metrics['f1']) / len(prep_metrics['f1'])
+                            if prep_metrics['precision']:
+                                log_dict[f'eval3/candidate_{prep_label}_precision'] = sum(prep_metrics['precision']) / len(prep_metrics['precision'])
+                            if prep_metrics['recall']:
+                                log_dict[f'eval3/candidate_{prep_label}_recall'] = sum(prep_metrics['recall']) / len(prep_metrics['recall'])
                     
                     # 実行時間とtoken数を追加
                     round_time = time.time() - round_start_time
@@ -1350,8 +1373,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                             if level in by_motivation and by_motivation[level] is not None:
                                 log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
                         
-                        # 各候補者ごとのメトリクス
+                        # 各候補者ごとのメトリクスを準備レベルごとに集約
                         per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
+                        # 準備レベルごとにメトリクスを集約する辞書
+                        metrics_by_preparation = {
+                            'low': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
+                            'middle': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
+                            'high': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []}
+                        }
+                        
                         for state in candidate_states:
                             candidate_name = state['profile']['name']
                             preparation = state['profile'].get('preparation', 'low')
@@ -1360,12 +1390,28 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                             if candidate_name in per_candidate:
                                 candidate_data = per_candidate[candidate_name]
                                 metrics = candidate_data.get('metrics', {})
-                                log_dict.update({
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_accuracy': metrics.get('accuracy', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_f1': metrics.get('f1_score', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_precision': metrics.get('precision', 0.0),
-                                    f'eval3/candidate_{candidate_name}_{preparation_label}_recall': metrics.get('recall', 0.0),
-                                })
+                                # 準備レベルごとにメトリクスを集約
+                                if preparation_label in metrics_by_preparation:
+                                    if metrics.get('accuracy') is not None:
+                                        metrics_by_preparation[preparation_label]['accuracy'].append(metrics.get('accuracy', 0.0))
+                                    if metrics.get('f1_score') is not None:
+                                        metrics_by_preparation[preparation_label]['f1'].append(metrics.get('f1_score', 0.0))
+                                    if metrics.get('precision') is not None:
+                                        metrics_by_preparation[preparation_label]['precision'].append(metrics.get('precision', 0.0))
+                                    if metrics.get('recall') is not None:
+                                        metrics_by_preparation[preparation_label]['recall'].append(metrics.get('recall', 0.0))
+                        
+                        # 準備レベルごとの平均を計算して記録
+                        for prep_label in ['low', 'middle', 'high']:
+                            prep_metrics = metrics_by_preparation[prep_label]
+                            if prep_metrics['accuracy']:
+                                log_dict[f'eval3/candidate_{prep_label}_accuracy'] = sum(prep_metrics['accuracy']) / len(prep_metrics['accuracy'])
+                            if prep_metrics['f1']:
+                                log_dict[f'eval3/candidate_{prep_label}_f1'] = sum(prep_metrics['f1']) / len(prep_metrics['f1'])
+                            if prep_metrics['precision']:
+                                log_dict[f'eval3/candidate_{prep_label}_precision'] = sum(prep_metrics['precision']) / len(prep_metrics['precision'])
+                            if prep_metrics['recall']:
+                                log_dict[f'eval3/candidate_{prep_label}_recall'] = sum(prep_metrics['recall']) / len(prep_metrics['recall'])
                     
                     # 実行時間とtoken数を追加
                     round_time = time.time() - round_start_time
