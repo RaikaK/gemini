@@ -634,10 +634,32 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         try:
             # wandbモジュールをインポート（グローバルスコープから取得）
             import wandb
+            
+            # モデル名を短縮形に変換（Runsの表示で見やすくするため）
+            model_short_name = interviewer_model_name
+            if '/' in model_short_name:
+                # HuggingFace形式の場合、最後の部分だけを使用（例: "microsoft/phi-2" -> "phi-2"）
+                model_short_name = model_short_name.split('/')[-1]
+            if len(model_short_name) > 20:
+                # 長すぎる場合は最初の20文字に制限
+                model_short_name = model_short_name[:20]
+            
+            # Run名にモデル情報を含める
+            run_name = f"{model_short_name}_sim{simulation_num}_set{actual_set_index}"
+            
+            # タグにモデル情報を追加（Runsのフィルタリングに便利）
+            tags = [
+                f"model_type_{interviewer_model_type}",
+                f"model_{model_short_name}",
+                f"simulation_{simulation_num}",
+                f"set_{actual_set_index}"
+            ]
+            
             wandb.init(
                 project=WANDB_PROJECT,
                 entity=WANDB_ENTITY,
-                name=f"simulation_{simulation_num}_set_{actual_set_index}",
+                name=run_name,
+                tags=tags,
                 config={
                     'simulation_num': simulation_num,
                     'set_index': actual_set_index,
@@ -651,7 +673,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 reinit=True
             )
             wandb_run = wandb.run
-            print(f"--- wandbログを開始しました (run: {wandb_run.name}) ---")
+            print(f"--- wandbログを開始しました (run: {wandb_run.name}, model: {interviewer_model_name}) ---")
         except Exception as e:
             print(f"警告: wandbの初期化に失敗しました: {e}")
             import traceback
@@ -1587,10 +1609,33 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
     if ENABLE_WANDB and WANDB_AVAILABLE and num_simulations > 1:
         try:
             import wandb
+            
+            # モデル名を短縮形に変換
+            model_short_name = interviewer_model_name
+            if '/' in model_short_name:
+                model_short_name = model_short_name.split('/')[-1]
+            if len(model_short_name) > 20:
+                model_short_name = model_short_name[:20]
+            
+            # Run名にモデル情報を含める
+            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            run_name = f"{model_short_name}_overall_{num_simulations}sims_{timestamp}"
+            
+            # タグにモデル情報を追加
+            tags = [
+                f"model_type_{interviewer_model_type}",
+                f"model_{model_short_name}",
+                "overall_run",
+                f"simulations_{num_simulations}"
+            ]
+            if set_index is not None:
+                tags.append(f"set_{set_index}")
+            
             overall_wandb_run = wandb.init(
                 project=WANDB_PROJECT,
                 entity=WANDB_ENTITY,
-                name=f"overall_run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                name=run_name,
+                tags=tags,
                 config={
                     'num_simulations': num_simulations,
                     'set_index': set_index,
@@ -1600,7 +1645,7 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
                 },
                 reinit=True
             )
-            print(f"--- 全体実行用wandb runを開始しました (run: {overall_wandb_run.name}) ---")
+            print(f"--- 全体実行用wandb runを開始しました (run: {overall_wandb_run.name}, model: {interviewer_model_name}) ---")
         except Exception as e:
             print(f"警告: 全体実行用wandb runの初期化に失敗しました: {e}")
             overall_wandb_run = None
