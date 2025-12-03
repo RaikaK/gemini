@@ -632,9 +632,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     wandb_run = None
     if ENABLE_WANDB and WANDB_AVAILABLE:
         try:
-            # wandbモジュールがインポートされていることを確認
-            if 'wandb' not in sys.modules:
-                import wandb
+            # wandbモジュールをインポート（グローバルスコープから取得）
+            import wandb
             wandb.init(
                 project=WANDB_PROJECT,
                 entity=WANDB_ENTITY,
