@@ -18,6 +18,9 @@ class CardExtractor:
     MAX_ATK = 3100.0
     MAX_DEF = 2600.0
     MAX_LEVEL = 9.0
+    DENOM_SMALL = 5.0
+    DENOM_MEDIUM = 10.0
+    DENOM_LARGE = 20.0
 
     # --- チャンネルサイズ ---
     CHANNEL_EMPTY = 0
@@ -56,6 +59,13 @@ class CardExtractor:
         # 初期化
         feature[self.CHANNEL_EMPTY, :, :] = 1.0
 
+        # カウント
+        location_counts: dict[tuple[int, int], int] = {}
+
+        for duel_card in duel_card_table:
+            key = (duel_card.player_id, duel_card.pos_id)
+            location_counts[key] = location_counts.get(key, 0) + 1
+
         # 埋め込み
         for duel_card in duel_card_table:
             height, width, is_bag = CardCellLayout.get_coord(
@@ -78,24 +88,35 @@ class CardExtractor:
                 )
                 cursor += self.SIZE_CARD_ID
 
+                # カウント取得
+                location_count = location_counts.get((duel_card.player_id, duel_card.pos_id), 0)
+
+                # 攻撃力 (Grid & Bag)
+                self._fill_atk(
+                    feature[cursor : cursor + self.SIZE_ATK, :, :], height, width, duel_card, location_count, is_bag
+                )
+                cursor += self.SIZE_ATK
+
+                # 守備力 (Grid & Bag)
+                self._fill_def(
+                    feature[cursor : cursor + self.SIZE_DEF, :, :], height, width, duel_card, location_count, is_bag
+                )
+                cursor += self.SIZE_DEF
+
+                # レベル (Grid & Bag)
+                self._fill_level(
+                    feature[cursor : cursor + self.SIZE_LEVEL, :, :], height, width, duel_card, location_count, is_bag
+                )
+                cursor += self.SIZE_LEVEL
+
+                # カテゴリ (Grid & Bag)
+                self._fill_category(
+                    feature[cursor : cursor + self.SIZE_CATEGORY, :, :], height, width, duel_card, is_bag
+                )
+                cursor += self.SIZE_CATEGORY
+
                 # カードID情報以外 (Grid)
                 if not is_bag:
-                    # 攻撃力
-                    self._fill_atk(feature[cursor : cursor + self.SIZE_ATK, :, :], height, width, duel_card)
-                    cursor += self.SIZE_ATK
-
-                    # 守備力
-                    self._fill_def(feature[cursor : cursor + self.SIZE_DEF, :, :], height, width, duel_card)
-                    cursor += self.SIZE_DEF
-
-                    # レベル
-                    self._fill_level(feature[cursor : cursor + self.SIZE_LEVEL, :, :], height, width, duel_card)
-                    cursor += self.SIZE_LEVEL
-
-                    # カテゴリ
-                    self._fill_category(feature[cursor : cursor + self.SIZE_CATEGORY, :, :], height, width, duel_card)
-                    cursor += self.SIZE_CATEGORY
-
                     # 表示形式
                     self._fill_position(feature[cursor : cursor + self.SIZE_POSITION, :, :], height, width, duel_card)
                     cursor += self.SIZE_POSITION
@@ -158,7 +179,9 @@ class CardExtractor:
         else:
             feature[channel_idx, height, width] = 1.0
 
-    def _fill_atk(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
+    def _fill_atk(
+        self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard, location_count: int, is_bag: bool
+    ) -> None:
         """
         攻撃力を埋め込む。
 
@@ -167,19 +190,28 @@ class CardExtractor:
             height (int): height
             width (int): width
             duel_card (DuelCard): カード情報
+            location_count (int): カード総数 (同一位置)
+            is_bag (bool): Bagフラグ
         """
         atk: float = 0.0
 
-        if duel_card.pos_id == PosId.HAND:
+        if duel_card.pos_id in (PosId.HAND, PosId.GRAVE, PosId.DECK):
             if duel_card.card_id in CARD_MAP:
                 atk = float(CARD_MAP[duel_card.card_id]["atk"])
 
         else:
             atk = float(max(0, duel_card.atk_val))
 
-        feature[0, height, width] = (atk / self.MAX_ATK) * self.scaling_factor
+        if is_bag:
+            denom: float = float(location_count) if location_count > 0 else 1.0
+            feature[0, height, width] += ((atk / denom) / self.MAX_ATK) * self.scaling_factor
 
-    def _fill_def(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
+        else:
+            feature[0, height, width] = (atk / self.MAX_ATK) * self.scaling_factor
+
+    def _fill_def(
+        self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard, location_count: int, is_bag: bool
+    ) -> None:
         """
         守備力を埋め込む。
 
@@ -188,19 +220,28 @@ class CardExtractor:
             height (int): height
             width (int): width
             duel_card (DuelCard): カード情報
+            location_count (int): カード総数 (同一位置)
+            is_bag (bool): Bagフラグ
         """
         def_val: float = 0.0
 
-        if duel_card.pos_id == PosId.HAND:
+        if duel_card.pos_id in (PosId.HAND, PosId.GRAVE, PosId.DECK):
             if duel_card.card_id in CARD_MAP:
                 def_val = float(CARD_MAP[duel_card.card_id]["def"])
 
         else:
             def_val = float(max(0, duel_card.def_val))
 
-        feature[0, height, width] = (def_val / self.MAX_DEF) * self.scaling_factor
+        if is_bag:
+            denom: float = float(location_count) if location_count > 0 else 1.0
+            feature[0, height, width] += ((def_val / denom) / self.MAX_DEF) * self.scaling_factor
 
-    def _fill_level(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
+        else:
+            feature[0, height, width] = (def_val / self.MAX_DEF) * self.scaling_factor
+
+    def _fill_level(
+        self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard, location_count: int, is_bag: bool
+    ) -> None:
         """
         レベルを埋め込む。
 
@@ -209,19 +250,26 @@ class CardExtractor:
             height (int): height
             width (int): width
             duel_card (DuelCard): カード情報
+            location_count (int): カード総数 (同一位置)
+            is_bag (bool): Bagフラグ
         """
         level_val: float = 0.0
 
-        if duel_card.pos_id == PosId.HAND:
+        if duel_card.pos_id in (PosId.HAND, PosId.GRAVE, PosId.DECK):
             if duel_card.card_id in CARD_MAP:
                 level_val = float(CARD_MAP[duel_card.card_id]["level"])
 
         else:
             level_val = float(max(0, duel_card.level))
 
-        feature[0, height, width] = (level_val / self.MAX_LEVEL) * self.scaling_factor
+        if is_bag:
+            denom: float = float(location_count) if location_count > 0 else 1.0
+            feature[0, height, width] += ((level_val / denom) / self.MAX_LEVEL) * self.scaling_factor
 
-    def _fill_category(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
+        else:
+            feature[0, height, width] = (level_val / self.MAX_LEVEL) * self.scaling_factor
+
+    def _fill_category(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard, is_bag: bool) -> None:
         """
         カテゴリを埋め込む。
 
@@ -230,51 +278,59 @@ class CardExtractor:
             height (int): height
             width (int): width
             duel_card (DuelCard): カード情報
+            is_bag (bool): Bagフラグ
         """
         card_id: int = duel_card.card_id
+
+        def _apply(channel_idx: int, denom: float) -> None:
+            if is_bag:
+                feature[channel_idx, height, width] += (1.0 / denom) * self.scaling_factor
+
+            else:
+                feature[channel_idx, height, width] = 1.0
 
         if card_id in CARD_MAP:
             card_info: dict[str, int] = CARD_MAP[card_id]
 
             # モンスター
             if card_info["monster"] == 1:
-                feature[0, height, width] = 1.0
+                _apply(0, self.DENOM_LARGE)
 
             # 魔法
             if card_info["spell"] == 1:
-                feature[1, height, width] = 1.0
+                _apply(1, self.DENOM_LARGE)
 
             # 罠
             if card_info["trap"] == 1:
-                feature[2, height, width] = 1.0
+                _apply(2, self.DENOM_MEDIUM)
 
             # 速攻魔法
             if card_info["quick"] == 1:
-                feature[3, height, width] = 1.0
+                _apply(3, self.DENOM_SMALL)
 
             # 永続・装備
             if card_info["remains"] == 1:
-                feature[4, height, width] = 1.0
+                _apply(4, self.DENOM_SMALL)
 
             # 儀式関連
             if card_info["ritual"] == 1:
-                feature[5, height, width] = 1.0
+                _apply(5, self.DENOM_MEDIUM)
 
             # 通常モンスター
             if card_info["normal"] == 1:
-                feature[6, height, width] = 1.0
+                _apply(6, self.DENOM_MEDIUM)
 
             # ドラゴン族
             if card_info["dragon"] == 1:
-                feature[7, height, width] = 1.0
+                _apply(7, self.DENOM_LARGE)
 
             # ATK 1500 以下
             if card_info["monster"] == 1 and card_info["atk"] <= 1500:
-                feature[8, height, width] = 1.0
+                _apply(8, self.DENOM_MEDIUM)
 
             # レベル 4
             if card_info["monster"] == 1 and card_info["level"] == 4:
-                feature[9, height, width] = 1.0
+                _apply(9, self.DENOM_LARGE)
 
     def _fill_position(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
         """
