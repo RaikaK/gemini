@@ -11,7 +11,7 @@ DEMONSTRATION_DIR = DATA_DIR / "demonstrations"
 MODELS_DIR = PROJECT_ROOT / "models"
 
 # --- 特徴量 ---
-CHANNELS_CARD = 50  # チャンネル数 (カード)
+CHANNELS_CARD = 55  # チャンネル数 (カード)
 CHANNELS_GENERAL = 18  # チャンネル数 (局面)
 CHANNELS_CHAIN = 5  # チャンネル数 (チェーン)
 CHANNELS_REQUEST = 22  # チャンネル数 (行動要求)

@@ -4,6 +4,7 @@ from ygo.constants.enums import Face, PosId, Turn
 from ygo.models.duel_card import DuelCard
 
 from src.feature.card_cell_layout import CardCellLayout
+from src.feature.card_data import CARD_MAP
 
 
 class CardExtractor:
@@ -24,48 +25,13 @@ class CardExtractor:
     SIZE_ATK = 1
     SIZE_DEF = 1
     SIZE_LEVEL = 1
-    SIZE_CATEGORY = 5
+    SIZE_CATEGORY = 10
     SIZE_POSITION = 2
     SIZE_TURN_PASSED = 1
     SIZE_EFFECT_USED = 3
     SIZE_IS_ATTACKING = 1
     SIZE_IS_ATTACKED = 1
     SIZE_EQUIP_TARGET = 1
-
-    # --- カードマップ ---
-    _CARD_MAP: dict[int, dict[str, int]] = {
-        1001: {"idx": 1, "atk": 1300, "def": 2000, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
-        1002: {"idx": 2, "atk": 1900, "def": 1600, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
-        1003: {"idx": 3, "atk": 2000, "def": 100, "level": 4, "dragon": 1, "normal": 1, "ritual": 0},
-        1004: {"idx": 4, "atk": 3000, "def": 2500, "level": 8, "dragon": 1, "normal": 1, "ritual": 0},
-        1005: {"idx": 5, "atk": 1800, "def": 1000, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
-        1006: {"idx": 6, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1007: {"idx": 7, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1008: {"idx": 8, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1009: {"idx": 9, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1010: {"idx": 10, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1011: {"idx": 11, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1012: {"idx": 12, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1013: {"idx": 13, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1014: {"idx": 14, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1015: {"idx": 15, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1016: {"idx": 16, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1017: {"idx": 17, "atk": 1400, "def": 1100, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
-        1018: {"idx": 18, "atk": 1000, "def": 0, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
-        1019: {"idx": 19, "atk": 100, "def": 200, "level": 3, "dragon": 1, "normal": 0, "ritual": 0},
-        1020: {"idx": 20, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
-        1021: {"idx": 21, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
-        1022: {"idx": 22, "atk": 1400, "def": 1000, "level": 4, "dragon": 0, "normal": 0, "ritual": 0},
-        1023: {"idx": 23, "atk": 1800, "def": 600, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
-        1024: {"idx": 24, "atk": 1900, "def": 1200, "level": 4, "dragon": 1, "normal": 0, "ritual": 0},
-        1025: {"idx": 25, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1026: {"idx": 26, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 1},
-        1027: {"idx": 27, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 1},
-        1028: {"idx": 28, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1029: {"idx": 29, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1030: {"idx": 30, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-        1031: {"idx": 31, "atk": 0, "def": 0, "level": 0, "dragon": 0, "normal": 0, "ritual": 0},
-    }
 
     def __init__(self, scaling_factor: float) -> None:
         """
@@ -182,8 +148,8 @@ class CardExtractor:
         card_id: int = duel_card.card_id
         channel_idx: int = 0
 
-        if card_id != 0 and card_id in self._CARD_MAP:
-            channel_idx = self._CARD_MAP[card_id]["idx"]
+        if card_id != 0 and card_id in CARD_MAP:
+            channel_idx = CARD_MAP[card_id]["idx"]
 
         if is_bag:
             denom: float = self.MAX_DECK_COUNT if channel_idx == 0 else self.MAX_CARD_COUNT
@@ -205,8 +171,8 @@ class CardExtractor:
         atk: float = 0.0
 
         if duel_card.pos_id == PosId.HAND:
-            if duel_card.card_id in self._CARD_MAP:
-                atk = float(self._CARD_MAP[duel_card.card_id]["atk"])
+            if duel_card.card_id in CARD_MAP:
+                atk = float(CARD_MAP[duel_card.card_id]["atk"])
 
         else:
             atk = float(max(0, duel_card.atk_val))
@@ -226,8 +192,8 @@ class CardExtractor:
         def_val: float = 0.0
 
         if duel_card.pos_id == PosId.HAND:
-            if duel_card.card_id in self._CARD_MAP:
-                def_val = float(self._CARD_MAP[duel_card.card_id]["def"])
+            if duel_card.card_id in CARD_MAP:
+                def_val = float(CARD_MAP[duel_card.card_id]["def"])
 
         else:
             def_val = float(max(0, duel_card.def_val))
@@ -247,8 +213,8 @@ class CardExtractor:
         level_val: float = 0.0
 
         if duel_card.pos_id == PosId.HAND:
-            if duel_card.card_id in self._CARD_MAP:
-                level_val = float(self._CARD_MAP[duel_card.card_id]["level"])
+            if duel_card.card_id in CARD_MAP:
+                level_val = float(CARD_MAP[duel_card.card_id]["level"])
 
         else:
             level_val = float(max(0, duel_card.level))
@@ -267,28 +233,48 @@ class CardExtractor:
         """
         card_id: int = duel_card.card_id
 
-        if card_id in self._CARD_MAP:
-            card_info: dict[str, int] = self._CARD_MAP[card_id]
+        if card_id in CARD_MAP:
+            card_info: dict[str, int] = CARD_MAP[card_id]
 
-            # ドラゴン族
-            if card_info["dragon"] == 1:
+            # モンスター
+            if card_info["monster"] == 1:
                 feature[0, height, width] = 1.0
+
+            # 魔法
+            if card_info["spell"] == 1:
+                feature[1, height, width] = 1.0
+
+            # 罠
+            if card_info["trap"] == 1:
+                feature[2, height, width] = 1.0
+
+            # 速攻魔法
+            if card_info["quick"] == 1:
+                feature[3, height, width] = 1.0
+
+            # 永続・装備
+            if card_info["remains"] == 1:
+                feature[4, height, width] = 1.0
+
+            # 儀式関連
+            if card_info["ritual"] == 1:
+                feature[5, height, width] = 1.0
 
             # 通常モンスター
             if card_info["normal"] == 1:
-                feature[1, height, width] = 1.0
+                feature[6, height, width] = 1.0
+
+            # ドラゴン族
+            if card_info["dragon"] == 1:
+                feature[7, height, width] = 1.0
 
             # ATK 1500 以下
-            if card_info["level"] > 0 and card_info["atk"] <= 1500:
-                feature[2, height, width] = 1.0
+            if card_info["monster"] == 1 and card_info["atk"] <= 1500:
+                feature[8, height, width] = 1.0
 
             # レベル 4
-            if card_info["level"] == 4:
-                feature[3, height, width] = 1.0
-
-            # 儀式魔法
-            if card_info["ritual"] == 1:
-                feature[4, height, width] = 1.0
+            if card_info["monster"] == 1 and card_info["level"] == 4:
+                feature[9, height, width] = 1.0
 
     def _fill_position(self, feature: np.ndarray, height: int, width: int, duel_card: DuelCard) -> None:
         """
