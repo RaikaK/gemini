@@ -15,7 +15,7 @@ CHANNELS_CARD = 55  # チャンネル数 (カード)
 CHANNELS_GENERAL = 33  # チャンネル数 (局面)
 CHANNELS_CHAIN = 12  # チャンネル数 (チェーン)
 CHANNELS_REQUEST = 22  # チャンネル数 (行動要求)
-CHANNELS_ENTRY = 54  # チャンネル数 (行動選択)
+CHANNELS_ENTRY = 53  # チャンネル数 (行動選択)
 TOTAL_CHANNELS_STATE = (
     CHANNELS_CARD + CHANNELS_GENERAL + CHANNELS_CHAIN + CHANNELS_REQUEST + CHANNELS_ENTRY
 )  # 合計チャンネル数（状態）
