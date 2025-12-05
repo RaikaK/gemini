@@ -64,6 +64,7 @@ class FeatureManager:
         # 局面
         self.general_extractor.extract(
             state.duel_state_data.general_data,
+            state.duel_state_data.duel_card_table,
             feature[cursor : cursor + config.CHANNELS_GENERAL, :, :],
         )
         cursor += config.CHANNELS_GENERAL
