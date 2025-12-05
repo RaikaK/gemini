@@ -20,7 +20,7 @@ class GeneralExtractor:
     MAX_FIELD = 5.0
 
     # --- チャンネルサイズ ---
-    SIZE_LP = 4
+    SIZE_LP = 5
     SIZE_MY_TURN = 1
     SIZE_TURN_NUM = 1
     SIZE_TURN_INFO = 2
@@ -112,11 +112,13 @@ class GeneralExtractor:
         feature[1, :, :] = (min(op_lp_raw, self.MAX_LP) / self.MAX_LP) * self.scaling_factor
 
         # LP差分
-        feature[2, :, :] = ((my_lp_raw - op_lp_raw) / self.MAX_LP) * self.scaling_factor
+        diff = (my_lp_raw - op_lp_raw) / self.MAX_LP
+        feature[2, :, :] = max(0.0, diff) * self.scaling_factor
+        feature[3, :, :] = max(0.0, -diff) * self.scaling_factor
 
         # コスト：早すぎる埋葬
         if my_lp_raw >= self.COST_PREMATURE_BURIAL:
-            feature[3, :, :] = 1.0
+            feature[4, :, :] = 1.0
 
     def _fill_my_turn(self, feature: np.ndarray, general_data: GeneralData) -> None:
         """
