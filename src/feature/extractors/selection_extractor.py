@@ -2,10 +2,9 @@ import numpy as np
 
 from ygo.constants.enums import SelectionType
 from ygo.constants.selection_id import SelectionId
-from ygo.models.command_request import CommandRequest
 
 
-class RequestExtractor:
+class SelectionExtractor:
     """
     行動要求特徴量抽出器
     """
@@ -26,39 +25,38 @@ class RequestExtractor:
         """
         self.scaling_factor: float = scaling_factor
 
-    def extract(self, command_request: CommandRequest, feature: np.ndarray) -> None:
+    def extract(self, selection_type: int, selection_id: int, feature: np.ndarray) -> None:
         """
         特徴量を抽出する。
 
         Args:
-            command_request (CommandRequest): 行動要求情報
+            selection_type (int): 行動要求の種類
+            selection_id (int): 行動要求の説明
             feature (np.ndarray): 特徴量埋め込み先
         """
         # 埋め込み
         cursor: int = 0
 
         # 行動要求の種類
-        self._fill_selection_type(feature[cursor : cursor + self.SIZE_SELECTION_TYPE, :, :], command_request)
+        self._fill_selection_type(feature[cursor : cursor + self.SIZE_SELECTION_TYPE, :, :], selection_type)
         cursor += self.SIZE_SELECTION_TYPE
 
         # 行動要求の説明
-        self._fill_selection_id(feature[cursor : cursor + self.SIZE_SELECTION_ID, :, :], command_request)
+        self._fill_selection_id(feature[cursor : cursor + self.SIZE_SELECTION_ID, :, :], selection_id)
         cursor += self.SIZE_SELECTION_ID
 
     # =================================================================
     # 埋め込みロジック
     # =================================================================
 
-    def _fill_selection_type(self, feature: np.ndarray, command_requet: CommandRequest) -> None:
+    def _fill_selection_type(self, feature: np.ndarray, selection_type: int) -> None:
         """
         行動要求の種類を埋め込む。
 
         Args:
             feature (np.ndarray): 特徴量埋め込み先
-            command_request (CommandRequest): 行動要求情報
+            selection_type (int): 行動要求の種類
         """
-        selection_type: int = command_requet.selection_type
-
         if selection_type == SelectionType.SELECT_ATTACK_TARGET:
             feature[0, :, :] = 1.0
 
@@ -71,16 +69,14 @@ class RequestExtractor:
         elif selection_type == SelectionType.OTHER:
             feature[3, :, :] = 1.0
 
-    def _fill_selection_id(self, feature: np.ndarray, command_request: CommandRequest) -> None:
+    def _fill_selection_id(self, feature: np.ndarray, selection_id: int) -> None:
         """
         行動要求の説明を埋め込む。
 
         Args:
             feature (np.ndarray): 特徴量埋め込み先
-            command_request (CommandRequest): 行動要求情報
+            selection_id (int): 行動要求の説明
         """
-        selection_id: int = command_request.selection_id
-
         if selection_id == SelectionId.SELECT_CARD_AS_TRIBUTE:
             feature[0, :, :] = 1.0
 
