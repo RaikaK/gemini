@@ -141,8 +141,7 @@ def _process_single_file(
                 continue
 
             # 状態特徴量を作成
-            feature: np.ndarray = feature_manager.to_state_feature(state)
-
+            feature: np.ndarray = feature_manager.to_snapshot_policy_feature(state)
             # 正解行動ラベルを作成
             label_dict: dict[str, int] = {}
 

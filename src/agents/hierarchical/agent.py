@@ -100,7 +100,7 @@ class HierarchicalAgent(BaseAgent):
         self.model.eval()
 
         # 1. 特徴量作成
-        feature: np.ndarray = self.feature_manager.to_state_feature(state)
+        feature: np.ndarray = self.feature_manager.to_snapshot_policy_feature(state)
         feature_tensor: torch.Tensor = torch.from_numpy(feature).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
