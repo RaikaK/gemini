@@ -80,12 +80,12 @@ class CardCellLayout:
 # 自分 (MYSELF)
 # ==========================================
 
-# H=0: 手札(6~8枚目) & デッキ & 墓地
+# H=0: 手札(6~8枚目) & 墓地 & デッキ
 CardCellLayout._register((0, 0), PlayerId.MYSELF, PosId.HAND, 5, False)
 CardCellLayout._register((0, 1), PlayerId.MYSELF, PosId.HAND, 6, False)
 CardCellLayout._register((0, 2), PlayerId.MYSELF, PosId.HAND, 7, False)
-CardCellLayout._register((0, 3), PlayerId.MYSELF, PosId.DECK, -1, True)
-CardCellLayout._register((0, 4), PlayerId.MYSELF, PosId.GRAVE, -1, True)
+CardCellLayout._register((0, 3), PlayerId.MYSELF, PosId.GRAVE, -1, True)
+CardCellLayout._register((0, 4), PlayerId.MYSELF, PosId.DECK, -1, True)
 
 # H=1: 手札(1~5枚目)
 CardCellLayout._register((1, 0), PlayerId.MYSELF, PosId.HAND, 0, False)
@@ -121,9 +121,9 @@ CardCellLayout._register((6, 2), PlayerId.RIVAL, PosId.HAND, 2, False)
 CardCellLayout._register((6, 3), PlayerId.RIVAL, PosId.HAND, 3, False)
 CardCellLayout._register((6, 4), PlayerId.RIVAL, PosId.HAND, 4, False)
 
-# H=7: 手札(6~8枚目) & デッキ & 墓地
+# H=7: 手札(6~8枚目) & 墓地 & デッキ
 CardCellLayout._register((7, 0), PlayerId.RIVAL, PosId.HAND, 5, False)
 CardCellLayout._register((7, 1), PlayerId.RIVAL, PosId.HAND, 6, False)
 CardCellLayout._register((7, 2), PlayerId.RIVAL, PosId.HAND, 7, False)
-CardCellLayout._register((7, 3), PlayerId.RIVAL, PosId.DECK, -1, True)
-CardCellLayout._register((7, 4), PlayerId.RIVAL, PosId.GRAVE, -1, True)
+CardCellLayout._register((7, 3), PlayerId.RIVAL, PosId.GRAVE, -1, True)
+CardCellLayout._register((7, 4), PlayerId.RIVAL, PosId.DECK, -1, True)

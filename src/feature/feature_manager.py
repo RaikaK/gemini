@@ -3,12 +3,13 @@ import numpy as np
 from ygo.models.command_request import CommandEntry
 
 import src.config as config
+from src.env.action_data import ActionData
 from src.env.state_data import StateData
 from src.feature.extractors.card_extractor import CardExtractor
 from src.feature.extractors.chain_extractor import ChainExtractor
 from src.feature.extractors.entry_extractor import EntryExtractor
 from src.feature.extractors.general_extractor import GeneralExtractor
-from src.feature.extractors.request_extractor import RequestExtractor
+from src.feature.extractors.selection_extractor import SelectionExtractor
 
 
 class FeatureManager:
@@ -33,12 +34,63 @@ class FeatureManager:
         self.card_extractor: CardExtractor = CardExtractor(scaling_factor)
         self.general_extractor: GeneralExtractor = GeneralExtractor(scaling_factor)
         self.chain_extractor: ChainExtractor = ChainExtractor(scaling_factor)
-        self.request_extractor: RequestExtractor = RequestExtractor(scaling_factor)
+        self.selection_extractor: SelectionExtractor = SelectionExtractor(scaling_factor)
         self.entry_extractor: EntryExtractor = EntryExtractor(scaling_factor)
 
-    def to_state_feature(self, state: StateData) -> np.ndarray:
+    def to_snapshot_policy_feature(self, state: StateData) -> np.ndarray:
         """
-        状態の特徴量を返す。
+        単一時点の特徴量を抽出する。 (行動を直接予測するモデル用)
+
+        Args:
+            state (StateData): 状態データ
+
+        Returns:
+            np.ndarray: 特徴量 (Channels, Height, Width)
+        """
+        return self._extract_state_feature(state)
+
+    def to_trajectory_policy_feature(
+        self, state_action_trajectory: list[tuple[StateData | None, ActionData | None]]
+    ) -> np.ndarray:
+        """
+        時系列の特徴量を抽出する。 (行動を直接予測するモデル用)
+
+        Args:
+            state_action_trajectory (list[tuple[StateData | None, ActionData | None]]): 状態データと行動データの軌跡
+
+        Returns:
+            np.ndarray: 特徴量 (Sequence, Channels, Height, Width)
+        """
+        feature_list: list[np.ndarray] = []
+
+        for state, action in state_action_trajectory:
+            command_entry: CommandEntry | None = action.command_entry if action else None
+            feature: np.ndarray = self._extract_state_action_feature(state, command_entry)
+            feature_list.append(feature)
+
+        return np.array(feature_list, dtype=np.float32)
+
+    def to_snapshot_value_feature(self, state: StateData) -> list[np.ndarray]:
+        """
+        単一時点の特徴量を抽出する。 (行動価値を予測するモデル用)
+
+        Args:
+            state (StateData): 状態データ
+
+        Returns:
+            list[np.ndarray]: 特徴量リスト [ (Channels, Height, Width), ... ]
+        """
+        feature_list = []
+
+        for command_entry in state.command_request.commands:
+            feature = self._extract_state_action_feature(state, command_entry)
+            feature_list.append(feature)
+
+        return feature_list
+
+    def _extract_state_feature(self, state: StateData) -> np.ndarray:
+        """
+        状態の特徴量を抽出する。
 
         Args:
             state (StateData): 状態データ
@@ -77,17 +129,27 @@ class FeatureManager:
         cursor += config.CHANNELS_CHAIN
 
         # 行動要求
-        self.request_extractor.extract(
-            state.command_request,
-            feature[cursor : cursor + config.CHANNELS_REQUEST, :, :],
+        self.selection_extractor.extract(
+            state.command_request.selection_type,
+            state.command_request.selection_id,
+            feature[cursor : cursor + config.CHANNELS_SELECTION, :, :],
         )
-        cursor += config.CHANNELS_REQUEST
+        cursor += config.CHANNELS_SELECTION
+
+        # 行動選択
+        for command in state.command_request.commands:
+            self.entry_extractor.extract(
+                command,
+                feature[cursor : cursor + config.CHANNELS_ENTRY, :, :],
+            )
+
+        cursor += config.CHANNELS_ENTRY
 
         return feature
 
-    def to_action_feature(self, command_entry: CommandEntry) -> np.ndarray:
+    def _extract_action_feature(self, command_entry: CommandEntry) -> np.ndarray:
         """
-        行動の特徴量を返す。
+        行動の特徴量を抽出する。
 
         Args:
             command_entry (CommandEntry): 行動選択情報
@@ -109,28 +171,41 @@ class FeatureManager:
 
         return feature
 
-    def to_state_action_features(self, state: StateData) -> list[np.ndarray]:
+    def _extract_state_action_feature(
+        self,
+        state: StateData | None,
+        command_entry: CommandEntry | None,
+    ) -> np.ndarray:
         """
-        状態と行動の結合特徴量リストを返す。
+        状態＋行動の特徴量を抽出する。
 
         Args:
-            state (StateData): 状態データ
+            state (StateData | None): 状態データ
+            command_entry (CommandEntry | None): 行動選択情報
 
         Returns:
-            list[np.ndarray]: 結合特徴量リスト
+            np.ndarray: 状態＋行動の特徴量
         """
+        # 初期化
+        feature: np.ndarray = np.zeros(
+            (config.TOTAL_CHANNELS_STATE_ACTION, config.HEIGHT, config.WIDTH),
+            dtype=np.float32,
+        )
+
+        cursor: int = 0
+
         # 状態の特徴量
-        state_feature: np.ndarray = self.to_state_feature(state)
+        if state is not None:
+            state_feature: np.ndarray = self._extract_state_feature(state)
+            feature[0 : config.TOTAL_CHANNELS_STATE, :, :] = state_feature
 
-        features: list[np.ndarray] = []
+        cursor += config.TOTAL_CHANNELS_STATE
 
-        for command in state.command_request.commands:
-            # 行動の特徴量
-            action_feature: np.ndarray = self.to_action_feature(command)
+        # 行動の特徴量
+        if command_entry is not None:
+            action_feature: np.ndarray = self._extract_action_feature(command_entry)
+            feature[cursor : cursor + config.TOTAL_CHANNELS_ACTION, :, :] = action_feature
 
-            # 結合
-            state_action_feature: np.ndarray = np.concatenate([state_feature, action_feature], axis=0)
+        cursor += config.TOTAL_CHANNELS_ACTION
 
-            features.append(state_action_feature)
-
-        return features
+        return feature
