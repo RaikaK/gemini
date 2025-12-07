@@ -136,6 +136,15 @@ class FeatureManager:
         )
         cursor += config.CHANNELS_SELECTION
 
+        # 行動選択
+        for command in state.command_request.commands:
+            self.entry_extractor.extract(
+                command,
+                feature[cursor : cursor + config.CHANNELS_ENTRY, :, :],
+            )
+
+        cursor += config.CHANNELS_ENTRY
+
         return feature
 
     def _extract_action_feature(self, command_entry: CommandEntry) -> np.ndarray:
