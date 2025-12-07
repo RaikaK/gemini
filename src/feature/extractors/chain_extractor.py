@@ -1,6 +1,6 @@
 import numpy as np
 
-from ygo.constants.enums import ChainState, EffectNo
+from ygo.constants.enums import ChainState
 from ygo.models.chain_data import ChainData
 from ygo.models.duel_card import DuelCard
 
@@ -12,12 +12,14 @@ class ChainExtractor:
     チェーン特徴量抽出器
     """
 
+    # --- 正規化用定数 ---
+    MAX_CHAIN_NUM = 4.0
+
     # --- チャンネルサイズ ---
     SIZE_IS_CHAINING = 1
     SIZE_CHAIN_STATE = 2
-    SIZE_CHAIN_SOURCE = 3
-    SIZE_CHAIN_TARGET = 3
-    SIZE_CHAIN_EFFECT = 3
+    SIZE_CHAIN_SOURCE = 1
+    SIZE_CHAIN_TARGET = 1
 
     def __init__(self, scaling_factor: float) -> None:
         """
@@ -56,7 +58,7 @@ class ChainExtractor:
         self._fill_chain_state(feature[cursor : cursor + self.SIZE_CHAIN_STATE, :, :], chain_stack)
         cursor += self.SIZE_CHAIN_STATE
 
-        # チェーン発生元
+        # チェーン発生順
         self._fill_chain_source(
             feature[cursor : cursor + self.SIZE_CHAIN_SOURCE, :, :],
             chain_stack,
@@ -64,21 +66,13 @@ class ChainExtractor:
         )
         cursor += self.SIZE_CHAIN_SOURCE
 
-        # チェーン対象
+        # チェーン対象フラグ
         self._fill_chain_target(
             feature[cursor : cursor + self.SIZE_CHAIN_TARGET, :, :],
             chain_stack,
             duel_card_table,
         )
         cursor += self.SIZE_CHAIN_TARGET
-
-        # チェーン効果
-        self._fill_chain_effect(
-            feature[cursor : cursor + self.SIZE_CHAIN_EFFECT, :, :],
-            chain_stack,
-            duel_card_table,
-        )
-        cursor += self.SIZE_CHAIN_EFFECT
 
     # =================================================================
     # 埋め込みロジック
@@ -121,7 +115,7 @@ class ChainExtractor:
         duel_card_table: list[DuelCard],
     ) -> None:
         """
-        チェーン発生元を埋め込む。
+        チェーン発生順を埋め込む。
 
         Args:
             feature (np.ndarray): 特徴量埋め込み先
@@ -131,13 +125,14 @@ class ChainExtractor:
         for chain in chain_stack:
             if 0 <= chain.table_index < len(duel_card_table):
                 duel_card: DuelCard = duel_card_table[chain.table_index]
+
                 height, width, is_bag = CardCellLayout.get_coord(
                     duel_card.player_id, duel_card.pos_id, duel_card.card_index
                 )
 
                 if height != -1 and not is_bag:
-                    channel_idx = min(chain.chain_num, self.SIZE_CHAIN_SOURCE) - 1
-                    feature[channel_idx, height, width] = 1.0
+                    chain_num = float(min(chain.chain_num, self.MAX_CHAIN_NUM))
+                    feature[0, height, width] = (chain_num / self.MAX_CHAIN_NUM) * self.scaling_factor
 
     def _fill_chain_target(
         self,
@@ -146,7 +141,7 @@ class ChainExtractor:
         duel_card_table: list[DuelCard],
     ) -> None:
         """
-        チェーン対象を埋め込む。
+        チェーン対象フラグを埋め込む。
 
         Args:
             feature (np.ndarray): 特徴量埋め込み先
@@ -157,41 +152,10 @@ class ChainExtractor:
             for target_idx in chain.target_table_index_list:
                 if 0 <= target_idx < len(duel_card_table):
                     duel_card: DuelCard = duel_card_table[target_idx]
+
                     height, width, _ = CardCellLayout.get_coord(
                         duel_card.player_id, duel_card.pos_id, duel_card.card_index
                     )
 
                     if height != -1:
-                        channel_idx = min(chain.chain_num, self.SIZE_CHAIN_TARGET) - 1
-                        feature[channel_idx, height, width] = 1.0
-
-    def _fill_chain_effect(
-        self,
-        feature: np.ndarray,
-        chain_stack: list[ChainData],
-        duel_card_table: list[DuelCard],
-    ) -> None:
-        """
-        チェーン効果を埋め込む。
-
-        Args:
-            feature (np.ndarray): 特徴量埋め込み先
-            chain_stack (list[ChainData]): チェーン情報リスト
-            duel_card_table (list[DuelCard]): カード情報リスト
-        """
-        for chain in chain_stack:
-            if 0 <= chain.table_index < len(duel_card_table):
-                duel_card = duel_card_table[chain.table_index]
-                height, width, is_bag = CardCellLayout.get_coord(
-                    duel_card.player_id, duel_card.pos_id, duel_card.card_index
-                )
-
-                if height != -1 and not is_bag:
-                    if chain.effect_no == EffectNo.NUM1:
                         feature[0, height, width] = 1.0
-
-                    elif chain.effect_no == EffectNo.NUM2:
-                        feature[1, height, width] = 1.0
-
-                    elif chain.effect_no == EffectNo.NUM3:
-                        feature[2, height, width] = 1.0

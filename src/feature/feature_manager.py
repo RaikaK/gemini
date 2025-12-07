@@ -80,13 +80,13 @@ class FeatureManager:
         Returns:
             list[np.ndarray]: 特徴量リスト [ (Channels, Height, Width), ... ]
         """
-        features = []
+        feature_list = []
 
         for command_entry in state.command_request.commands:
             feature = self._extract_state_action_feature(state, command_entry)
-            features.append(feature)
+            feature_list.append(feature)
 
-        return features
+        return feature_list
 
     def _extract_state_feature(self, state: StateData) -> np.ndarray:
         """
@@ -116,7 +116,6 @@ class FeatureManager:
         # 局面
         self.general_extractor.extract(
             state.duel_state_data.general_data,
-            state.duel_state_data.duel_card_table,
             feature[cursor : cursor + config.CHANNELS_GENERAL, :, :],
         )
         cursor += config.CHANNELS_GENERAL
@@ -136,22 +135,6 @@ class FeatureManager:
             feature[cursor : cursor + config.CHANNELS_SELECTION, :, :],
         )
         cursor += config.CHANNELS_SELECTION
-
-        # 行動ログ
-        for i in range(config.MAX_LOG_HISTORY):
-            if i < len(state.command_request.command_log):
-                command_log_entry = state.command_request.command_log[i]
-                self.selection_extractor.extract(
-                    command_log_entry.selection_type,
-                    command_log_entry.selection_id,
-                    feature[cursor : cursor + config.CHANNELS_SELECTION, :, :],
-                )
-                self.entry_extractor.extract(
-                    command_log_entry.command,
-                    feature[cursor + config.CHANNELS_SELECTION : cursor + config.CHANNELS_LOG, :, :],
-                )
-
-            cursor += config.CHANNELS_LOG
 
         # 行動選択
         for command in state.command_request.commands:
