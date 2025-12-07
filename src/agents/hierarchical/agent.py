@@ -72,7 +72,7 @@ class HierarchicalAgent(BaseAgent):
         Returns:
             ModuleType: パラメータモジュール
         """
-        params_path: Path = model_path.parent / "params.py"
+        params_path: Path = model_path.parent / config.PARAMS_FILE
 
         if not params_path.exists():
             raise FileNotFoundError(f"Params file not found at: {params_path}")

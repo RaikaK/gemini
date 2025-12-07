@@ -57,7 +57,7 @@ def setup_experiment(args: argparse.Namespace) -> tuple[Path, torch.device]:
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # パラメータバックアップ
-    shutil.copy(params.__file__, save_dir / "params.py")
+    shutil.copy(params.__file__, save_dir / config.PARAMS_FILE)
 
     # デバイス設定
     device: torch.device = torch.device(args.device)
