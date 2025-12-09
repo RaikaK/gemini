@@ -1,11 +1,41 @@
-# utils.py - ユーティリティ関数
-
 import json
 from openai import OpenAI
-from config import OPENAI_API_KEY
+import google.generativeai as genai
+import os
+from config import OPENAI_API_KEY, GOOGLE_API_KEY
 
 def call_openai_api(model_name, prompt):
-    """OpenAI APIを呼び出してテキスト応答を取得"""
+    """
+    LLM APIを呼び出してテキスト応答を取得
+    model_nameが 'gemini' で始まる場合はGoogle API、それ以外はOpenAI APIを使用
+    """
+    # Geminiモデルの場合
+    if model_name.lower().startswith("gemini"):
+        if not GOOGLE_API_KEY or not GOOGLE_API_KEY.strip() or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
+            error_message = "GOOGLE_API_KEYが設定されていません。環境変数GOOGLE_API_KEYを設定してください。"
+            print(f"エラー: {error_message}")
+            return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+        try:
+            genai.configure(api_key=GOOGLE_API_KEY)
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            
+            # Geminiはトークン情報を標準では返さないが、簡易的にカウントするか0を入れる
+            # (必要であれば count_tokens API を呼ぶことも可能だがスキップ)
+            token_info = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0
+            }
+            
+            return response.text, token_info
+        except Exception as e:
+            error_str = str(e)
+            print(f"Gemini APIエラー: {error_str}")
+            return f"API呼び出しエラー: {error_str}", {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+    # OpenAIモデルの場合 (デフォルト)
     # APIキーの検証
     if not OPENAI_API_KEY or not OPENAI_API_KEY.strip() or OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE":
         error_message = "APIキーが設定されていません。環境変数OPENAI_API_KEYを設定してください。"

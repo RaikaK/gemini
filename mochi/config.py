@@ -5,6 +5,7 @@ import os
 # --- APIモデル設定 ---
 # 環境変数から取得、なければプレースホルダー
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "YOUR_OPENAI_API_KEY_HERE")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "YOUR_GOOGLE_API_KEY_HERE")
 
 # APIキーの検証（起動時に警告を表示）
 if OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE" or not OPENAI_API_KEY or not OPENAI_API_KEY.strip():
@@ -21,8 +22,22 @@ if OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE" or not OPENAI_API_KEY or not OPE
     print("=" * 80)
     print()
 
+if GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE" or not GOOGLE_API_KEY or not GOOGLE_API_KEY.strip():
+    print("=" * 80)
+    print("警告: GOOGLE_API_KEYが設定されていません")
+    print("=" * 80)
+    print("環境変数を設定してください:")
+    print("  Windows PowerShell:")
+    print("    $env:GOOGLE_API_KEY='your-api-key-here'")
+    print("  Windows CMD:")
+    print("    set GOOGLE_API_KEY=your-api-key-here")
+    print("  Linux/Mac:")
+    print("    export GOOGLE_API_KEY='your-api-key-here'")
+    print("=" * 80)
+    print()
+
 # 使用するモデル名
-INTERVIEWER_MODEL = "gpt-4o-mini"  # 面接官役
+INTERVIEWER_MODEL = "gemini-2.5-flash-lite"  # 面接官役
 APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
 
 # --- 実験設定 ---
