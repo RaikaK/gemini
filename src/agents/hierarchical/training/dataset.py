@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, default_collate
 from tqdm import tqdm
-from ygo.constants.enums import CommandType
+from ygo.constants.enums import CommandType, ResultType
 from ygo.models.command_request import CommandEntry, CommandRequest
 
 
@@ -106,7 +106,7 @@ def hierarchical_collate_fn(
 
 
 def _process_single_file(
-    file_path: Path, feature_manager: FeatureManager
+    file_path: Path, feature_manager: FeatureManager, only_win: bool
 ) -> tuple[list[np.ndarray], list[dict[str, int]], list[CommandRequest], list[int]]:
     """
     単一のpklファイルを読み込み、状態特徴量と正解行動ラベルを作成する。
@@ -114,6 +114,7 @@ def _process_single_file(
     Args:
         file_path (Path): pklファイルのパス
         feature_manager (FeatureManager): 特徴量マネージャー
+        only_win (bool): 勝利した試合のみを使用するフラグ
 
     Returns:
         tuple[list[np.ndarray], list[dict[str, int]], list[CommandRequest], list[int]]: (状態特徴量リスト, 正解行動ラベルリスト, コマンドリクエストリスト, 正解インデックスリスト)
@@ -127,6 +128,13 @@ def _process_single_file(
         # pklファイルを読み込む
         with open(file_path, "rb") as f:
             demonstration_data: list[dict] = pickle.load(f)
+
+        if only_win:
+            # 勝利した試合のみを使用
+            duel_end_data = demonstration_data[-1]["next_state"].duel_end_data
+
+            if duel_end_data is not None and duel_end_data.result_type != ResultType.WIN:
+                return [], [], [], []
 
         # 各ステップを処理
         for step_data in demonstration_data:
@@ -162,7 +170,7 @@ def _process_single_file(
 
 
 def create_hierarchical_datasets(
-    feature_manager: FeatureManager, valid_ratio: float = 0.1
+    feature_manager: FeatureManager, valid_ratio: float = 0.1, only_win: bool = False
 ) -> tuple[HierarchicalDataset, HierarchicalDataset]:
     """
     学習用と検証用の階層型データセットを作成する。
@@ -188,7 +196,7 @@ def create_hierarchical_datasets(
     # データを作成
     for pkl_file in tqdm(pkl_files, desc="Processing files"):
         state_features, action_labels, command_requests, correct_indices = _process_single_file(
-            pkl_file, feature_manager
+            pkl_file, feature_manager, only_win
         )
         all_state_features.extend(state_features)
         all_action_labels.extend(action_labels)
