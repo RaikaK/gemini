@@ -117,18 +117,6 @@ class HuggingFaceModelManager:
                 "size_gb": 2,
                 "description": "Gemma 3 1B IT - 軽量高性能モデル",
                 "recommended_gpu": "RTX 3060, CPU"
-            },
-            "gemma-2-2b-jpn-it": {
-                "model_id": "google/gemma-2-2b-jpn-it",
-                "size_gb": 4,
-                "description": "Gemma 2 2B JPN IT - 日本語特化軽量モデル",
-                "recommended_gpu": "RTX 3060, CPU"
-            },
-            "gemma-3-4b-it": {
-                "model_id": "google/gemma-3-4b-it",
-                "size_gb": 8,
-                "description": "Gemma 3 4B IT - 最新世代の軽量高性能モデル",
-                "recommended_gpu": "RTX 4070, A100"
             }
 
         }
@@ -304,16 +292,16 @@ class HuggingFaceModelManager:
             is_complete = model_path and self.is_model_complete(model_key)
             
             # 使用するパスを決定
-            # 完全な場合はローカルパス、不完全でもローカルパスがあればそれを使用（from_pretrainedが自動的に欠けているファイルをダウンロード）
-            if model_path:
+            # 完全な場合はローカルパス、不完全な場合はモデルIDを使用して自動ダウンロード/キャッシュ利用
+            if model_path and is_complete:
                 load_path = str(model_path)
-                if is_complete:
-                    logger.info(f"ローカルパスからロード（完全）: {model_path}")
-                else:
-                    logger.warning(f"モデル {model_key} のダウンロードが不完全です。ローカルファイルからロードを試みます（欠けているファイルは自動ダウンロードされます）。")
+                logger.info(f"ローカルパスからロード（完全）: {model_path}")
             else:
                 load_path = model_id
-                logger.info(f"モデルIDから自動ダウンロード: {model_id}")
+                if model_path:
+                    logger.warning(f"モデル {model_key} のダウンロードが不完全か、存在しません。モデルID ({model_id}) からロードを試みます（欠けているファイルは自動ダウンロードされます）。")
+                else:
+                    logger.info(f"モデルIDから自動ダウンロード: {model_id}")
             
             # 量子化設定
             quantization_config = None
