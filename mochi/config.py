@@ -27,7 +27,7 @@ APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
-MAX_ROUNDS = 20     # 面接ラウンド数（デフォルト）
+MAX_ROUNDS = 5     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
@@ -72,6 +72,8 @@ AVAILABLE_LOCAL_MODELS = {
     "SWALLOW": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
     "qwen3-4b-instruct-2507": "Qwen/Qwen3-4B-Instruct-2507",
     "qwen2.5-7b-instruct": "Qwen/Qwen2.5-7B-Instruct",
+    "gemma-2-2b-jpn-it": "google/gemma-2-2b-jpn-it",
+    "gemma-3-4b-it": "google/gemma-3-4b-it",
     # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
     # "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
@@ -86,12 +88,14 @@ MODEL_TYPE_MAPPING = {
     "llama3-elyza-jp": "llama3",
     # "tinyllama": "llama2",  # TinyLlamaはLlama-2ベースのためllama2形式を使用
     "qwen2.5-7b-instruct": "qwen",
+    "gemma-2-2b-jpn-it": "gemma",  # Gemmaモデルはsystemロールをサポートしていないため、専用処理を使用
+    "gemma-3-4b-it": "gemma",  # Gemma 3モデルもsystemロールをサポートしていないため、専用処理を使用
 }
 
 # デフォルトのローカルモデル
 LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定
 
 # --- wandb設定 ---
-ENABLE_WANDB = True  # wandbログを有効にするかどうか
+ENABLE_WANDB = False  # wandbログを有効にするかどうか
 WANDB_PROJECT = "penguin-paper-interviews"  # wandbプロジェクト名
 WANDB_ENTITY = None  # wandbエンティティ（Noneの場合はデフォルト）
