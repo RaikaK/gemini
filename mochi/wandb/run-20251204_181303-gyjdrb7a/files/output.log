@@ -1,0 +1,3422 @@
+--- wandbログを開始しました (run: qwen2.5-7b-instruct_sim100_set39, model: qwen2.5-7b-instruct) ---
+
+--- ラウンド 1 (全体質問) ---
+
+面接官の質問（全員へ）: 共通の未言及項目として、「ビジョン」が多くの候補者が言及していませんでしたので、その分野に関連する質問を作成しました。
+
+質問:
+当社のビジョンについてどのように思っていますか？また、それを達成するためにどのような取り組みをしていると感じていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.395366 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.994838 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.445368 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.949152 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.376641 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.932455 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 1 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 1 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 1 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 1 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: この質問では、候補者はAPI呼び出しエラーにより対話を中断しています。通常、このような質問に対する回答には、企業のビジョンや目標に関する具体的な意見が必要となります。しかし、この場合は直接的な回答ではなくエラーメッセージが出力されてしまいました。これは技術的問題であり、直接的に知識の欠落とはみなせません。
+
+欠損項目キー: []
+
+学生B1:
+
+分析: 同じく、この質問での応答はAPI呼び出しエラーによるものであり、同様に技術的障害が原因となっています。そのため、ここで示されたエラーメッセージ自体は知識の欠落を示すものではありません。
+
+欠損項目キー: []
+
+学生B3:
+
+分析: データから推察すると、学生B3も同様にAPI呼び出しエラーによって対話を中断しています。これも技術的な制約であり、直接的には知識の欠落を指摘するものではないため、評価基準からは除外されます。
+
+欠损項目キー: []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: この質問では、候補者はAPI呼び出しエラーにより対話を中断しています。通常、このような質問に対する回答には、企業のビジョンや目標に関する具体的な意見が必要となります。しかし、この場合は直接的な回答ではなくエラーメッセージが出力されてしまいました。これは技術的問題であり、直接的に知識の欠落とはみなせません。
+
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+分析: 同じく、この質問での応答はAPI呼び出しエラーによるものであり、同様に技術的障害が原因となっています。そのため、ここで示されたエラーメッセージ自体は知識の欠落を示すものではありません。
+
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+分析: データから推察すると、学生B3も同様にAPI呼び出しエラーによって対話を中断しています。これも技術的な制約であり、直接的には知識の欠落を指摘するものではないため、評価基準からは除外されます。
+
+欠损項目キー: []
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 1 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 1 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.396209 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.796657 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.483136 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.779371 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.435840 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.865770 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 2 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社のパートナーシップ関係について詳しく説明できますか？それは如何にして当社のビジネスモデルに貢献していますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.447329 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.789681 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 2 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 2 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 2 - 評価2: 志望度ランキング（低い順）】
+学生B3, 学生B2, 学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 2 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+分析: この質問では、学生B2はAPI呼び出しエラーを繰り返していました。そのため、具体的な回答ができていなかったと考えられます。ただし、このエラー自体が質問に対する回答ではなく、技術的な問題であるため、これは知識不足とは直接結びつけるのは適切ではありません。他の候補者も同様のエラーを投げかけられていましたから、個々人の理解度には大きな違いはありません。
+
+  欠損項目キー: []
+
+学生B1:
+分析: 同じく、この質問でも学生B1はAPI呼び出しエラーにより具体的な回答ができませんでした。これも技術的な制限であり、知識不足とは異なる原因によるものです。他の候補者も同じエラーメッセージを受け取っていたことから、個々人が示す理解度には影響を与えていない可能性があります。
+
+  欠損項目キー: []
+
+学生B3:
+分析: 学生B3も同様にAPI呼び出しエラーによって具体的な回答できず、一般的な回答しか提供できていません。これは技術的制約によるもので、直接的に知識不足とは言い難い状況です。他の候補者も同じエラーメッセージを受け取っていたことを考慮すると、それぞれの理解度には差がないと考えられます。
+
+  欠損項目キー: []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+分析: この質問では、学生B2はAPI呼び出しエラーを繰り返していました。そのため、具体的な回答ができていなかったと考えられます。ただし、このエラー自体が質問に対する回答ではなく、技術的な問題であるため、これは知識不足とは直接結びつけるのは適切ではありません。他の候補者も同様のエラーを投げかけられていましたから、個々人の理解度には大きな違いはありません。
+
+  欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+分析: 同じく、この質問でも学生B1はAPI呼び出しエラーにより具体的な回答ができませんでした。これも技術的な制限であり、知識不足とは異なる原因によるものです。他の候補者も同じエラーメッセージを受け取っていたことから、個々人が示す理解度には影響を与えていない可能性があります。
+
+  欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+分析: 学生B3も同様にAPI呼び出しエラーによって具体的な回答できず、一般的な回答しか提供できていません。これは技術的制約によるもので、直接的に知識不足とは言い難い状況です。他の候補者も同じエラーメッセージを受け取っていたことを考慮すると、それぞれの理解度には差がないと考えられます。
+
+  欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 2 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 2 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 3 (全体質問) ---
+
+面接官の質問（全員へ）: 当社のパートナーシップについてどのように考えていますか？また、これらの関係を通じて当社はどのように成長していると感じるでしょうか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.417026 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.857421 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.376882 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.880959 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.453679 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.924373 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 3 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 3 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 3 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 3 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていない可能性があります。これ以外には、パートナーシップや事業内容などについては触れましたが、これらに深く掘り下げていなかった印象を受けます。
+
+欠損項目キー: ["vision"]
+
+学生B1:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていない可能性があります。これ以外には、パートナーシップや事業内容などについては触れましたが、これらに深く掘り下げていなかった印象を受けます。
+
+欠損項目キー: ["vision"]
+
+学生B3:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていない可能性があります。これ以外には、パートナーシップや事業内容などについては触れましたが、これらに深く掘り下げていなかった印象を受けます。
+
+欠損項目キー: ["vision"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていな
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 5, FP: 1, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.500, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていな
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 9, FP: 1, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.900, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+分析: この候補者はすべての質問においてAPI呼び出しエラーを繰り返していました。しかし、これは直接的な知識の欠如とは限らないため、その原因が技術的問題であることを確認する必要があります。ただし、他の候補者も同様のエラーを示しており、質問自体が適切かどうか再評価することもあります。特に「ビジョン」に関する質問では、候補者は全く答えていないことから、当社のビジョンに対する理解が足りていな
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 3, FP: 1, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.300, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.567
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 5, FP: 1, FN: 4
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan', 'partnerships']
+
+学生B1 (準備レベル: high):
+  精度: 0.900
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 9, FP: 1, FN: 0
+  誤検出された欠損 (FP): ['vision']
+
+学生B3 (準備レベル: low):
+  精度: 0.300
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 3, FP: 1, FN: 6
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.300
+  medium: 0.500
+  high: 0.900
+デバッグ: ラウンド 3 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 3 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.434824 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.955305 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.446363 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.963554 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.393156 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.832204 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 4 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の強みや競争上の利点（アドバンテージ）についてはどのように思いますか？これらが当社のビジョン達成にどのように寄与していると思いますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.398913 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.942884 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 4 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 4 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 4 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 4 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** この候補者はすべての質問に対しても同様の「API呼び出しエラー」が表示され、実際には何も応答していません。これは、彼または彼女が当社に関する基本的な理解がないことを示唆します。特に、「ビジョン」および「パートナーシップ」についての質問に対する反応が完全に無視されているため、それが当社にとって重要であるということを認識していない可能性があります。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B1:
+
+**分析:** この候補者は「ビジョン」についての質問に全く対処できていません。さらに、他の質問でも一般的なコメントしか提供せず、具体的な事例や詳細がありません。一方、「パートナーシップ」についても一部の質問では触れられましたが、十分な深さでの考察が見受けられませんでした。
+
+**欠损項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B3:
+
+**分析:** この候補者も同様に、すべての質問に対して「API呼び出しエラー」が表示されます。これにより、彼または彼女が当社に関する基本的な理解がないことがわかります。特に、「ビジョン」についての質問に対する反応が存在しないことから、これが当社にとって何らかの意味を持つのかを理解していないと思われます。
+
+**欠損項目キー:** ["vision"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** この候補者はすべての質問に対しても同様の「API呼び出しエラー」が表示され、実際には何も応答していません。これは、彼または彼女が当社に関する基本的な理解がないことを示唆します。特に、「ビジョン」および「パートナーシップ」についての質問に対する反応が完全に無視されているため、それが当社にとって重要であるということを認識していない可能性があります。
+
+**欠損項目キー:*
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 4 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 4 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 5 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の基本情報や事業内容についてどのように認識していますか？また、これらに基づいて当社の将来の展望はどう捉えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.405765 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.845301 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.434431 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.984166 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.447221 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.956496 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 5 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 5 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 5 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 5 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+分析: この候補者は複数回API呼び出しエラーを吐出したため、直接的な回答は得られませんでした。しかし、面接中に「ビジョン」に関する質問が何度も繰り返されましたが、候补者はこれに対する具体的な回答を行っていません。他の質問では一般的な意見しか示さず、具体的な経営戦略や未来の展望に関して詳細を提供できていません。
+  欠損項目キー: ["vision"]
+
+学生B1:
+分析: 同様に、この候補者も複数回API呼び出しエラーを吐き、具体的な回答を見つけることができませんでした。ただし、彼は他の質問でも一般的な意見だけを述べており、特に「ビジョン」に関する具体的な理解や評価を表明していません。これは、彼が具体的な経営視座を持たない可能性があります。
+  欠损項目キー: ["vision"]
+
+学生B3:
+分析: この候補者も同様に複数回API呼び出しエラーを吐き、具体的な回答を得ることができませんでした。彼も他の質問において一般的な意見ばかりを述べており、「ビジョン」に関する具体的な理解や評価を明らかにしていないようです。これは、彼が具体的な経営視座を持っていないことを示唆しています。
+  欠損項目キー: ["vision"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+分析: この候補者は複数回API呼び出しエラーを吐出したため、直接的な回答は得られませんでした。しかし、面接中に「ビジョン」に関する質問が何度も繰り返されましたが、候补者はこれに対する具体的な回答を行っていません。他の質問では一般的な意見しか示さず、具体的な経営戦略や未来の展望に関して詳細を提供できていません。
+  欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 5, FP: 1, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.500, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+分析: 同様に、この候補者も複数回API呼び出しエラーを吐き、具体的な回答を見つけることができませんでした。ただし、彼は他の質問でも一般的な意見だけを述べており、特に「ビジョン」に関する具体的な理解や評価を表明していません。これは、彼が具体的な経営視座を持たない可能性があります。
+  欠损項目キー: ["vision"]
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+分析: この候補者も同様に複数回API呼び出しエラーを吐き、具体的な回答を得ることができませんでした。彼も他の質問において一般的な意見ばかりを述べており、「ビジョン」に関する具体的な理解や評価を明らかにしていないようです。これは、彼が具体的な経営視座を持っていないことを示唆しています。
+  欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 3, FP: 1, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.300, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.600
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 5, FP: 1, FN: 4
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan', 'partnerships']
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.300
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 3, FP: 1, FN: 6
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.300
+  medium: 0.500
+  high: 1.000
+デバッグ: ラウンド 5 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 5 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.440063 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.874343 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.426770 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.938445 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.454401 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.788419 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 6 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 「採用」についてどのように考えておられますか？当社の採用方針や活動には何を感じますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.408929 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.884435 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 6 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 6 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 6 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 6 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** この候補者は、すべての質問に対する回答において繰り返しAPI呼び出しエラーエラーを示しています。これは直接的な知識の欠如ではなく、技術的問題によるものと思われますが、質問自体が企業に関する一般的な理解を求めたため、これが候補者の知識の欠落を示唆することもあります。特に、ビジョンやパートナーシップなど、企業の戦略的な側面に関しては、詳細な理解が必要でしたが、質問に対する反応があまり具体性を持ちませんでした。
+
+**欠損項目キー:** []
+
+---
+
+学生B1:
+
+**分析:** この候补者は、ビジョンやパートナーシップなどの重要事項に関してほとんど触れていません。特に、ビジョンの内容やその実現方法、およびパートナーシップを通じてどの程度の成長が期待されているのか等、具体的な視点から議論することが求められましたが、これに対する回答がありませんでした。一方で、基本情報や事業内容に関しては一定量の知識を持っているように見えました。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B3:
+
+**分析:** この候補者も同様に、ビジョンやパートナーシップに関する深い理解が欠けています。特に、ビジョンの具体的な内容やそれがどのように達成されるのか、またはパートナーシップを通じてどれだけの利益を得られているのかなどを掘り下げることで、より具体的かつ深く理解した印象を与えることが可能でした。しかし、彼/彼女はこれらの重要な要素について全く触れず、結果的にこれらの領域での知識が不足していました。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** この候補者は、すべての質問に対する回答において繰り返しAPI呼び出しエラーエラーを示しています。これは直接的な知識の欠如ではなく、技術的問題によるものと思われますが、質問自体が企業に関する一般的な理解を求めたため、これが候補者の知識の欠落を示唆することもあります。特に、ビジョンやパートナーシップなど、企業の戦略的な側面に関しては、詳細な理解が必要でしたが、質問に対する
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 6 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 6 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 7 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の基本情報や事業内容について詳しく説明できますか？また、これらに基づいて当社の強みと改善点は何だと考えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.498413 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.817947 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.476269 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.773077 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.459730 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.885105 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 7 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 7 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 7 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 7 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** この候補者は面接中常にAPI呼び出しエラーよりも詳細な回答を試みました。しかし、彼は「ビジョン」に関する質問に対する回答において、具体的な情報提供ができていませんでした。例えば、「ビジョン」に関して当社が掲げる具体的な目標や戦略について触れることなく、一般的なフレーズだけを使用していました。さらに、「パートナーシップ」について質問された際にも具体的な事実や評価を与えることが少なかったため、これらから推察される部分的な理解度の限界が明らかになりました。
+
+**欠損項目キー:** ["vision"]
+
+---
+
+学生B1:
+
+**分析:** B1は他の候補者と同じように繰り返すような回答しかせず、特に「ビジョン」についての具体的な理解を見せていない様子がありました。また、「パートナーシップ」についての具体的な経験談や見解を示さず、抽象的な意見しか表明していません。このような広範かつ一般的な反応からは、より深い知識がないことを伺います。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B3:
+
+**分析:** B3も同僚たちのように頻回にAPI呼び出しエラーが表示されましたが、それでも彼自身が具体的な事実や視点を提供する努力を見せました。ただし、彼の回答は依然として抽象的であり、「ビジョン」について具体性を欠くものでした。一方、「パートナーシップ」についての具体的な評価も十分では無かったです。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** この候補者は面接中常にAPI呼び出しエラーよりも詳細な回答を試みました。しかし、彼は「ビジョン」に関する質問に対する回答において、具体的な情報提供ができていませんでした。例えば、「ビジョン」に関して当社が掲げる具体的な目標や戦略について触れることなく、一般的なフレーズだけを使用していました。さらに、「パートナーシップ」について質問された際にも具体的な事実や評価を与える
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 7 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 7 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.466585 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.977349 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.466981 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.864990 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.391314 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.959157 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 8 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の採用方針や活動について具体例を挙げながら教えていただけますか？また、これがあなたにとってどのような意味を持つと感じていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.421532 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.783763 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 8 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 8 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 8 - 評価2: 志望度ランキング（低い順）】
+学生B1
+学生B3
+学生B2
+
+精度スコア: 0.333
+============================================================
+
+【ラウンド 8 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** この候補者はすべての質問に対する回答において、API呼び出しエラーが頻繁に出bial。これは直接的な知識不足とは別次元の問題ですが、対話を中断させることから、その他の質問に対する理解度も低い可能性があります。特に、ビジョンやパートナーシップなどに関する詳細な議論では、具体的な事実やデータを提供できていません。
+
+**欠損項目キー:** ["basic_info", "business", "vision", "partnerships"]
+
+学生B1:
+
+**分析:** この候補者は同じく、API呼び出しエラーが出bial。ただし、その影響以外での具体的な回答は見られませんでした。しかし、いくつかの質問に関して、具体的な企業情報に触れずに一般的な意見しか示さなかったり、適切に回答できていない場面がありました。
+
+**欠損項目キー:** ["basic_info", "business", "vision", "partnerships"]
+
+学生B3:
+
+**分析:** この候補者も同様にAPI呼び出しエラーが出bial。しかし、彼/女は少なくとも一部の質問に対しても具体的な回答を行っており、全体的により良いコミュニケーションスキルを持っていたように見えました。ただし、ビジョンやパートナーシップなどの重要性については深く掘り下げることができませんでした。
+
+**欠损项目键值:** []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** この候補者はすべての質問に対する回答において、API呼び出しエラーが頻繁に出bial。これは直接的な知識不足とは別次元の問題ですが、対話を中断させることから、その他の質問に対する理解度も低い可能性があります。特に、ビジョンやパートナーシップなどに関する詳細な議論では、具体的な事実やデータを提供できていません。
+
+**欠損項目キー:** ["basic_info", "
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+**分析:** この候補者は同じく、API呼び出しエラーが出bial。ただし、その影響以外での具体的な回答は見られませんでした。しかし、いくつかの質問に関して、具体的な企業情報に触れずに一般的な意見しか示さなかったり、適切に回答できていない場面がありました。
+
+**欠損項目キー:** ["basic_info", "business", "vision", "partnerships
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+**分析:** この候補者も同様にAPI呼び出しエラーが出bial。しかし、彼/女は少なくとも一部の質問に対しても具体的な回答を行っており、全体的により良いコミュニケーションスキルを持っていたように見えました。ただし、ビジョンやパートナーシップなどの重要性については深く掘り下げることができませんでした。
+
+**欠损项目键值:** []
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 8 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 8 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 9 (全体質問) ---
+
+面接官の質問（全員へ）: 当社のビジョンについてどのように思っていますか？また、それを達成するためにどのような取り組みをしていると感じていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.476890 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.971287 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.426832 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.911479 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.497691 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.752527 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 9 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 9 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 9 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 9 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: この候補者は質問に対する反応ではAPIエラーよりも一般的な議題を取り扱っていました。特に、ビジョンやパートナーシップなどに関する詳細な理解を見せるべき質問に対しても、具体的な回答がありませんでした。例えば、ビジョンについて尋ねられても、具体的な視座や達成方法などの具体的な視点から答えていないことがわかりました。一方で、他の質問でも同様の傾向があり、一部の質問に関しては適切に回答できていませんでした。
+
+欠損項目キー: ["vision", "partnerships"]
+
+学生B1:
+
+分析: この候補者も同じように一般的な議題を取り扱っており、具体的な回答が見られませんでした。特にビジョンについての具体的な意見や、パートナーシップによる具体的な影響などを示すことができませんでした。これは全体的に広範囲にわたる知識不足を示唆しており、より具体的かつ詳しい情報が必要であることを示しています。
+
+欠損項目キー: ["vision", "partnerships"]
+
+学生B3:
+
+分析: この候補者も質問に対する具体的な回答が少なく、一般的な議題しか取り上げていませんでした。特にビジョンやパートナーシップについての具体的な評価や影響などがなく、全体的な知識が薄い印象を受けました。
+
+欠損項目キー: ["vision", "partnerships"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: この候補者は質問に対する反応ではAPIエラーよりも一般的な議題を取り扱っていました。特に、ビジョンやパートナーシップなどに関する詳細な理解を見せるべき質問に対しても、具体的な回答がありませんでした。例えば、ビジョンについて尋ねられても、具体的な視座や達成方法などの具体的な視点から答えていないことがわかりました。一方で、他の質問でも同様の傾向があり、一部の質問に関しては適切に回
+
+[デバッグ] 抽出されたキー文字列: [["vision", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision', 'partnerships'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'vision', 'partnerships'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 1, TN: 5, FP: 1, FN: 3
+  Precision: 0.500, Recall: 0.250, Accuracy: 0.600, F1: 0.333
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+分析: この候補者も同じように一般的な議題を取り扱っており、具体的な回答が見られませんでした。特にビジョンについての具体的な意見や、パートナーシップによる具体的な影響などを示すことができませんでした。これは全体的に広範囲にわたる知識不足を示唆しており、より具体的かつ詳しい情報が必要であることを示しています。
+
+欠損項目キー: ["vision", "partnerships"]
+
+[デバッグ] 抽出されたキー文字列: [["vision", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision', 'partnerships'}
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: {'vision', 'partnerships'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 8, FP: 2, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.800, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+分析: この候補者も質問に対する具体的な回答が少なく、一般的な議題しか取り上げていませんでした。特にビジョンやパートナーシップについての具体的な評価や影響などがなく、全体的な知識が薄い印象を受けました。
+
+欠損項目キー: ["vision", "partnerships"]
+
+[デバッグ] 抽出されたキー文字列: [["vision", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision', 'partnerships'}
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: {'vision', 'partnerships'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 1, TN: 3, FP: 1, FN: 5
+  Precision: 0.500, Recall: 0.167, Accuracy: 0.400, F1: 0.250
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.600
+平均F1スコア: 0.194
+平均Precision: 0.333
+平均Recall: 0.139
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.500
+  Recall: 0.250
+  F1スコア: 0.333
+  TP: 1, TN: 5, FP: 1, FN: 3
+  正しく検出された欠損 (TP): ['partnerships']
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan']
+
+学生B1 (準備レベル: high):
+  精度: 0.800
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 8, FP: 2, FN: 0
+  誤検出された欠損 (FP): ['vision', 'partnerships']
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.500
+  Recall: 0.167
+  F1スコア: 0.250
+  TP: 1, TN: 3, FP: 1, FN: 5
+  正しく検出された欠損 (TP): ['partnerships']
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'news', 'plan']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 0.800
+デバッグ: ラウンド 9 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 9 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.478628 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.897294 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.498765 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.810644 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.378924 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.975207 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 10 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の最新ニュースについてどのように THINKING PROCESS:
+1. 分析：上記の会話履歴を見ると、大部分の質問が基本情報、ビジョン、パートナーシップ、強み等に集中していました。
+2. 異なる視点での質問が必要であり、最近の業界动态や同社の位置づけに対する理解も重要となるため、ニュースに関する質問を行うことが適切です。
+3. 候補者に特化させるために、過去の質問ではあまり触れられていない現在のトピックを選択します。例えば、特定のプロジェクトや新製品リリースなど。
+4. 最近のニュースを把握することで、候補者は同社の現状と未来への展望を持っているかどうか評価することができます。
+
+質問: 当社の最近の重要なニュースについて教えていただけますか？そのニュースがどうして注目されるものなのか、またそれが当社のビジネスにどのように影響を与えたと考えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.491256 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.879611 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 10 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 10 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 10 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 10 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:**
+学生B2は、いくつかの質問に対処しようとしたものの、頻繁にAPI呼び出しエラーエクスペッションが出力されました。これは彼のネットワーク接続またはOpenAIプラットフォームとの通信問題かもしれません。しかし、ここで焦点を当てるのは、質問の内容に対する反応ではなく、提供された企業情報から得られる詳細度と精度です。特に、以下のような質問に対する対策が不足していました：
+- 当社のビジョンについてどのように思っていますか？
+- 当社のパートナーシップについてどのように考えていますか？
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B1:
+
+**分析:**
+学生B1も同様に、API呼び出しエラーエクスペッションが何度も表示されます。ただし、企業情報に関する質問に対する彼の回答は一般的なものが多く、詳細性に欠けています。特に、以下のような質問に対する詳しい回答が見られませんでした：
+- 当社のビジョンについてどのように思っていますか？
+- 当社のパートナーシップについてどのように考えていますか？
+
+**欠损項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B3:
+
+**分析:**
+学生B3も同様に、API呼び出しエラーエクスペッションが繰り返し表示されています。しかしながら、彼の回答は他の二人よりも若干具体的になりつつあり、一部の企業情報に関する質問に対してより具体的な答えを試みました。ただし、それでも以下のような質問に対する詳しい回答が不足していました：
+
+- 当社のビジョンについてどのように思っていますか？
+- 当社のパートナーシップについてどのように考えていますか？
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:**
+学生B2は、いくつかの質問に対処しようとしたものの、頻繁にAPI呼び出しエラーエクスペッションが出力されました。これは彼のネットワーク接続またはOpenAIプラットフォームとの通信問題かもしれません。しかし、ここで焦点を当てるのは、質問の内容に対する反応ではなく、提供された企業情報から得られる詳細度と精度です。特に、以下のような質問に対する対策が不足していました：
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 10 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 10 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 11 (全体質問) ---
+
+面接官の質問（全員へ）: 当社のパートナーシップについてどのように考えていますか？また、これらの関係を通じて当社はどのように成長していると感じるでしょうか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.421986 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.757361 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.463651 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.777223 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.493712 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.953106 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 11 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 11 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 11 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 11 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: B2候補者はすべての質問に対応できず、特に「API呼び出しエラー」により質問に答えることができませんでした。これは、彼/彼女が面接中に十分な準備ができていなかった可能性があります。ただし、他の質問に対する回答から推察すると、B2候補者は基本的な企業情報やビジョンについては知っているようですが、詳細な経営戦略やニュースなどの細かい部分まで理解していない可能性があります。最後の質問である「当社の最近の重要なニュースについて教えていただけますか？」において、B2候補者は回答できませんでした。これは、同社の最新動向やニュースについて詳しい知識がないことを示唆しています。
+
+欠損項目キー: ["news"]
+
+---
+
+学生B1:
+
+分析: B1候補者も同様に、すべての質問に対応できませんでした。しかし、B1候補者は一部の質問に対して一般的な答えしか提供せず、具体的な事実や細部まで踏み込んでいない傾向がありました。さらに、最終的な質問である「当社の最近の重要なニュースについて教えていただけますか？」において、B1候補者は再度回答できませんでした。これは、同社の最新動向やニュースについて詳しい知識がないことを示しており、B1候補者は全体的に広範囲の企業情報について深い理解を持っていないようです。
+
+欠損項目キー: ["news"]
+
+---
+
+学生B3:
+
+分析: B3候補者も同様に、すべての質問に対して完全に対応できませんでした。B3候補者は、いくつかの質問に対する具体的な回答を試みました。しかし、特に「API呼び出しエラー」による問題以外でも、彼/彼女が企業情報について深く理解しているとは限りません。最後の質問である「当社の最近の重要なニュースについて教えていただけますか？」においても、B3候補者は回答できませんでした。これは、同社の最新動向やニュースについて詳しい知識がないことを示唆しています。
+
+欠損項目キー: ["news"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: B2候補者はすべての質問に対応できず、特に「API呼び出しエラー」により質問に答えることができませんでした。これは、彼/彼女が面接中に十分な準備ができていなかった可能性があります。ただし、他の質問に対する回答から推察すると、B2候補者は基本的な企業情報やビジョンについては知っているようですが、詳細な経営戦略やニュースなどの細かい部分まで理解していない可能性があります。最後の質
+
+[デバッグ] 抽出されたキー文字列: [["news"]]
+[デバッグ] パース成功: 検出された欠損キー = {'news'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'news'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 5, FP: 1, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.500, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.167
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 5, FP: 1, FN: 4
+  誤検出された欠損 (FP): ['news']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan', 'partnerships']
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.500
+  high: 0.000
+デバッグ: ラウンド 11 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 11 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.379803 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.803990 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.449802 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.863997 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.470024 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.924720 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 12 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の採用計画とその目標についてどのように思っていますか？また、あなたのスキルセットが当社の需要職種に合致すると感じる理由を教えていただけますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.393876 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.928750 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 12 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 12 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 12 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 12 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** B2はほとんどの質問に対処しようと試みましたしかし、APIエラーよりも彼の応答の品質が問題であることを考慮に入れると、彼はほとんどすべての質問に対して一般的な答えしか提供できませんでした。特に、ビジョンやパートナーシップについての詳細な議論ができていなかったように見えました。また、彼の対話を維持する能力も疑わしい部分がありました。ただし、彼自身の技術的な問題により、具体的な情報提供が困難であった可能性もあります。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+学生B1:
+
+**分析:** B1も他の候補と同じような傾向があり、一部の質問では一般的な答えを与え、またはAPIエラーのために空白の応答を提出しました。特に、ビジョンとパートナーシップについて深く掘り下げることはありませんでした。また、基本情報や事業内容についての詳細な理解が欠けていました。
+
+**欠损項目キー:** ["basic_info", "business", "partnerships", "vision"]
+
+学生B3:
+
+**分析:** B3は他の候補者と似たようなパターンを見せましたが、特に深いレベルでの反応がありませんでした。彼もAPIエラーによって多くを失礼しそれぞれの質問への直接的かつ具体的な回答が少なかったです。彼はビジョンやパートナーシップについて具体的な意見を示すことができず、基本情報や業務範囲についても詳しい理解が足りないと感じられました。
+
+**欠損項目キー:** ["basic_info", "business", "partnerships", "vision"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** B2はほとんどの質問に対処しようと試みましたしかし、APIエラーよりも彼の応答の品質が問題であることを考慮に入れると、彼はほとんどすべての質問に対して一般的な答えしか提供できませんでした。特に、ビジョンやパートナーシップについての詳細な議論ができていなかったように見えました。また、彼の対話を維持する能力も疑わしい部分がありました。ただし、彼自身の技術的な問題により、具
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+**分析:** B1も他の候補と同じような傾向があり、一部の質問では一般的な答えを与え、またはAPIエラーのために空白の応答を提出しました。特に、ビジョンとパートナーシップについて深く掘り下げることはありませんでした。また、基本情報や事業内容についての詳細な理解が欠けていました。
+
+**欠损項目キー:** ["basic_info", "business", "partnership
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+**分析:** B3は他の候補者と似たようなパターンを見せましたが、特に深いレベルでの反応がありませんでした。彼もAPIエラーによって多くを失礼しそれぞれの質問への直接的かつ具体的な回答が少なかったです。彼はビジョンやパートナーシップについて具体的な意見を示すことができず、基本情報や業務範囲についても詳しい理解が足りないと感じられました。
+
+**欠損項目キー:** ["basic_i
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 12 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 12 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 13 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の基本情報や事業内容についてどのように認識していますか？また、これらに基づいて当社の競争上の利点と今後の課題は何だと思いますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.487031 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.913811 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.477516 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.997616 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.433516 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.883730 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 13 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 13 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 13 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 13 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: 候補者はすべての質問においてAPIエラーよりも一般的な応答しか提供せず、特に詳細な企業情報について掘り下げる意欲が見られませんでした。特に、広範囲にわたる質問パターンから逸脱することなく繰り返し同じような回答を提供しており、質問ごとに異なる企業情報に触れる余裕がなかった可能性があります。
+
+具体的に言えば：
+- ビジョン、およびこれを達成する方法についての具体的な議論が欠落していた。
+- 役割やパートナーシップによる企業の成長や成功の具体的な事例が示されず、一般的な意見だけが提示された。
+- 新聞記事に関する詳しい理解や反応が期待できなかった。
+
+欠損項目キー: ["vision", "business", "participations", "plans", "news"]
+
+学生B1:
+
+分析: B1候補者もまた、質問に対して一般的な応答しか提供せず、特に企業の基本的な特性やビジョンについて深く掘り下げることはありませんでした。一部の質問に対して、具体的な経営戦略や取引先との協働についての具体的な事例などが示されていましたが、全体的に詳細かつ具体的な企業情報についての理解が不十分であることを指摘せざるを得ません。
+
+欠損項目キー: ["visions", "business", "advantages", "plans", "news"]
+
+学生B3:
+
+分析: この候補者も他の二人と同じように、詳細な企業情報について掘り下げる意欲が足りていなかった。ただし、いくつかの質問に対しても具体的な回答が得られ、特にパートナーシップの役割や具体的なニュースの影響についての理解が他よりも少し高かった。しかし、より深い洞察や具体的な事例の提供が求められる部分でも、完全に満足いくレベルまで到達していない印象を受けました。
+
+欠損項目キー: []
+
+以上のように、B2とB1共々、詳細な企業情報について掘り下げることの必要性が強く指摘されていますが、B3はそれらの欠陥が最小限であり、どの候補者よりも強い洞察力を見せていたと言えるでしょう。
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: 候補者はすべての質問においてAPIエラーよりも一般的な応答しか提供せず、特に詳細な企業情報について掘り下げる意欲が見られませんでした。特に、広範囲にわたる質問パターンから逸脱することなく繰り返し同じような回答を提供しており、質問ごとに異なる企業情報に触れる余裕がなかった可能性があります。
+
+具体的に言えば：
+- ビジョン、およびこれを達成する方法についての具体的な議論が欠落し
+
+[デバッグ] 抽出されたキー文字列: [["vision", "business", "participations", "plans", "news"]]
+[デバッグ] パース成功: 検出された欠損キー = {'participations', 'plans', 'business', 'news', 'vision'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'participations', 'plans', 'business', 'news', 'vision'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 3, FP: 5, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.300, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+分析: B1候補者もまた、質問に対して一般的な応答しか提供せず、特に企業の基本的な特性やビジョンについて深く掘り下げることはありませんでした。一部の質問に対して、具体的な経営戦略や取引先との協働についての具体的な事例などが示されていましたが、全体的に詳細かつ具体的な企業情報についての理解が不十分であることを指摘せざるを得ません。
+
+欠損項目キー: ["visions", "busin
+
+[デバッグ] 抽出されたキー文字列: [["visions", "business", "advantages", "plans", "news"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plans', 'business', 'advantages', 'visions', 'news'}
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: {'plans', 'business', 'advantages', 'visions', 'news'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 7, FP: 5, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.700, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+分析: この候補者も他の二人と同じように、詳細な企業情報について掘り下げる意欲が足りていなかった。ただし、いくつかの質問に対しても具体的な回答が得られ、特にパートナーシップの役割や具体的なニュースの影響についての理解が他よりも少し高かった。しかし、より深い洞察や具体的な事例の提供が求められる部分でも、完全に満足いくレベルまで到達していない印象を受けました。
+
+欠損項目キー: []
+
+
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.467
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.300
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 3, FP: 5, FN: 4
+  誤検出された欠損 (FP): ['participations', 'plans', 'business', 'news', 'vision']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan', 'partnerships']
+
+学生B1 (準備レベル: high):
+  精度: 0.700
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 7, FP: 5, FN: 0
+  誤検出された欠損 (FP): ['plans', 'business', 'advantages', 'visions', 'news']
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.300
+  high: 0.700
+デバッグ: ラウンド 13 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 13 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.423530 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.834949 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.455167 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.900780 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.411789 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.995131 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 14 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の新しい製品ライン关于此产品线，您能详细说明一下吗？它对我们的业务有何影响和意义呢？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.430854 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.938291 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 14 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 14 - 評価1: 最も志望度が低い候補者の選定】
+学生B3
+
+次の個別質問の対象: 学生B3
+============================================================
+
+【ラウンド 14 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 14 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:**
+候補者B2は頻繁にAPI呼び出しエラーエラーが出るようになっています。これは実際に面接中に起こったことであり、そのような技術的な問題に関して直接答えるべきではありません。しかし、質問自体は一般的なもので、これらの質問に対する反応から候補者の知識レベルを推察することができます。特に、最後の質問において、「当社の採用計画とその目標についてどのように思っていますか？」という質問に対して全く反応がないことを考慮に入れると、候補者は企業の内部情勢や戦略についての深い理解が足りていない可能性があります。
+
+**欠損項目キー:** []
+
+学生B1:
+
+**分析:**
+候補者B1も頻繁に同じようにAPI呼び出しエラーが表示されます。しかし、彼/女自身が質問に対処しようとする意欲を見せています。ただし、いくつかの質問に対する回答が一般的になり、詳細な情報提供が不足していたり、完全に省略されていたりすることがあります。特に、ビジョンやパートナーシップ、そしてニュースなどの部分で具体的な事実を提供しない傾向がありました。また、最後の質問における反応の無さからも、企業の内部情勢や戦略についての深く掘り下げた理解が欠けていたと思われます。
+
+**欠損項目キー:** ["visions", "partnerships", "latest_news"]
+
+学生B3:
+
+**分析:**
+候補者B3も同様にAPI呼び出しエラーが頻繁に出ますが、彼/女の回答からは具体的な情報提供がほとんど見られません。ほとんどの質問に対して、一般的な意見しか示していないだけでなく、質問に直接繋がる具体的な企業情報に触れない回答も多くありました。最終的には、すべての質問に対して具体的かつ詳しい回答を行っておりませんでした。特に、ビジョンやパートナーシップ、および企業の最新動向については具体的な回答がありませんでした。
+
+**欠損項目キー:** ["visions", "partnerships", "latest_news"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:**
+候補者B2は頻繁にAPI呼び出しエラーエラーが出るようになっています。これは実際に面接中に起こったことであり、そのような技術的な問題に関して直接答えるべきではありません。しかし、質問自体は一般的なもので、これらの質問に対する反応から候補者の知識レベルを推察することができます。特に、最後の質問において、「当社の採用計画とその目標についてどのように思っていますか？」と
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+**分析:**
+候補者B1も頻繁に同じようにAPI呼び出しエラーが表示されます。しかし、彼/女自身が質問に対処しようとする意欲を見せています。ただし、いくつかの質問に対する回答が一般的になり、詳細な情報提供が不足していたり、完全に省略されていたりすることがあります。特に、ビジョンやパートナーシップ、そしてニュースなどの部分で具体的な事実を提供しない傾向がありました。また、最後の質
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+**分析:**
+候補者B3も同様にAPI呼び出しエラーが頻繁に出ますが、彼/女の回答からは具体的な情報提供がほとんど見られません。ほとんどの質問に対して、一般的な意見しか示していないだけでなく、質問に直接繋がる具体的な企業情報に触れない回答も多くありました。最終的には、すべての質問に対して具体的かつ詳しい回答を行っておりませんでした。特に、ビジョンやパートナーシップ、および企業の
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 14 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 14 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 15 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の経営理念や長期的な目指す姿勢についてどのように思っていますか？また、それに向けて当社が現在行っている主な取り組みとは何だと考えるでしょうか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.465708 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.936592 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.396225 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.848877 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.467177 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.971702 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 15 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 15 - 評価1: 最も志望度が低い候補者の選定】
+学生B3
+
+次の個別質問の対象: 学生B3
+============================================================
+
+【ラウンド 15 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 15 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: B2候補者はすべての質問においてAPIエラーよりも繰り返しの一般的な回答を与え続けました。特に「ビジョン」や「パートナーシップ」について具体的な意見を示さず、抽象的かつ広範囲な議論に留まっていたことから、これらの領域における知識が足りていない可能性が高いです。さらに、最後まで具体的な事実情報や詳細な回答がなく、一部の質問では完全に回答できずにいたことも確認されました。
+
+欠損項目キー: ["visions", "partnerships"]
+
+学生B1:
+
+分析: B1候補者も同様に、すべての質問においてAPIエラーよりも繰り返しの一般的な回答を与え続けました。特に「ビジョン」や「パートナーシップ」について具体的な意見を示さず、抽象的かつ広範囲な議論に留まっていたことから、これらの領域における知識が足りていない可能性が高いです。さらに、最後まで具体的な事実情報や詳細な回答がなく、一部の質問では完全に回答できずにいたことも確認されました。
+
+欠損項目キー: ["visions", "partnerships"]
+
+学生B3:
+
+分析: B3候補者も他の二人と同じように、全体的に一般的な回答が多く、具体的な情報提供が不十分でした。ただし、B3候補者はいくつかの質問に対しても一定の具体的な回答を試みました。しかし、それでも「ビジョン」や「パートナーシップ」についてより深い理解を見せていなかったことは明らかでした。
+
+欠損項目キー: ["visions", "partnerships"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: B2候補者はすべての質問においてAPIエラーよりも繰り返しの一般的な回答を与え続けました。特に「ビジョン」や「パートナーシップ」について具体的な意見を示さず、抽象的かつ広範囲な議論に留まっていたことから、これらの領域における知識が足りていない可能性が高いです。さらに、最後まで具体的な事実情報や詳細な回答がなく、一部の質問では完全に回答できずにいたことも確認されました。
+
+欠損
+
+[デバッグ] 抽出されたキー文字列: [["visions", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'partnerships', 'visions'}
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: {'partnerships', 'visions'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 1, TN: 6, FP: 1, FN: 3
+  Precision: 0.500, Recall: 0.250, Accuracy: 0.700, F1: 0.333
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+分析: B1候補者も同様に、すべての質問においてAPIエラーよりも繰り返しの一般的な回答を与え続けました。特に「ビジョン」や「パートナーシップ」について具体的な意見を示さず、抽象的かつ広範囲な議論に留まっていたことから、これらの領域における知識が足りていない可能性が高いです。さらに、最後まで具体的な事実情報や詳細な回答がなく、一部の質問では完全に回答できずにいたことも確認されました。
+
+[デバッグ] 抽出されたキー文字列: [["visions", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'partnerships', 'visions'}
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: {'partnerships', 'visions'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 9, FP: 2, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.900, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+分析: B3候補者も他の二人と同じように、全体的に一般的な回答が多く、具体的な情報提供が不十分でした。ただし、B3候補者はいくつかの質問に対しても一定の具体的な回答を試みました。しかし、それでも「ビジョン」や「パートナーシップ」についてより深い理解を見せていなかったことは明らかでした。
+
+欠損項目キー: ["visions", "partnerships"]
+
+[デバッグ] 抽出されたキー文字列: [["visions", "partnerships"]]
+[デバッグ] パース成功: 検出された欠損キー = {'partnerships', 'visions'}
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: {'partnerships', 'visions'}
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 1, TN: 4, FP: 1, FN: 5
+  Precision: 0.500, Recall: 0.167, Accuracy: 0.500, F1: 0.250
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.700
+平均F1スコア: 0.194
+平均Precision: 0.333
+平均Recall: 0.139
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.700
+  Precision: 0.500
+  Recall: 0.250
+  F1スコア: 0.333
+  TP: 1, TN: 6, FP: 1, FN: 3
+  正しく検出された欠損 (TP): ['partnerships']
+  誤検出された欠損 (FP): ['visions']
+  見逃された欠損 (FN): ['id', 'recruit', 'plan']
+
+学生B1 (準備レベル: high):
+  精度: 0.900
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 9, FP: 2, FN: 0
+  誤検出された欠損 (FP): ['partnerships', 'visions']
+
+学生B3 (準備レベル: low):
+  精度: 0.500
+  Precision: 0.500
+  Recall: 0.167
+  F1スコア: 0.250
+  TP: 1, TN: 4, FP: 1, FN: 5
+  正しく検出された欠損 (TP): ['partnerships']
+  誤検出された欠損 (FP): ['visions']
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'news', 'plan']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.500
+  medium: 0.700
+  high: 0.900
+デバッグ: ラウンド 15 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 15 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.381874 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.814212 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.460075 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.973868 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.487385 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.838605 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 16 (個別質問) ---
+対象候補者: 学生B3
+
+面接官の質問（学生B3へ）: 当社の採用方針や人材育成計画についてどのように考えておりますか？これに基づいて当社でのキャリアパスはどのようになると考えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.405519 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.859458 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 16 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 16 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 16 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 16 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答から見えてくるのは、API呼び出しエラーによる繰り返しみたいな応答が多いことである。しかし、質問自体が複数回同じような形で行われており、それぞれに対しても詳細な回答を求められていることを考慮に入れれば、個々の質問に対する反応が不十分または欠落している可能性が高い。特に、ビジョンやパートナーシップ、基本情報や事業内容、強み・改善点などについての詳しい議論が省略されているように見える。一方で、これらの部分に関して直接的に言及していないわけではなく、ただ繰り返しエラーメッセージが出てしまうだけとなっている。
+
+**欠損項目キー:**
+["basic_info", "business", "vision", "partnerships", "advantages"]
+
+---
+
+学生B1:
+
+**分析:**
+学生 B1 も似たようなパターンを見せている。繰り返しエラーメッセージが出る中でも、質問の意図された範囲内において広く一般的な意見を述べることが多い。ただし、一部の質問では、より具体的かつ専門的な情報が求められていたのに、概要レベルでの回答しか提供されていない場面もある。これは特に、ビジョンやパートナーシップ、基本情報や事業内容などの特定の領域における具体的な理解の欠如を示唆している。
+
+**欠損項目キー:**
+["basic_info", "business", "vision", "partnerships", "advantages"]
+
+---
+
+学生B3:
+
+**分析:**
+学生 B3 のケースは他の二人ほど繰り返しエラーが出ることはなく、ほぼ全般的に具体的な回答を試みており、そのため、彼/女自身の知識の欠片がないわけではない。それでも、いくつかの質問に対して具体的な情報が要求されても、依然として広範な概念的または抽象的な回答しか提供されていない。特に、ビジョンやパートナーシップ、基本情報や事業内容に関する深い理解が足りていない様子が見て取れる。
+
+**欠損項目キー:**
+
+[]
+
+以上のように、三人目の学生は全体的には良い準備をしてきた印象があり、特に明らかに欠ける情報が存在しない。他方、前二名の学生は、広範な理解を持ちつつも、深掘りができていない箇所が多くあると言えるでしょう。
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答から見えてくるのは、API呼び出しエラーによる繰り返しみたいな応答が多いことである。しかし、質問自体が複数回同じような形で行われており、それぞれに対しても詳細な回答を求められていることを考慮に入れれば、個々の質問に対する反応が不十分または欠落している可能性が高い。特に、ビジョンやパートナーシップ、基本情報や事業内容、強み・改善点などについての詳
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 16 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 16 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 17 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の経営理念や長期的な目指す姿勢についてどのように思っていますか？また、それに向けて当社が現在行っている主な取り組みとは何と考えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.405144 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.856946 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.462640 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.768672 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.403652 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.949377 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 17 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 17 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 17 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 17 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+分析: B2はほとんどの質問においてAPI呼び出しエラーにより応答せず、実際の回答がないことを示唆しています。しかし、いくつかの質問に対して彼/女は意図的に無回答にしていた可能性があります。ただし、以下のような事象から推察できます：
+1. バーチャルアシスタントとのやりとり中に問題があり、実際に面接者は有意義な回答を行っていたかもしれませんが、システム上で反映されなかった可能性もあります。
+2. システムエラーやネットワーク障害による一時的問題かもしれません。
+
+しかしながら、B2が言及しなかったあるいは不正確な情報を探す視点からは、以下の点が特に懸念されます：
+
+- 彼/彼女はすべての質問に対処できていませんでした。
+- 可能性としては、一部の詳細について知識が足らなかった可能性もあります。
+
+欠損項目キー: []
+
+学生B1:
+
+分析: B1もB2と同じく、API呼び出しエラーにより多くの質問に回答せずにいたことが確認されています。これは技術的な問題である可能性が高いですが、B1自身の知識の範囲内でもあるかもしれません。
+
+欠損項目キー: []
+
+学生B3:
+
+分析: B3も同じようなパターンを示しており、API呼び出しエラーによって多くの質問に回答せずにいました。しかし、以下のように彼/女の回答から推測できる点があります：
+1. B3は一部の質問に関して具体的な回答を試みました。
+2. 特に、「ビジョン」についての質問に対しては、直接的な回答を提供しようと努力した様子があります。
+
+このような行動から、B3は少なくとも「ビジョン」について一定の知識を持っており、他の部分についても一般的な理解はあると思われますが、より深い洞察力や詳細な知識は見受けられません。
+
+欠損項目キー: []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+分析: B2はほとんどの質問においてAPI呼び出しエラーにより応答せず、実際の回答がないことを示唆しています。しかし、いくつかの質問に対して彼/女は意図的に無回答にしていた可能性があります。ただし、以下のような事象から推察できます：
+1. バーチャルアシスタントとのやりとり中に問題があり、実際に面接者は有意義な回答を行っていたかもしれませんが、システム上で反映されなかった可能性もあり
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+分析: B1もB2と同じく、API呼び出しエラーにより多くの質問に回答せずにいたことが確認されています。これは技術的な問題である可能性が高いですが、B1自身の知識の範囲内でもあるかもしれません。
+
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+分析: B3も同じようなパターンを示しており、API呼び出しエラーによって多くの質問に回答せずにいました。しかし、以下のように彼/女の回答から推測できる点があります：
+1. B3は一部の質問に関して具体的な回答を試みました。
+2. 特に、「ビジョン」についての質問に対しては、直接的な回答を提供しようと努力した様子があります。
+
+このような行動から、B3は少なくとも「ビジョン」について
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 17 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 17 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.449878 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.993358 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.493841 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.773491 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.422806 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.951129 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 18 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の採用ポリシーにおいて、多元化和包容性是如何体现的？你认为这些政策对公司文化和长期发展有哪些积极的影响？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.495314 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.816018 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 18 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 18 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 18 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 18 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答は頻繁に「API呼び出しエラー: Error code: 429」が表示され、具体的な回答が得られませんでした。特に、広範囲にわたる質問に対しても一般的な答えしか提供せず、詳細かつ具体的な事実を提供することが困難でした。特に、「ビジョン」や「パートナーシップ」などの一部質問に関しては、具体的な事例や詳しい見解を示さなかったり、誤った情報を提供したりしていました。
+
+**欠損項目キー:**
+["established", "capital", "employees", "hq", "business", "vision", "news", "plan", "partnerships", "advantages", "recruit"]
+
+学生B1:
+
+**分析:**
+学 生 B1 も同様に、「API呼び出しエラー: Error code: 429」により具体的な回答が得られませんでした。彼/彼女も一般的な答えばかりで、具体的な事実を提供するのが難しく、特に「ビジョン」や「パートナーシップ」などに関する深い理解が欠けていました。
+
+**欠损項目キー:**
+["established", "capital", "employees", "hq", "business", "vision", "news", "plan", "partnerships", "advantages", "recruit"]
+
+学生B3:
+
+**分析:**
+学 生 B3 の回答は「API呼び出しエラー: Error code: 429」によって制限されており、具体的な回答を得ることが難しい状況でしたが、全体的により良い応答を見せました。しかし、他の二人と比べるとまだ一般的な答えが多く、具体的な事実や深いつらねの解答が期待できませんでした。ただし、特定の問題領域でも不十分な部分がありました。
+
+**欠損項目キー:**
+["established", "capital", "employees", "hq", "business", "vision", "news", "plan", "partnerships", "advantages", "recruit"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答は頻繁に「API呼び出しエラー: Error code: 429」が表示され、具体的な回答が得られませんでした。特に、広範囲にわたる質問に対しても一般的な答えしか提供せず、詳細かつ具体的な事実を提供することが困難でした。特に、「ビジョン」や「パートナーシップ」などの一部質問に関しては、具体的な事例や詳しい見解を示さなかったり、誤った情報を提供し
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+**分析:**
+学 生 B1 も同様に、「API呼び出しエラー: Error code: 429」により具体的な回答が得られませんでした。彼/彼女も一般的な答えばかりで、具体的な事実を提供するのが難しく、特に「ビジョン」や「パートナーシップ」などに関する深い理解が欠けていました。
+
+**欠损項目キー:**
+["established", "capital", "employee
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+**分析:**
+学 生 B3 の回答は「API呼び出しエラー: Error code: 429」によって制限されており、具体的な回答を得ることが難しい状況でしたが、全体的により良い応答を見せました。しかし、他の二人と比べるとまだ一般的な答えが多く、具体的な事実や深いつらねの解答が期待できませんでした。ただし、特定の問題領域でも不十分な部分がありました。
+
+**欠損項目キー:**
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 18 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 18 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 19 (全体質問) ---
+
+面接官の質問（全員へ）: 当社の基本情報や事業内容について、具体的かつ詳細に説明することができますか？また、これらに基づいて当社の強みと改善点は何だと考えていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.412878 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.937351 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.473884 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.908645 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.419991 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.942182 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 19 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 19 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 19 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B2
+学生B1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 19 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答では、特に「ビジョン」や「パートナーシップ」などの核心的な部分についての詳しい議論が見られませんでした。さらに、「最近のニュース」についても全く触れていなかったことに着目します。これは、企業の主要な方向性や外部との協働について深く理解していない可能性があります。
+
+**分析:**
+学 生 B2 は一般的な応答しか提供せず、具体的な事実や企業の特性についての深い理解が示されていません。例えば、「ビジョン」に関しては、具体的な取り組みや企業の戦略がほとんど言及されず、抽象的な意見だけが出されました。また、「パートナーシップ」についても、具体的な事例やその成果についての説明がありませんでした。
+
+**分析:**
+API エラーよりも、候補者の回答自体から得られる情報量が少なく、企業の内部情勢や具体的な取り組みについての理解が乏しくなっています。
+
+**欠損項目キー:** ["basic_info", "business", "plans", "partnerships", "recent_news"]
+
+学生B1:
+
+**分析:**
+学 生 B1 の回答は、他の候補者と似ており、特に「ビジョン」や「パートナーシップ」、そして「最近のニュース」についての具体的な議論が不足していました。これらは企業の基本的な方向性や外部からの支援などを表しており、広範囲な視角からの理解が求められています。
+
+**分析:**
+学 生 B1 は一般的な意見が多く、具体的な事実や企業の特性についての深い理解が示されていません。例えば、「ビジョン」に関しては具体的な取り組みや企業の戦略がほとんど言及されず、抽象的な意見だけが出ました。また、「パートナーシップ」についても、具体的な事例やその成果についての説明がありませんでした。
+
+**分析:**
+API エラー以外の問題としては、企業の内側の情勢や具体的な取り組みについての理解が不足していることが明らかになりました。
+
+**欠損項目キー:** ["basic_info", "business", "plans", "partnerships", "recent_news"]
+
+
+学生B3:
+
+**分析:**
+学 生 B3 の回答は他の候補者と比べてもかなり薄っぺらく、特に「
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:**
+学 生 B2 の回答では、特に「ビジョン」や「パートナーシップ」などの核心的な部分についての詳しい議論が見られませんでした。さらに、「最近のニュース」についても全く触れていなかったことに着目します。これは、企業の主要な方向性や外部との協働について深く理解していない可能性があります。
+
+**分析:**
+学 生 B2 は一般的な応答しか提供せず、具体的な事実や企業
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B1'
+[デバッグ] 最終的に使用する候補者名: '学生B1'
+[デバッグ] セクション内容（最初の200文字）:
+学生B1:
+
+**分析:**
+学 生 B1 の回答は、他の候補者と似ており、特に「ビジョン」や「パートナーシップ」、そして「最近のニュース」についての具体的な議論が不足していました。これらは企業の基本的な方向性や外部からの支援などを表しており、広範囲な視角からの理解が求められています。
+
+**分析:**
+学 生 B1 は一般的な意見が多く、具体的な事実や企業の特性についての深い理解が示され
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B1:
+  実際の欠損キー: set()
+  実際の保持キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生B3'
+[デバッグ] 最終的に使用する候補者名: '学生B3'
+[デバッグ] セクション内容（最初の200文字）:
+学生B3:
+
+**分析:**
+学 生 B3 の回答は他の候補者と比べてもかなり薄っぺらく、特に「ビジョン」や「パートナーシップ」、そして「最近のニュース」についての具体的な議論が見当たりません。しかし、全体的に API エラーにより多くの議論が中断されています。
+
+**分析:**
+学 生 B3 は一般的な意見だけでなく、具体的な事実や企業の特性についての深い理解が示されていません。例えば、
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B3:
+  実際の欠損キー: {'recruit', 'advantages', 'id', 'partnerships', 'news', 'plan'}
+  実際の保持キー: {'vision', 'name', 'basic_info', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'plan', 'advantages', 'id', 'partnerships', 'news']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 19 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 19 完了。次のラウンドに進みます...
+============================================================
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.387530 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.751685 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.434912 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.887958 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B1: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.445430 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.867119 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B3: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+--- ラウンド 20 (個別質問) ---
+対象候補者: 学生B2
+
+面接官の質問（学生B2へ）: 当社の採用方針におけるダイバーシティ推進策について、どのように理解していますか？具体的な事例があれば紹介してみてください。これは私たちの組織文化にも大きな影響を与えていると感じていますか？
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.422228 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 0.830228 seconds
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+エラー: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+学生B2: API呼び出しエラー: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+
+============================================================
+ラウンド 20 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 20 - 評価1: 最も志望度が低い候補者の選定】
+学生B2
+
+次の個別質問の対象: 学生B2
+============================================================
+
+【ラウンド 20 - 評価2: 志望度ランキング（低い順）】
+学生B3
+学生B1
+学生B2
+
+精度スコア: 0.667
+============================================================
+
+【ラウンド 20 - 評価3: 知識欠損検出】
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生B2:
+
+**分析:** B2候補者は特に技術的な質問に応える際に頻繁にAPI呼び出しエラーエラーが出るが、一般的な質問に対しても一部しか対応できていない様子である。ただし、質問自体が複数回繰り返され、同一質問に対する反復回答が見られることから、直接的に知識がないわけではなく、質問に対する理解が不十分または意図せずに同じ質問を繰り返している可能性が高い。しかし、いくつかの質問に対して、広範囲の企業情報についての深い理解を示しており、特にビジョンやパートナーシップについての具体的な回答は存在しないわけではない。ただし、これらの部分でも具体的な回答は期待されており、より具体的な情報を提供することを求められているべきだ。
+
+**欠損項目キー:** []
+
+---
+
+学生B1:
+
+**分析:** B1候補者は、企業の基本情報や事業内容について、特にビジョンやパートナーシップなどの具体的な情報を提供するのが難しいように見える。一方で、他の質問に関しては一定量の情報提供があり、ただしどちらも全体的には一般的な回答が多い傾向にある。具体的な企業情報についての深掘りが足りず、特にビジョンやパートナーシップに関する具体的な情報が少ないことにより、一貫性が欠ける回答となっている。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+---
+
+学生B3:
+
+**分析:** B3候補者は、特にビジョンやパートナーシップに関する具体的な情報を提供することが困難である。また、他の質問に対しても、企業の基本情報や事業内容についての具体的な回答が少なかったり、一般的な回答が多く見受けられる。この結果、B3候補者は企業の内情や具体的な戦略についての理解が浅く、具体的な情報を提供する能力が不足していると言える。
+
+**欠損項目キー:** ["vision", "partnerships"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生B2', '学生B1', '学生B3']
+
+[デバッグ] 抽出された候補者名（生）: '学生B2'
+[デバッグ] 最終的に使用する候補者名: '学生B2'
+[デバッグ] セクション内容（最初の200文字）:
+学生B2:
+
+**分析:** B2候補者は特に技術的な質問に応える際に頻繁にAPI呼び出しエラーエラーが出るが、一般的な質問に対しても一部しか対応できていない様子である。ただし、質問自体が複数回繰り返され、同一質問に対する反復回答が見られることから、直接的に知識がないわけではなく、質問に対する理解が不十分または意図せずに同じ質問を繰り返している可能性が高い。しかし、いくつかの質問に対して、広範囲の
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生B2:
+  実際の欠損キー: {'id', 'recruit', 'partnerships', 'plan'}
+  実際の保持キー: {'business', 'basic_info', 'advantages', 'news', 'vision', 'name'}
+  検出された欠損キー: set()
+  全企業キー: {'business', 'recruit', 'basic_info', 'advantages', 'id', 'partnerships', 'news', 'plan', 'vision', 'name'}
+
+[デバッグ] 学生B2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生B2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'recruit', 'partnerships', 'plan']
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+学生B1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生B3 (準備レベル: low):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 6
+  見逃された欠損 (FN): ['recruit', 'advantages', 'id', 'partnerships', 'news', 'plan']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.000
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 20 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+結果を保存しました: /host/home/yanai-lab/Sotsuken24/fujita-h/penguin-paper/mochi/results/interview_result_sim100_20251204_182510.json
+============================================================
+
+--- プロンプトログをwandbに記録しました (150件) ---
