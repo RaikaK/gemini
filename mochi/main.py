@@ -42,6 +42,58 @@ except ImportError:
     WANDB_AVAILABLE = False
     print("警告: wandbモジュールが見つかりません。wandbログは無効です。")
 
+def generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds=None):
+    """実験IDを生成する
+    
+    Args:
+        set_index: データセットのインデックス
+        interviewer_model_type: 面接官モデルのタイプ
+        interviewer_model_name: 面接官モデル名
+        max_rounds: 最大ラウンド数
+    
+    Returns:
+        実験ID文字列
+    """
+    import hashlib
+    
+    # 実験設定を文字列に変換
+    config_str = f"{set_index}_{interviewer_model_type}_{interviewer_model_name}_{max_rounds}"
+    
+    # ハッシュ化して短いIDを生成
+    hash_obj = hashlib.md5(config_str.encode())
+    hash_hex = hash_obj.hexdigest()[:8]
+    
+    # 読みやすい形式に変換
+    model_short = interviewer_model_name.split('/')[-1] if '/' in interviewer_model_name else interviewer_model_name
+    model_short = model_short.replace('-', '_').replace('.', '_')[:20]
+    
+    set_str = f"set{set_index}" if set_index is not None else "random"
+    rounds_str = f"r{max_rounds}" if max_rounds else "r20"
+    
+    experiment_id = f"{set_str}_{interviewer_model_type}_{model_short}_{rounds_str}_{hash_hex}"
+    return experiment_id
+
+
+def find_existing_summary_file(results_dir, experiment_id):
+    """既存のサマリーファイルを検索する
+    
+    Args:
+        results_dir: 結果ディレクトリのパス
+        experiment_id: 実験ID
+    
+    Returns:
+        既存のサマリーファイルのパス、見つからない場合はNone
+    """
+    # experiment_idを含むファイルを検索
+    pattern = f"experiment_summary_*_{experiment_id}.json"
+    existing_files = list(results_dir.glob(pattern))
+    
+    if existing_files:
+        # 最新のファイルを返す
+        return max(existing_files, key=lambda p: p.stat().st_mtime)
+    return None
+
+
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
     try:
@@ -1470,6 +1522,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         'simulation_num': simulation_num,
         'timestamp': datetime.datetime.now().isoformat(),
         'set_index': actual_set_index,
+        'interviewer_model_type': interviewer_model_type,
+        'interviewer_model_name': interviewer_model_name,
         'company_profile': company_profile,
         'interview_transcripts': [
             {
@@ -1848,24 +1902,88 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
     
     # 全体結果の保存
     if all_results:
-        summary_data = {
-            'experiment_summary': {
-                'total_simulations': num_simulations,
-                'timestamp': datetime.datetime.now().isoformat(),
-                'set_index': set_index
-            },
-            'individual_results': all_results
-        }
+        # 実験IDを生成
+        experiment_id = generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds)
         
-        summary_file = results_dir / f'experiment_summary_{timestamp_str}.json'
-        with open(summary_file, 'w', encoding='utf-8') as f:
-            json.dump(summary_data, f, ensure_ascii=False, indent=2)
+        # 既存のサマリーファイルを検索
+        existing_summary_file = find_existing_summary_file(results_dir, experiment_id)
         
-        print(f"\n{'='*80}")
-        print(f"全シミュレーション完了")
-        print(f"個別結果: {len(all_results)}件")
-        print(f"サマリーファイル: {summary_file}")
-        print(f"{'='*80}\n")
+        if existing_summary_file:
+            # 既存のファイルを読み込んで追加
+            print(f"\n既存のサマリーファイルを発見: {existing_summary_file.name}")
+            print(f"実験ID: {experiment_id}")
+            print("既存の結果に追加します...")
+            
+            try:
+                with open(existing_summary_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                
+                # 既存の結果に追加
+                existing_individual_results = existing_data.get('individual_results', [])
+                existing_individual_results.extend(all_results)
+                
+                # サマリー情報を更新
+                existing_summary = existing_data.get('experiment_summary', {})
+                existing_total = existing_summary.get('total_simulations', 0)
+                new_total = existing_total + num_simulations
+                
+                summary_data = {
+                    'experiment_summary': {
+                        'total_simulations': new_total,
+                        'timestamp': datetime.datetime.now().isoformat(),  # 最終更新時刻
+                        'created_timestamp': existing_summary.get('created_timestamp', existing_summary.get('timestamp')),  # 初回作成時刻
+                        'set_index': set_index,
+                        'interviewer_model_type': interviewer_model_type,
+                        'interviewer_model_name': interviewer_model_name,
+                        'max_rounds': max_rounds,
+                        'experiment_id': experiment_id
+                    },
+                    'individual_results': existing_individual_results
+                }
+                
+                # 既存のファイルを更新
+                with open(existing_summary_file, 'w', encoding='utf-8') as f:
+                    json.dump(summary_data, f, ensure_ascii=False, indent=2)
+                
+                print(f"\n{'='*80}")
+                print(f"既存のサマリーファイルを更新しました")
+                print(f"追加した個別結果: {len(all_results)}件")
+                print(f"合計個別結果: {len(existing_individual_results)}件")
+                print(f"合計シミュレーション数: {new_total}件")
+                print(f"サマリーファイル: {existing_summary_file}")
+                print(f"{'='*80}\n")
+                
+            except Exception as e:
+                print(f"警告: 既存ファイルの読み込みに失敗しました: {e}")
+                print("新規ファイルとして保存します...")
+                existing_summary_file = None
+        
+        if not existing_summary_file:
+            # 新規ファイルとして保存
+            summary_data = {
+                'experiment_summary': {
+                    'total_simulations': num_simulations,
+                    'timestamp': datetime.datetime.now().isoformat(),
+                    'created_timestamp': datetime.datetime.now().isoformat(),
+                    'set_index': set_index,
+                    'interviewer_model_type': interviewer_model_type,
+                    'interviewer_model_name': interviewer_model_name,
+                    'max_rounds': max_rounds,
+                    'experiment_id': experiment_id
+                },
+                'individual_results': all_results
+            }
+            
+            summary_file = results_dir / f'experiment_summary_{timestamp_str}_{experiment_id}.json'
+            with open(summary_file, 'w', encoding='utf-8') as f:
+                json.dump(summary_data, f, ensure_ascii=False, indent=2)
+            
+            print(f"\n{'='*80}")
+            print(f"全シミュレーション完了")
+            print(f"実験ID: {experiment_id}")
+            print(f"個別結果: {len(all_results)}件")
+            print(f"サマリーファイル: {summary_file}")
+            print(f"{'='*80}\n")
         
         # 全体実行用wandb runに最終サマリーを記録
         if overall_wandb_run and len(all_results) > 0:

@@ -117,6 +117,18 @@ class HuggingFaceModelManager:
                 "size_gb": 2,
                 "description": "Gemma 3 1B IT - 軽量高性能モデル",
                 "recommended_gpu": "RTX 3060, CPU"
+            },
+            "gemma-2-2b-jpn-it": {
+                "model_id": "google/gemma-2-2b-jpn-it",
+                "size_gb": 4,
+                "description": "Gemma 2 2B JPN IT - 日本語特化軽量モデル",
+                "recommended_gpu": "RTX 3060, CPU"
+            },
+            "gemma-3-4b-it": {
+                "model_id": "google/gemma-3-4b-it",
+                "size_gb": 8,
+                "description": "Gemma 3 4B IT - 最新世代の軽量高性能モデル",
+                "recommended_gpu": "RTX 4070, A100"
             }
 
         }

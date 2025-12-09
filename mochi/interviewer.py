@@ -59,6 +59,21 @@ class Interviewer:
             # ローカルモデルでの生成ロジック
             system_content = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
             
+            # プロンプトのトークン数をチェック（Gemmaモデルの場合、コンテキストウィンドウを確認）
+            if self.chat_template_type == "gemma":
+                # Gemma-2-2b-jpn-itのコンテキストウィンドウは20kトークン程度
+                # system_content + prompt のトークン数をチェック
+                full_prompt_for_check = f"{system_content}\n\n{prompt}"
+                tokenized = self.tokenizer(full_prompt_for_check, return_tensors="pt")
+                input_token_count = tokenized['input_ids'].shape[1]
+                max_context_tokens = 19500  # 安全マージンを考慮して19500トークンに設定（出力用に500トークン程度残す）
+                
+                if input_token_count > max_context_tokens:
+                    print(f"警告: プロンプトのトークン数({input_token_count})が推奨制限({max_context_tokens})を超えています。")
+                    print(f"生成は試みますが、コンテキストウィンドウを超える可能性があります。")
+                else:
+                    print(f"デバッグ: プロンプトのトークン数: {input_token_count} (制限: {max_context_tokens})")
+            
             # モデルタイプに応じてメッセージ形式を変更
             if self.chat_template_type == "llama2":
                 # Llama-2系モデル（ELYZA-japanese-Llama-2など）の形式
@@ -84,6 +99,13 @@ class Interviewer:
                     full_prompt = f"{system_content}\n\n{prompt}"
                     encoded = self.tokenizer(full_prompt, return_tensors="pt")
                     inputs = encoded['input_ids'].to(self.model.device)
+            elif self.chat_template_type == "gemma":
+                # Gemmaモデル（gemma-2-2b-jpn-itなど）の形式
+                # Gemmaモデルはsystemロールをサポートしていないため、userメッセージに統合し、apply_chat_templateを使わない
+                # Gemmaモデル用のプロンプト形式: <start_of_turn>user\n{プロンプト}<end_of_turn>\n<start_of_turn>model\n
+                full_prompt = f"<start_of_turn>user\n{system_content}\n\n{prompt}<end_of_turn>\n<start_of_turn>model\n"
+                encoded = self.tokenizer(full_prompt, return_tensors="pt", add_special_tokens=False)
+                inputs = encoded['input_ids'].to(self.model.device)
             elif self.chat_template_type == "qwen":
                 # Qwen系モデル（Qwen3-4B-Instructなど）の形式
                 # Qwen系はsystemロールをサポートしているが、形式が異なる場合がある
@@ -129,19 +151,48 @@ class Interviewer:
             
             attention_mask = torch.ones_like(inputs).to(self.model.device)
             
+            # Gemmaモデルの場合、生成パラメータを調整
+            if self.chat_template_type == "gemma":
+                # Gemmaモデル用の生成パラメータ（より高いtemperatureとtop_pで多様な応答を促す）
+                generation_kwargs = {
+                    "max_new_tokens": max_tokens,
+                    "eos_token_id": self.tokenizer.eos_token_id,
+                    "do_sample": True,
+                    "temperature": 0.8,  # より高いtemperature
+                    "top_p": 0.95,  # より高いtop_p
+                    "repetition_penalty": 1.1,  # より低いrepetition_penalty
+                    "pad_token_id": self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
+                }
+            else:
+                generation_kwargs = {
+                    "max_new_tokens": max_tokens,
+                    "eos_token_id": self.tokenizer.eos_token_id,
+                    "do_sample": True,
+                    "temperature": 0.6,
+                    "top_p": 0.9,
+                    "repetition_penalty": 1.2
+                }
+            
             outputs = self.model.generate(
                 inputs,
                 attention_mask=attention_mask,
-                max_new_tokens=max_tokens,
-                eos_token_id=self.tokenizer.eos_token_id,
-                do_sample=True,
-                temperature=0.6,
-                top_p=0.9,
-                repetition_penalty=1.2
+                **generation_kwargs
             )
             
             response = outputs[0][inputs.shape[-1]:]
-            return self.tokenizer.decode(response, skip_special_tokens=True).strip(), None
+            decoded_response = self.tokenizer.decode(response, skip_special_tokens=True).strip()
+            
+            # デバッグ: 空の応答をチェック
+            if not decoded_response and self.chat_template_type == "gemma":
+                print(f"警告: Gemmaモデルの応答が空です。入力長: {inputs.shape[-1]}, 出力長: {len(response)}")
+                # デバッグ: 生のトークンIDを確認
+                if len(response) > 0:
+                    print(f"デバッグ: 生のトークンID: {response.tolist()[:10]}")
+                    # 特殊トークンを除外せずにデコードしてみる
+                    decoded_with_special = self.tokenizer.decode(response, skip_special_tokens=False)
+                    print(f"デバッグ: 特殊トークン込みのデコード結果: {decoded_with_special[:200]}")
+            
+            return decoded_response, None
         
         elif self.model_type == 'api':
             # APIモデルでの生成ロジック
@@ -300,7 +351,11 @@ class Interviewer:
                 # モデルタイプに応じてチャットテンプレートの処理を調整
                 if self.chat_template_type == "llama2":
                     # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
-                    user_message = f"{messages[0]['content']}"
+                    user_message = f"{messages[0]['content']}\n\n{messages[1]['content']}"
+                    formatted_prompt = user_message
+                elif self.chat_template_type == "gemma":
+                    # Gemma系はsystemロールをサポートしていないため、userメッセージに統合
+                    user_message = f"{messages[0]['content']}\n\n{messages[1]['content']}"
                     formatted_prompt = user_message
                 elif self.chat_template_type == "qwen":
                     # Qwen系は通常のチャットテンプレートを使用
@@ -491,7 +546,11 @@ class Interviewer:
                 # モデルタイプに応じてチャットテンプレートの処理を調整
                 if self.chat_template_type == "llama2":
                     # Llama-2系はsystemロールをサポートしていないため、userメッセージに統合
-                    user_message = f"{messages[0]['content']}"
+                    user_message = f"{messages[0]['content']}\n\n{messages[1]['content']}"
+                    formatted_prompt = user_message
+                elif self.chat_template_type == "gemma":
+                    # Gemma系はsystemロールをサポートしていないため、userメッセージに統合
+                    user_message = f"{messages[0]['content']}\n\n{messages[1]['content']}"
                     formatted_prompt = user_message
                 elif self.chat_template_type == "qwen":
                     # Qwen系は通常のチャットテンプレートを使用
@@ -572,13 +631,27 @@ class Interviewer:
             ranking, token_info = self._generate_response(prompt, max_tokens=512)
             return ranking, token_info
     
-    def _format_all_conversations(self, all_states):
-        """全候補者の会話ログを整形するヘルパー"""
+    def _format_all_conversations(self, all_states, max_rounds=None):
+        """全候補者の会話ログを整形するヘルパー
+        
+        Args:
+            all_states: 候補者の状態リスト
+            max_rounds: 最新のNラウンドのみを含める（Noneの場合は全て）
+        """
         full_log = ""
         for i, state in enumerate(all_states):
             profile = state['profile']
-            history_str = "\n".join([f"  面接官: {turn['question']}\n  {profile.get('name')}: {turn['answer']}" for turn in state['conversation_log']])
-            full_log += f"--- 候補者{i+1}: {profile.get('name')} ---\n会話履歴:\n{history_str}\n\n"
+            conversation_log = state['conversation_log']
+            
+            # max_roundsが指定されている場合は、最新のNラウンドのみを使用
+            if max_rounds is not None and len(conversation_log) > max_rounds:
+                conversation_log = conversation_log[-max_rounds:]
+                full_log += f"--- 候補者{i+1}: {profile.get('name')} (最新{max_rounds}ラウンドのみ) ---\n"
+            else:
+                full_log += f"--- 候補者{i+1}: {profile.get('name')} ---\n"
+            
+            history_str = "\n".join([f"  面接官: {turn['question']}\n  {profile.get('name')}: {turn['answer']}" for turn in conversation_log])
+            full_log += f"会話履歴:\n{history_str}\n\n"
         return full_log.strip()
     
     def _calculate_detection_metrics(self, llm_output_text, all_states):
@@ -820,10 +893,50 @@ class Interviewer:
     def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval):
         """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う"""
         
-        conversation_summary = self._format_all_conversations(all_states)
         full_company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
         
-        prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
+        # プロンプトの基本部分のトークン数を計算
+        base_prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
+以下の「正解の企業情報」、「各候補者の面接記録」を比較し、候補者の知識の穴を特定してください。
+
+# 重要な注意点
+単に候補者が言及しなかったという理由だけで、知識が欠損していると結論づけないでください。質問の流れの中で、その情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりした場合にのみ「知識欠損」と判断してください。
+
+# 正解の企業情報 (キーと値のペア)
+```json
+{full_company_info_str}
+```
+
+# 各候補者の面接記録
+"""
+        
+        # Gemmaモデルの場合、動的に会話履歴を調整
+        max_conversation_rounds = None
+        if self.chat_template_type == "gemma":
+            # 基本プロンプトのトークン数を計算
+            base_tokenized = self.tokenizer(base_prompt, return_tensors="pt")
+            base_token_count = base_tokenized['input_ids'].shape[1]
+            
+            # コンテキストウィンドウは20kトークン、出力用に500トークン程度残す
+            available_tokens = 19500 - base_token_count
+            
+            # 1ラウンドあたりの平均トークン数を推定（質問+回答で約200-300トークン）
+            avg_tokens_per_round = 250
+            estimated_rounds = available_tokens // avg_tokens_per_round
+            
+            # 利用可能なラウンド数を計算（最低3ラウンドは確保）
+            if estimated_rounds < len(all_states[0]['conversation_log']):
+                max_conversation_rounds = max(3, estimated_rounds)
+                print(f"デバッグ: Gemmaモデル使用のため、会話履歴を最新{max_conversation_rounds}ラウンドに制限します。")
+                print(f"デバッグ: 基本プロンプトトークン数: {base_token_count}, 利用可能トークン数: {available_tokens}")
+            else:
+                print(f"デバッグ: 全ての会話履歴を使用可能です。")
+        
+        conversation_summary = self._format_all_conversations(all_states, max_rounds=max_conversation_rounds)
+        
+        prompt = f"""{base_prompt}{conversation_summary}
+
+指示:
 以下の「正解の企業情報」、「各候補者の面接記録」を比較し、候補者の知識の穴を特定してください。
 
 # 重要な注意点
