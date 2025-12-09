@@ -7,8 +7,6 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from utils import call_openai_api
 import config
-import google.generativeai as genai
-from config import GOOGLE_API_KEY
 
 # MODEL_TYPE_MAPPINGをインポート（config.pyから直接取得）
 try:
@@ -342,27 +340,6 @@ class Interviewer:
                 # OpenAI APIのJSONモードを使用
                 system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
                 
-                # Geminiモデルの場合
-                if self.model_name.lower().startswith("gemini"):
-                    if not GOOGLE_API_KEY or not GOOGLE_API_KEY.strip() or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
-                        raise ValueError("GOOGLE_API_KEY not set")
-                    
-                    genai.configure(api_key=GOOGLE_API_KEY)
-                    model = genai.GenerativeModel(self.model_name)
-                    
-                    response = model.generate_content(
-                        f"{system_prompt}\n\n{prompt}\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{{\n  \"candidate_name\": \"候補者名\"\n}}",
-                        generation_config={"response_mime_type": "application/json"}
-                    )
-                    
-                    result_json = json.loads(response.text)
-                    least_motivated_result = LeastMotivatedResult.model_validate(result_json)
-                    
-                    # Geminiはトークン情報を返さないためダミー
-                    token_info = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
-                    
-                    return least_motivated_result.candidate_name, token_info
-                
                 # OpenAI APIのJSONモードで呼び出し
                 from openai import OpenAI
                 client = OpenAI(api_key=config.OPENAI_API_KEY)
@@ -551,32 +528,6 @@ class Interviewer:
             try:
                 # OpenAI APIのJSONモードを使用
                 system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
-                
-                # Geminiモデルの場合
-                if self.model_name.lower().startswith("gemini"):
-                    if not GOOGLE_API_KEY or not GOOGLE_API_KEY.strip() or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
-                        raise ValueError("GOOGLE_API_KEY not set")
-                        
-                    genai.configure(api_key=GOOGLE_API_KEY)
-                    model = genai.GenerativeModel(self.model_name)
-                    
-                    response = model.generate_content(
-                        f"{system_prompt}\n\n{prompt}\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{{\n  \"ranking\": [\n    {{\"rank\": 1, \"candidate_name\": \"候補者名\"}},\n    {{\"rank\": 2, \"candidate_name\": \"候補者名\"}},\n    {{\"rank\": 3, \"candidate_name\": \"候補者名\"}}\n  ]\n}}",
-                        generation_config={"response_mime_type": "application/json"}
-                    )
-                    
-                    result_json = json.loads(response.text)
-                    ranking_result = RankingResult.model_validate(result_json)
-                    
-                    # シンプルな形式に変換
-                    ranking_text = ""
-                    for entry in ranking_result.ranking:
-                        ranking_text += f"{entry.rank}位: {entry.candidate_name}\n"
-                    
-                    # Geminiはトークン情報を返さないためダミー
-                    token_info = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
-                    
-                    return ranking_text.strip(), token_info
                 
                 # OpenAI APIのJSONモードで呼び出し
                 from openai import OpenAI
