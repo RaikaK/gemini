@@ -1,0 +1,3588 @@
+--- wandbログを開始しました (run: llama3_sim75_set7, model: llama3) ---
+
+--- ラウンド 1 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この会社のビジョンとはどのように関連していますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.408974 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.778693 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.443123 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.920897 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.478465 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.848575 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 1 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 1 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 1 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+このような回答から判断すると、すべての候補者がAPI呼び出しのエラーメッセージしか返していないため、志望度が極めて低く感じます。しかし、この質問に対する回答の差異はないので、
+
+3. 学生H3
+2. 学生H2
+1. 学生H1
+
+となります。この結果は、他の回答がないことによるものなので注意が必要です。
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 1 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は質問に対する企業情報との関係性に関する明確な理解や説明がないようであり、これにより知識が欠如していることを推測できます。また、API呼び出しエラーに関係なく、質問に対する企業のビジョンの概念に関する説明が存在しませんでした。これには、企業ビジョンやその関連性に関する基本的な知識が足りていない可能性があります。
+欠損項目キー: ["vision"]
+
+学生H2:
+
+分析: 候補者も質問に対する企業情報との関係性に関する明確な理解や説明がないようであり、これにより知識が欠如していることを推測できます。また、API呼び出しエラーに関係なく、質問に対する企業のビジョンの概念に関する説明が存在しませんでした。これには、企業ビジョンやその関連性に関する基本的な知識が足りていない可能性があります。
+欠損項目キー: ["vision"]
+
+学生H1:
+
+分析: 候補者の応答では、質問に対する企業情報との関連性に関する詳細な理解や説明が見られませんでした。しかし、彼らの回答から、企業のビジョンなどに関心があまりないように思われました。そのため、企業ビジョンなどの基本的な知識が十分ではないようです。
+欠損項目キー: ["vision"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は質問に対する企業情報との関係性に関する明確な理解や説明がないようであり、これにより知識が欠如していることを推測できます。また、API呼び出しエラーに関係なく、質問に対する企業のビジョンの概念に関する説明が存在しませんでした。これには、企業ビジョンやその関連性に関する基本的な知識が足りていない可能性があります。
+欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 3, FP: 1, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.300, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者も質問に対する企業情報との関係性に関する明確な理解や説明がないようであり、これにより知識が欠如していることを推測できます。また、API呼び出しエラーに関係なく、質問に対する企業のビジョンの概念に関する説明が存在しませんでした。これには、企業ビジョンやその関連性に関する基本的な知識が足りていない可能性があります。
+欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 0, TN: 5, FP: 1, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.500, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者の応答では、質問に対する企業情報との関連性に関する詳細な理解や説明が見られませんでした。しかし、彼らの回答から、企業のビジョンなどに関心があまりないように思われました。そのため、企業ビジョンなどの基本的な知識が十分ではないようです。
+欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 9, FP: 1, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.900, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.567
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.300
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 3, FP: 1, FN: 6
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 5, FP: 1, FN: 4
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.900
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 9, FP: 1, FN: 0
+  誤検出された欠損 (FP): ['vision']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.300
+  medium: 0.500
+  high: 0.900
+デバッグ: ラウンド 1 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 1 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.377663 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.997361 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.460802 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.752092 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.466010 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.897666 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 2 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この会社の基本情報についてどう思っていますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.426118 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.901899 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 2 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 2 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H1
+
+次の個別質問の対象: 学生H1
+============================================================
+
+【ラウンド 2 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+3. 学生H1
+2. 学生H2
+1. 学生H3
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 2 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞭な回答しか提供せず、企業情報に関連する詳細な説明や理解を持たないことが確認できました。また、企業のビジョンの意図的な説明を行っていなかったため、知識が欠如していることを推測しました。
+
+欠損項目キー: ["vision"]
+
+学生H2:
+
+分析: 候補者は複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞘な回答しか提供せていません。ただし、面接官との会話中には、企業の基本情報やビジネスの分野などへの興味表現がありました。しかし、これらの要素に関連する知識が十分ではないようであり、さらに深掘りをしたところで、知識の欠陥が見られます。
+
+欠損項目キー: ["basic_info","business"]
+
+学生H1:
+
+分析: 候補者は同様に複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞻な回答しか提供しておりませんでした。そのほかの質問では応答を見事に行われていたようです。しかし、企業のビジョンに関わる部分においては、学習材料を提示されていないような感覚がありました。これにより、知識の欠乏が判別できます。
+
+欠損項目キー: ["vision"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞭な回答しか提供せず、企業情報に関連する詳細な説明や理解を持たないことが確認できました。また、企業のビジョンの意図的な説明を行っていなかったため、知識が欠如していることを推測しました。
+
+欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 3, FP: 1, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.300, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者は複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞘な回答しか提供せていません。ただし、面接官との会話中には、企業の基本情報やビジネスの分野などへの興味表現がありました。しかし、これらの要素に関連する知識が十分ではないようであり、さらに深掘りをしたところで、知識の欠陥が見られます。
+
+欠損項目キー: ["basic_info","business"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'business'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'basic_info', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 1, TN: 5, FP: 1, FN: 3
+  Precision: 0.500, Recall: 0.250, Accuracy: 0.600, F1: 0.333
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者は同様に複数回同じ質問を受けた際も、API呼び出しエラーに関する不明瞻な回答しか提供しておりませんでした。そのほかの質問では応答を見事に行われていたようです。しかし、企業のビジョンに関わる部分においては、学習材料を提示されていないような感覚がありました。これにより、知識の欠乏が判別できます。
+
+欠損項目キー: ["vision"]
+
+[デバッグ] 抽出されたキー文字列: [["vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'vision'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 9, FP: 1, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.900, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.600
+平均F1スコア: 0.111
+平均Precision: 0.167
+平均Recall: 0.083
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.300
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 3, FP: 1, FN: 6
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.500
+  Recall: 0.250
+  F1スコア: 0.333
+  TP: 1, TN: 5, FP: 1, FN: 3
+  正しく検出された欠損 (TP): ['basic_info']
+  誤検出された欠損 (FP): ['business']
+  見逃された欠損 (FN): ['id', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.900
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 9, FP: 1, FN: 0
+  誤検出された欠損 (FP): ['vision']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.300
+  medium: 0.600
+  high: 0.900
+デバッグ: ラウンド 2 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 2 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 3 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この会社のビジョンとはどのような関係があり、現在の仕事において私たちが目指すことに関係があるでしょうか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.456069 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.770029 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.478688 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.903811 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.438556 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.798201 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 3 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 3 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H2
+
+次の個別質問の対象: 学生H2
+============================================================
+
+【ラウンド 3 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+3. 学生H3
+2. 学生H2
+1. 学生H1
+
+このランキングでは、候補者全員が同じ回答を繰り返しているため、すべての点数が等しくなりました。しかし、三つとも企業に関する特定の情報や熱意を表明することができなかったことは共通しました。これらの点から、志望度が高いと考えられるのはありません。
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 3 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は全ての質問に対してAPI呼び出しエラーとして回答しており、これらの質問には触れるはずの情報である「ネクストストリーム株式会社」の基本情報やビジネスの内容などに関する知識が明らかに欠如していることがわかります。また、彼らの回答は具体的なものではなく、一般性だけに留まっていることも判別できます。
+
+欠損項目キー: ["basic_info","business"]
+
+---
+
+学生H2:
+
+分析: 候補者も同様に全ての質問に対してAPI呼び出しエラーとして回答しており、これらの質問には触れるはずの情報である「ネクストストリーム株式会社」の基本情報やビジネスの内容などに関する知識が明らかに欠如していることがわかります。
+
+欠損項目キー: ["basic_info","business"]
+
+---
+
+学生H1:
+
+分析: 候補者も同様に全ての質問に対してAPI呼び出しエラーとして回答しており、これらの質問には触れるはずの情報である「ネクストストリーム株式会社」の基本情報やビジネスの内容などに関する知識が明らかに欠如していることがわかります。
+
+欠損項目キー: ["basic_info","business"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は全ての質問に対してAPI呼び出しエラーとして回答しており、これらの質問には触れるはずの情報である「ネクストストリーム株式会社」の基本情報やビジネスの内容などに関する知識が明らかに欠如していることがわかります。また、彼らの回答は具体的なものではなく、一般性だけに留まっていることも判別できます。
+
+欠損項目キー: ["basic_info","business"]
+
+--
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'business'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'basic_info', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 1, TN: 3, FP: 1, FN: 5
+  Precision: 0.500, Recall: 0.167, Accuracy: 0.400, F1: 0.250
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.133
+平均F1スコア: 0.083
+平均Precision: 0.167
+平均Recall: 0.056
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.500
+  Recall: 0.167
+  F1スコア: 0.250
+  TP: 1, TN: 3, FP: 1, FN: 5
+  正しく検出された欠損 (TP): ['basic_info']
+  誤検出された欠損 (FP): ['business']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生H1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.000
+  high: 0.000
+デバッグ: ラウンド 3 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 3 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.487703 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.753014 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.383694 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.919013 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.479498 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.876254 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 4 (個別質問) ---
+対象候補者: 学生H2
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H2へ）: この会社の『基本情報』にはどれほどよくお馴染みですか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.409435 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.800866 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 4 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 4 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H2
+
+次の個別質問の対象: 学生H2
+============================================================
+
+【ラウンド 4 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング：
+
+3. 学生H1
+2. 学生H2
+1. 学生H3
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 4 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: この候補者は、質問に対する明確な回答を行わず、代わりに「API呼び出しエラー: Connection error」を繰り返しました。これにより、質問への理解やその応答に関する知識の欠如が浮き彫りになります。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+student H2 :
+
+分析: この候補者も質問に対する明確な回答を行わず、同じように「API呼び出しエラー: Connection error」を繰り返しました。また、前回同様に、基本情報の認識もできませんでした。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H1：
+
+分析: 同じく質問に対する明確な回答を行わず、また同じく「API呼び出しエラー: Connection error」を繰り返しました。このため、質問に対する理解やそれらの応答に関する知識の欠如が際立つものとなりました。
+
+欠損項目キー :["basic_info","business","vision","news","plan","partnerships","advantages","recruit" ]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: この候補者は、質問に対する明確な回答を行わず、代わりに「API呼び出しエラー: Connection error」を繰り返しました。これにより、質問への理解やその応答に関する知識の欠如が浮き彫りになります。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages",
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 5, TN: 1, FP: 3, FN: 1
+  Precision: 0.625, Recall: 0.833, Accuracy: 0.600, F1: 0.714
+
+[デバッグ] 抽出された候補者名（生）: 'studentH2'
+[デバッグ] 数字部分でマッチ: 'studentH2' → '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+student H2 :
+
+分析: この候補者も質問に対する明確な回答を行わず、同じように「API呼び出しエラー: Connection error」を繰り返しました。また、前回同様に、基本情報の認識もできませんでした。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","rec
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 3, TN: 1, FP: 5, FN: 1
+  Precision: 0.375, Recall: 0.750, Accuracy: 0.400, F1: 0.500
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1：
+
+分析: 同じく質問に対する明確な回答を行わず、また同じく「API呼び出しエラー: Connection error」を繰り返しました。このため、質問に対する理解やそれらの応答に関する知識の欠如が際立つものとなりました。
+
+欠損項目キー :["basic_info","business","vision","news","plan","partnerships","advantages
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.405
+平均Precision: 0.333
+平均Recall: 0.528
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.625
+  Recall: 0.833
+  F1スコア: 0.714
+  TP: 5, TN: 1, FP: 3, FN: 1
+  正しく検出された欠損 (TP): ['plan', 'partnerships', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['recruit', 'vision', 'business']
+  見逃された欠損 (FN): ['id']
+
+学生H2 (準備レベル: medium):
+  精度: 0.400
+  Precision: 0.375
+  Recall: 0.750
+  F1スコア: 0.500
+  TP: 3, TN: 1, FP: 5, FN: 1
+  正しく検出された欠損 (TP): ['basic_info', 'plan', 'advantages']
+  誤検出された欠損 (FP): ['partnerships', 'business', 'recruit', 'news', 'vision']
+  見逃された欠損 (FN): ['id']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.400
+  high: 1.000
+デバッグ: ラウンド 4 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 4 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 5 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この会社のビジョンの達成方法として、この企業の『プラン』にはどのようなステップやアクションが含まれていますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.499385 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.840123 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.397737 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.940871 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.477117 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.815124 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 5 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 5 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+候補者の中から最も志望度が低いと判断するのは難しいですが、以下の点から分析すると、
+
+*   すべての候補者が同じ質問に対して「API呼び出しエラー: Connection error.」という回答を繰り返していることがわかります。
+*   これらの回答は、質問への理解や回答の意思表示ではなく、システム障害によるものである可能性が高く、これらを行った候補者たちはこの問題に対処できていないことを意味します。
+*   また、他の質問にも同様なパターンが見られます。
+
+これらの観点から考えてみると、すべての候補者がこの問題に対処できていなかったようです。しかし、それでも特定の候補者が他の人よりも弱いところを見つける必要があります。
+
+ここでの主要的な違いは、質問ごとの回答数です。この点では、候補者2の方が他の2人よりも少ない回答を残しており、その回答も「Connection error」という一文だけです。他の2人は5つの質問に対してそれぞれ5回ずつ回答したため、2人のうち誰がより不適
+
+============================================================
+
+【ラウンド 5 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+3. 学生H1
+2. 学生H2
+1. 学生H3
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 5 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者はすべて同じ質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。これは、質問への理解が十分ではないことを意味しており、また状況によっては意図的な回答である可能性もあります。しかし、他の質問でも同様のパターンが見られました。このような回答では、実際に問題なくて良いはずの質問に対しても、不正確または曖昧なものが出たことは注目すべき事項です。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+学生H2:
+
+分析: 候補者は全く異なる質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。また、これらの質問に対する前回の質問との類似性により、適切な回答ではなく、元の質問に対応できなかったことが考えられます。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+学生H1:
+
+分析: 候補者は全くの異なる質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。そのため、これら回答はそれぞれの質問に対する適切な回答になっていないようです。他の質問に対する回答もこれまでの結果から考えて不明瞭だと思われます。
+
+欠損項目キー: []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者はすべて同じ質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。これは、質問への理解が十分ではないことを意味しており、また状況によっては意図的な回答である可能性もあります。しかし、他の質問でも同様のパターンが見られました。このような回答では、実際に問題なくて良いはずの質問に対しても、不正確または曖昧なものが出たことは注目すべ
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","ビジョン","プラン"]]
+[デバッグ] パース成功: 検出された欠損キー = {'ビジョン', '基本情報', 'プラン'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'ビジョン', '基本情報', 'プラン'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 4, FP: 3, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者は全く異なる質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。また、これらの質問に対する前回の質問との類似性により、適切な回答ではなく、元の質問に対応できなかったことが考えられます。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","ビジョン","プラン"]]
+[デバッグ] パース成功: 検出された欠損キー = {'ビジョン', '基本情報', 'プラン'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'ビジョン', '基本情報', 'プラン'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 0, TN: 6, FP: 3, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者は全くの異なる質問に対して「API呼び出しエラー: Connection error」という文を繰り返しました。そのため、これら回答はそれぞれの質問に対する適切な回答になっていないようです。他の質問に対する回答もこれまでの結果から考えて不明瞭だと思われます。
+
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 3, FN: 6
+  誤検出された欠損 (FP): ['ビジョン', '基本情報', 'プラン']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 3, FN: 4
+  誤検出された欠損 (FP): ['ビジョン', '基本情報', 'プラン']
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 5 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 5 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.411176 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.948319 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.495704 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.871102 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.407140 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.972371 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 6 (個別質問) ---
+対象候補者: 学生H2
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H2へ）: この会社のパートナー企業について、お伝えしてもらえることはありますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.448383 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.966496 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 6 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 6 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 6 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3 > 学生H2 > 学生H1
+
+この回答では、API 呼び出しのエラーがすべての質問に対する答えとなりました。これは、候補者が十分な研究を行っていないことを意味します。また、候補者が熱意を持って回答したこともありません。このような状況下での評価は難しく、企業との関わり方に関する理解不足を疑わせるものです。
+
+ここから学習への道筋を読むと、まず企業のウェブサイトを見ておくことが大事だということになります。そして、企業のビジョンやミッションなどについて調べた結果を明記し、それらの特徴によってこれまで働いた経験が得られている場所とは異なる点を挙げてみたり、自分自身がこの企業に入社したら何をするかという自分の考えを述べてみると良いでしょう。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 6 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者はすべての質問にAPI呼び出しエラー: Connection error. としか答えてこなかったため、提供された企業情報に関する知識がほぼ全て欠如していたと思われます。また、これらの質問に応じた適切な回答が存在するはずであり、候補者がこれらの企業情報について何も調査または理解していないことを意味します。
+
+欠損項目キー: ["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H2:
+
+分析: 候補者は質問に対してAPI呼び出しエラー: Connection error. のだけではなく、ある程度の企業情報に関する説明を行っているように見えました。しかし、企業情報の多くが不明瞭である、または誤っていると感じられます。たとえば、「この会社の基本情報についてどう思っていますか?」という質問に対して「API 呼び出しエラー: Connection error。」という回答は、何も考えていないようでした。他の質問への回答でも同様で、企業情報から得られるインサイトに照らし合わせると、特にビジネス、アドバンテージなどにおける誤った情報や抽象的な回答が混在しており、知識の欠如が疑われる状況となっております。
+
+欠損項目キー: ["capital","employees","hq"]
+
+学生H1:
+
+分析: 候補者はすべての質問にAPI呼び出しエラー: Connection error. としか答えてこなかったため、提供された企業情報に関する知識がほぼ全て欠如していたと思われます。提供された企業情報に関する知識がない場合は、企業の基本情報、ビジネスの主な事業活動、ビジョンなどの情報に直接触れた質問に対して、十分な回答が提示されていません。これにより、候補者がこれらの企業情報について何も調査または理解していないことが推測できます。
+
+欠損項目キー: ["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者はすべての質問にAPI呼び出しエラー: Connection error. としか答えてこなかったため、提供された企業情報に関する知識がほぼ全て欠如していたと思われます。また、これらの質問に応じた適切な回答が存在するはずであり、候補者がこれらの企業情報について何も調査または理解していないことを意味します。
+
+欠損項目キー: ["id","name","basic_inf
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 0, FP: 4, FN: 0
+  Precision: 0.600, Recall: 1.000, Accuracy: 0.600, F1: 0.750
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者は質問に対してAPI呼び出しエラー: Connection error. のだけではなく、ある程度の企業情報に関する説明を行っているように見えました。しかし、企業情報の多くが不明瞭である、または誤っていると感じられます。たとえば、「この会社の基本情報についてどう思っていますか?」という質問に対して「API 呼び出しエラー: Connection error。」という回答
+
+[デバッグ] 抽出されたキー文字列: [["capital","employees","hq"]]
+[デバッグ] パース成功: 検出された欠損キー = {'hq', 'employees', 'capital'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'hq', 'employees', 'capital'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 0, TN: 6, FP: 3, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者はすべての質問にAPI呼び出しエラー: Connection error. としか答えてこなかったため、提供された企業情報に関する知識がほぼ全て欠如していたと思われます。提供された企業情報に関する知識がない場合は、企業の基本情報、ビジネスの主な事業活動、ビジョンなどの情報に直接触れた質問に対して、十分な回答が提示されていません。これにより、候補者がこれらの企業情報につい
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 0, FP: 10, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.400
+平均F1スコア: 0.250
+平均Precision: 0.200
+平均Recall: 0.333
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.600
+  Recall: 1.000
+  F1スコア: 0.750
+  TP: 6, TN: 0, FP: 4, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['name', 'recruit', 'vision', 'business']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 3, FN: 4
+  誤検出された欠損 (FP): ['capital', 'hq', 'employees']
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 10, FN: 0
+  誤検出された欠損 (FP): ['id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.600
+  high: 0.000
+デバッグ: ラウンド 6 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 6 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 7 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この企業における『パートナーシップ』とはどのように関連しており、これらのパートナーとの協業によって、私たちは今後のキャリア開発においてどのようなメリットを受けることができますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.487655 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.902729 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.438862 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.794427 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.444036 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.828303 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 7 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 7 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 7 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+1. 学生H1
+2. 学生H2
+3. 学生H3
+
+上記のランキングでは、各候補者の回答が「API呼び出しエラー: Connection error」という固定的な文言しか出ていなかったため、そのような回答を持つ候補者はすべて志望度が極めて低く評価されました。これにより、ランキングの上位から下位まで、それぞれの状況と同様な質問に対する回答の特徴に基づいて決定しました。
+
+ここでのポイントは、「この会社」の基本情報やビジョンに関する理解不足であり、ほぼ全ての質問に同じ回答をすることで明らかにしたものです。この点からすると、候補者H1 > H2 > H3となります。
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 7 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は複数回同じ質問に答えており、その際もAPI呼び出しエラーにより正しく回答できなかった。また、基本的な企業情報やビジョンなどに関する理解が十分ではないようにも見えました。これは、知識が欠如していることを意味する可能性があります。
+欠損項目キー: ["basic_info","vision"]
+
+
+学生H2:
+
+分析: 候補者は基本的に質問に対応しました。しかし、たまたまその企業情報に触れるのが自然だったこともなく、答え方が一般的であったりと、知識が十分にある印象ではありません。
+欠損項目キー: []
+
+
+学生H1:
+
+分析: 候補者は同様に質問に対応しました。そのうちの幾つかの企業情報に関してはそれぞれ説明されたようですが、一部の企業情報については不明瞭であるような気持ちはしませんでした。
+欠損項目キー: []
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は複数回同じ質問に答えており、その際もAPI呼び出しエラーにより正しく回答できなかった。また、基本的な企業情報やビジョンなどに関する理解が十分ではないようにも見えました。これは、知識が欠如していることを意味する可能性があります。
+欠損項目キー: ["basic_info","vision"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'vision'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'basic_info', 'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 1, TN: 3, FP: 1, FN: 5
+  Precision: 0.500, Recall: 0.167, Accuracy: 0.400, F1: 0.250
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者は基本的に質問に対応しました。しかし、たまたまその企業情報に触れるのが自然だったこともなく、答え方が一般的であったりと、知識が十分にある印象ではありません。
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 0, TN: 6, FP: 0, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者は同様に質問に対応しました。そのうちの幾つかの企業情報に関してはそれぞれ説明されたようですが、一部の企業情報については不明瞭であるような気持ちはしませんでした。
+欠損項目キー: []
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.083
+平均Precision: 0.167
+平均Recall: 0.056
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.500
+  Recall: 0.167
+  F1スコア: 0.250
+  TP: 1, TN: 3, FP: 1, FN: 5
+  正しく検出された欠損 (TP): ['basic_info']
+  誤検出された欠損 (FP): ['vision']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 7 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 7 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.485532 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.985548 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.379537 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.979228 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.436960 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.763277 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 8 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この企業における《'id'》という項ですが、その意味合いと利用法はどのようなものであり、今回の採用プロセスの流れにおいてどのような重要性を持っていますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.481734 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.937034 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 8 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 8 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 8 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+1. 学生H3
+2. 学生H2
+3. 学生H1
+
+注：すべての候補者が同じ質問に対して「API呼び出しエラー: Connection error」という回答を行ったため、評価に困る部分がありました。しかし、ここではこのような不完全な回答ではなく、それぞれの回答から何が欠けているのかという点を見て比較検討しました。
+
+また、「企業知識の深さ」、「回答の具体性」、「熱意の表現」の3つの要素を考慮することで、ランク付けを行いました。
+・学生H3: 回答は全くなかったので、企業に関する知識がないことになります。他の候補者よりも志望度が低くなります。
+・学生H2: 回答はほぼ同等だったようですが、「この会社の基本情報についてどう思っていますか？」などの質問に対応していませんでした。そのため志望度が少し高いと思われます。
+・学生H1: 同じ問題に対して返答しなかったのは学生H1だけであることに注意してください。これにより、他の候補者よりも志望度が高くなると考えられます。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 8 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は質問に対する明確な回答を行わず、API 呼び出し エラーメッセージしか提供しませんでした。このような行動から、学生 H3 の回答に関する知識が欠如していると推測されます。
+
+欠損項目キー: ["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+studentH2 :
+
+分析: 候補者は質問に対する明確な回答を行わなかったり、誤った情報を提示していたりと、知識が欠如していると考えられます。また、相手の理解を求める際、自身の経験や学習した事実を説明しようとする姿勢も見られませんでした。これにより、彼の意思決定能力への懸念も寄せられるようになりました。
+
+欠損項目キー: ["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+
+学生H1：
+
+分析: 候補者は質問に対する明確な回答を行わなかったり、誤った情報を提示していたりと、知識が欠如していると考えられます。たとえば、会社の基本情報に関する質問に対して、候補者はそれぞれ異なる応答をしたのであり、これらの回答は適切ではありません。他方、同様の質問に対して、同じ間違った回答を繰り返しました。そのため、彼らは企業の基本的な側面を把握できていません。
+
+欠損項目キー :["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は質問に対する明確な回答を行わず、API 呼び出し エラーメッセージしか提供しませんでした。このような行動から、学生 H3 の回答に関する知識が欠如していると推測されます。
+
+欠損項目キー: ["id","name","basic_info","business","vision","news","plan","partnerships","advantages","r
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 0, FP: 4, FN: 0
+  Precision: 0.600, Recall: 1.000, Accuracy: 0.600, F1: 0.750
+
+[デバッグ] 抽出された候補者名（生）: 'studentH2'
+[デバッグ] 数字部分でマッチ: 'studentH2' → '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+studentH2 :
+
+分析: 候補者は質問に対する明確な回答を行わなかったり、誤った情報を提示していたりと、知識が欠如していると考えられます。また、相手の理解を求める際、自身の経験や学習した事実を説明しようとする姿勢も見られませんでした。これにより、彼の意思決定能力への懸念も寄せられるようになりました。
+
+欠損項目キー: ["id","name","basic_info","business"
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 4, TN: 0, FP: 6, FN: 0
+  Precision: 0.400, Recall: 1.000, Accuracy: 0.400, F1: 0.571
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1：
+
+分析: 候補者は質問に対する明確な回答を行わなかったり、誤った情報を提示していたりと、知識が欠如していると考えられます。たとえば、会社の基本情報に関する質問に対して、候補者はそれぞれ異なる応答をしたのであり、これらの回答は適切ではありません。他方、同様の質問に対して、同じ間違った回答を繰り返しました。そのため、彼らは企業の基本的な側面を把握できていません。
+
+欠損項目キー :["id
+
+[デバッグ] 警告: '欠損項目キー' の行が見つかりません
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.440
+平均Precision: 0.333
+平均Recall: 0.667
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.600
+  Recall: 1.000
+  F1スコア: 0.750
+  TP: 6, TN: 0, FP: 4, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['name', 'recruit', 'vision', 'business']
+
+学生H2 (準備レベル: medium):
+  精度: 0.400
+  Precision: 0.400
+  Recall: 1.000
+  F1スコア: 0.571
+  TP: 4, TN: 0, FP: 6, FN: 0
+  正しく検出された欠損 (TP): ['id', 'basic_info', 'plan', 'advantages']
+  誤検出された欠損 (FP): ['partnerships', 'business', 'recruit', 'name', 'news', 'vision']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+  注意: Candidate block found, but '欠損項目キー' line is missing.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.400
+  high: 1.000
+デバッグ: ラウンド 8 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 8 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 9 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この企業にとっての『パーツナーシップ』という概念は、実際にどれほど大切だと感じていますか？そして、そのようなパーツナーシップにより、私たちの職場での成功への取り組みをどのように高めることができると考えていますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.391592 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.980659 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.420643 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.772322 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.383322 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.813807 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 9 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 9 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+この問題では、各候補者の回答から何も得られないため、分析を行うのは難しいようだ。しかし、それでも何かを見つけることができるかもしれない。
+
+まず、すべての候補者が同じ質問に対して「API呼び出しエラー: Connection error」という回答をしていることに注目する。これは、質問に対する十分な準備がなかったり、システム的な問題があったりと様々な理由が考えられるだろう。その結果として、質問に対する理解や意思表示がない状態になっており、これが志望度を評価する上で欠点となる。
+
+ただし、三人のうち誰がもっとも志望度が低いかを比較検討すると、次の観点から言える：
+
+* 三人とも同一の質問に対して同一の回答しかしなかった。
+* これは、資格試験などによる基礎的認定証明書取得前の方がいらっしゃる可能性が高いことを意味する。
+* 資格試験などの受験状況を確認した後、志向度に関する最終結論に至ったほうがよいでしょう。
+
+しかし、この質問セットからは、志望度が低い
+
+============================================================
+
+【ラウンド 9 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+3. 学生H1
+2. 学生H2
+1. 学生H3
+
+注：すべての候補者は質問に対する回答が「API 呼び出しエラー: Connection error」という文を繰り返しているため、企業知識の深さ、回答の具体性、熱意の表現などに関する評価は難しい状況になりました。しかし、候補者間の差異はほぼないように見えます。ただし、他の要因や面接全体の中からこの問題だけを見た場合では、学生H3 が他よりも少し悪く見えたようです。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 9 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者H3は、面接中、すべての質問に対してAPI呼び出しエラーが発生するように回答しました。これは、彼の知識に関する提供された企業情報に対する理解がないことを示唆しています。他方では、質問の主題が複数回提示されましたが、適切な回答も提案せず、説明責任を放棄していたため、明らかに対象企業の知識が不足しているようでした。
+
+欠損項目キー: ["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages"]
+
+学生H2:
+
+分析: 候補者H2も同様の問題を見せており、ほぼ全ての質問に対して同じ応答(「Connection Error」)を行ってしまいました。この行動から推測すると、彼女は提供された企業情報に対する十分な理解を有していない可能性があります。また、彼女は何度か質問の再現を試みたようですが、前向きな意見や回答は無く、また、過去に提供されてきた企業情報のうち多くの部分を把握していなかったことが窺われます。
+
+欠損項目キー: ["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H1:
+
+分析: 候補者H1も同じ状況に見舞われており、質問に対して「Connection Error」という回答しか残さず、企業情報の提供された要素の大半については不明瞭であることが分かりました。彼はそれぞれの質問に対して、前の質問と同じ応答を行ってしまったので、企業情報の理解が深められていませんでした。
+
+欠損項目キー: ["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者H3は、面接中、すべての質問に対してAPI呼び出しエラーが発生するように回答しました。これは、彼の知識に関する提供された企業情報に対する理解がないことを示唆しています。他方では、質問の主題が複数回提示されましたが、適切な回答も提案せず、説明責任を放棄していたため、明らかに対象企業の知識が不足しているようでした。
+
+欠損項目キー: ["id","basic_info","
+
+[デバッグ] 抽出されたキー文字列: [["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 2, FP: 6, FN: 0
+  Precision: 0.500, Recall: 1.000, Accuracy: 0.800, F1: 0.667
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者H2も同様の問題を見せており、ほぼ全ての質問に対して同じ応答(「Connection Error」)を行ってしまいました。この行動から推測すると、彼女は提供された企業情報に対する十分な理解を有していない可能性があります。また、彼女は何度か質問の再現を試みたようですが、前向きな意見や回答は無く、また、過去に提供されてきた企業情報のうち多くの部分を把握していなかったことが窺
+
+[デバッグ] 抽出されたキー文字列: [["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 4, TN: 1, FP: 9, FN: 0
+  Precision: 0.308, Recall: 1.000, Accuracy: 0.500, F1: 0.471
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者H1も同じ状況に見舞われており、質問に対して「Connection Error」という回答しか残さず、企業情報の提供された要素の大半については不明瞭であることが分かりました。彼はそれぞれの質問に対して、前の質問と同じ応答を行ってしまったので、企業情報の理解が深められていませんでした。
+
+欠損項目キー: ["id","basic_info","establishment"
+
+[デバッグ] 抽出されたキー文字列: [["id","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'employees', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 2, FP: 12, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.200, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.500
+平均F1スコア: 0.379
+平均Precision: 0.269
+平均Recall: 0.667
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.800
+  Precision: 0.500
+  Recall: 1.000
+  F1スコア: 0.667
+  TP: 6, TN: 2, FP: 6, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['establishment', 'hq', 'capital', 'business', 'employees', 'vision']
+
+学生H2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.308
+  Recall: 1.000
+  F1スコア: 0.471
+  TP: 4, TN: 1, FP: 9, FN: 0
+  正しく検出された欠損 (TP): ['id', 'basic_info', 'plan', 'advantages']
+  誤検出された欠損 (FP): ['establishment', 'hq', 'capital', 'partnerships', 'business', 'recruit', 'employees', 'news', 'vision']
+
+学生H1 (準備レベル: high):
+  精度: 0.200
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 2, FP: 12, FN: 0
+  誤検出された欠損 (FP): ['id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'employees', 'basic_info', 'news', 'vision', 'advantages']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.800
+  medium: 0.500
+  high: 0.200
+デバッグ: ラウンド 9 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 9 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.399594 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.933591 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.427749 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.866407 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.481175 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.776239 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 10 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この企業における《'recruit'》という項ですが、その意味合いと利用法はどのようなものであり、今回の採用プロセスの流れにおいてどのような重要性を持っていますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.484053 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.962865 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 10 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 10 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 10 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+3. 学生H3
+2. 学生H2
+1. 学生H1
+
+※候補者全員がAPI呼び出しが失敗しているため、企業に関する質問に対する回答が得られなかったことに注意しましょう。この場合、ランキングは各候補者の応答能力や熱意ではなく、彼等の対応不足を反映した結果となります。
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 10 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は質問に対する明確な回答を行わず、API 呼び出しエラー: Connection error のように回答を繰り返していた。これは、質問に対する理解が不足していることを示唆している。また、質問に対する回答がないため、提供された企業情報に関する知識も十分ではないようだ。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H2:
+
+分析: 候補者は質問に対する回答を提供しているが、回答は不完全または間違っている。たとえば、「この会社のビジョンとはどのように関連していますか?」には「API 呼び出しエラー: Connection error」のような回答しか得られなかった。このような回答から、質問に対する理解が不足していることを推測できる。また、「この企業の基本情報についてどう思っていますか?」には何も回答されず、質問に対する回答が存在しないことも問題となっていた。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+
+学生H1:
+
+分析: 候補者は質問に対応せず、何も回答しなかった。その結果、企業情報に関する知識が十分に蓄積できないままであった。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は質問に対する明確な回答を行わず、API 呼び出しエラー: Connection error のように回答を繰り返していた。これは、質問に対する理解が不足していることを示唆している。また、質問に対する回答がないため、提供された企業情報に関する知識も十分ではないようだ。
+
+欠損項目キー: ["basic_info","business","vision","news","
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 5, TN: 1, FP: 3, FN: 1
+  Precision: 0.625, Recall: 0.833, Accuracy: 0.600, F1: 0.714
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者は質問に対する回答を提供しているが、回答は不完全または間違っている。たとえば、「この会社のビジョンとはどのように関連していますか?」には「API 呼び出しエラー: Connection error」のような回答しか得られなかった。このような回答から、質問に対する理解が不足していることを推測できる。また、「この企業の基本情報についてどう思っていますか?」には何も回答されず
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 3, TN: 1, FP: 5, FN: 1
+  Precision: 0.375, Recall: 0.750, Accuracy: 0.400, F1: 0.500
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者は質問に対応せず、何も回答しなかった。その結果、企業情報に関する知識が十分に蓄積できないままであった。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 2, FP: 8, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.200, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.400
+平均F1スコア: 0.405
+平均Precision: 0.333
+平均Recall: 0.528
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.625
+  Recall: 0.833
+  F1スコア: 0.714
+  TP: 5, TN: 1, FP: 3, FN: 1
+  正しく検出された欠損 (TP): ['plan', 'partnerships', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['recruit', 'vision', 'business']
+  見逃された欠損 (FN): ['id']
+
+学生H2 (準備レベル: medium):
+  精度: 0.400
+  Precision: 0.375
+  Recall: 0.750
+  F1スコア: 0.500
+  TP: 3, TN: 1, FP: 5, FN: 1
+  正しく検出された欠損 (TP): ['basic_info', 'plan', 'advantages']
+  誤検出された欠損 (FP): ['partnerships', 'business', 'recruit', 'news', 'vision']
+  見逃された欠損 (FN): ['id']
+
+学生H1 (準備レベル: high):
+  精度: 0.200
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 2, FP: 8, FN: 0
+  誤検出された欠損 (FP): ['plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.400
+  high: 0.200
+デバッグ: ラウンド 10 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 10 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 11 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この会社の『アドバンテージ』とはどのように関連しており、今後自身のキャリア発展において受け取れるメリットは何であり、彼らが提供する独自の価値観や強みが自分たちの職場での成功へどのように貢献するのか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.395365 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.836350 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.408927 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.844839 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.481317 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.833894 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 11 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 11 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+この問題では、各候補者の回答から得られるデータを使用して、企業に対する理解の程度、回答の具体性、熱意の表現などさまざまな要素を評価します。その結果、志望度が最も低く見られると考えられる候補者を見つけたいと存じます。
+
+まず、すべての質問に対して「API 呼び出しエラー: Connection Error」という同じ返事をした候補者は存在しません。しかし、同一の質問に対して同様の回答（または異なる形式で同じ意味の回答）を複数回繰り返している候補者がいれば、それがその人にとって不適切な回答であることを示唆しています。
+
+候補者1: 「API 呼び出しエラー: Connection Error」を8回以上回答したため、志望度が低くなっている可能性が高い。
+候補者2: 同上 (6回)
+候補者3: 同上 (5回)
+
+また、他の点でも分析を行っていきます。
+
+*   企業に関する質問に対して、特定のアイテムの説明や詳細な回答がない候補者も
+
+============================================================
+
+【ラウンド 11 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果:
+
+3. 学生H3
+2. 学生H2
+1. 学生H1
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 11 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者3は質問に応じるたびにAPI呼び出しエラー: Connection errorとしか答えてこなかったため、企業に関する基本的な情報やサービスなど多くの部分に関する知識がほぼ皆無であると考えられます。また、質問に直接対処せず回答が繰り返されていたこともその一因となっていると想定される。
+
+欠損項目キー:
+["id","name","basic_info","established","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+---
+
+学生H2:
+
+分析: 候補者2も同様に質問に対する答えが不十分であったようだ。基本情報やビジオン達成方法などの部分では回答が全く得られない状態だった。このように情報を得られなくても、それまでの説明から推測しようとしたところでも、間違った表現や混乱していた可能性を見てきた。これは彼が企業に関する知識が浅いことを裏付けており、またこれだけの情報収集を行ってもそれ以上の理解がない状況にあるのであった。
+
+欠損項目キー:
+["id","name","established","capital","employees","hq","news","plan","partnerships","advantages","recruit"]
+
+---
+
+学生H1:
+
+分析: 候補者1は同じ問題に直面しました。しかし彼は他の２人の違いは見つけられました。それは、API呼び出しエラー: Connection errorではなく、明示的に自分の回答できないことを認めた点です。他の２人がそうしそうなるようにすると、何らかの形であれば企業に関する基本的事項やビジョンの達成手段等を少々把握していたはずだ。しかし学生H1はその限界を認め、より深い理解の必要性を口にすることで、潜在的な能力と責任感を持っている意欲的な個性と評価された。ただし、まだ企業に関する知識が未熟化されていることは避免出来なかった。
+
+欠損項目キー: []
+(学生H1は企業に関する知識が未熟化していることは避けたが、最終的には企業に関する知識が未熟化していることに気付き、自己改善の意思表示をした)
+
+最後に、学生
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者3は質問に応じるたびにAPI呼び出しエラー: Connection errorとしか答えてこなかったため、企業に関する基本的な情報やサービスなど多くの部分に関する知識がほぼ皆無であると考えられます。また、質問に直接対処せず回答が繰り返されていたこともその一因となっていると想定される。
+
+欠損項目キー:
+["id","name","basic_info","establ
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","established","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'established', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'established', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 0, FP: 8, FN: 0
+  Precision: 0.429, Recall: 1.000, Accuracy: 0.600, F1: 0.600
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.200
+平均Precision: 0.143
+平均Recall: 0.333
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.429
+  Recall: 1.000
+  F1スコア: 0.600
+  TP: 6, TN: 0, FP: 8, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['hq', 'capital', 'business', 'recruit', 'employees', 'name', 'established', 'vision']
+
+学生H2 (準備レベル: medium):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生H1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.000
+  high: 0.000
+デバッグ: ラウンド 11 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 11 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.430430 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.972549 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.483854 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.849292 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.474345 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.807356 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 12 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この会社のビジネスモデルはどのように構築されており、市場規模や競争環境に対応していくための戦略はどこにあるのでしょうか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.461648 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.935555 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 12 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 12 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 12 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+3. 学生H3
+2. 学生H2
+1. 学生H1
+
+このランキングでは、候補者の回答から明らかなように、すべての候補者が企業に関する質問に対して「API呼び出しエラー: Connection error」という同じ返答を繰り返していたため、企業知識の深さ、回答の具体性、熱意の表現といった評価項目にも満足できない形となった。この状況下では、志望度の高い候補者がいないようである。
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 12 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分類: この候補者は、面接中にAPI呼び出しエラーが繰り返されるため、質問に対する適切な回答を行っていないように見えました。これは、知識が欠如している可能性があります。また、複数の質問に対して同じエラーメッセージを返しました。この状況では、回答が不十分であることを認識する必要があります。
+
+欠損項目キー:
+["id","name","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H2:
+
+分類: この候補者も、面接中同様にAPI呼び出しエラーが頻繁に出現しました。しかし、少々異なるのは、質問ごとに別個のエラーメッセージが出ることでした。その結果、多くの質問に対して明確な回答がないことに留意されます。
+
+欠損項目キー:
+["id","name","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H1:
+
+分類: 最初から最後まで、面接中API呼び出しエラーが起こりました。しかも、質問ごとに同じエラーメッセージが出たことも注目すべき事象の一つです。これにより、質問に対する完全な回答が得られなかったと考えられます。
+
+欠損項目キー: []
+(上記の3名の候補者全員が、問題なく行われた面接とは異なる形態で進んだ面談であったため、"basic_info" の一部の要素である "establishment" に対して、学生 H2 がその面白い説明を残さずに行っただけで、他のすべての部分は正常に進行したため、欠落のキーは全部 "" と表示された)
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分類: この候補者は、面接中にAPI呼び出しエラーが繰り返されるため、質問に対する適切な回答を行っていないように見えました。これは、知識が欠如している可能性があります。また、複数の質問に対して同じエラーメッセージを返しました。この状況では、回答が不十分であることを認識する必要があります。
+
+欠損項目キー:
+["id","name","basic_info","establishme
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 0, FP: 8, FN: 0
+  Precision: 0.429, Recall: 1.000, Accuracy: 0.600, F1: 0.600
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分類: この候補者も、面接中同様にAPI呼び出しエラーが頻繁に出現しました。しかし、少々異なるのは、質問ごとに別個のエラーメッセージが出ることでした。その結果、多くの質問に対して明確な回答がないことに留意されます。
+
+欠損項目キー:
+["id","name","basic_info","establishment","capital","employees","hq","busin
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","establishment","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'id', 'establishment', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 4, TN: 0, FP: 10, FN: 0
+  Precision: 0.286, Recall: 1.000, Accuracy: 0.400, F1: 0.444
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分類: 最初から最後まで、面接中API呼び出しエラーが起こりました。しかも、質問ごとに同じエラーメッセージが出たことも注目すべき事象の一つです。これにより、質問に対する完全な回答が得られなかったと考えられます。
+
+欠損項目キー: []
+(上記の3名の候補者全員が、問題なく行われた面接とは異なる形態で進んだ面談であったため、"basic_info" の一部の要素である "establi
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 0, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.348
+平均Precision: 0.238
+平均Recall: 0.667
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.429
+  Recall: 1.000
+  F1スコア: 0.600
+  TP: 6, TN: 0, FP: 8, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['establishment', 'hq', 'capital', 'business', 'recruit', 'employees', 'name', 'vision']
+
+学生H2 (準備レベル: medium):
+  精度: 0.400
+  Precision: 0.286
+  Recall: 1.000
+  F1スコア: 0.444
+  TP: 4, TN: 0, FP: 10, FN: 0
+  正しく検出された欠損 (TP): ['id', 'basic_info', 'plan', 'advantages']
+  誤検出された欠損 (FP): ['establishment', 'hq', 'capital', 'partnerships', 'business', 'recruit', 'employees', 'name', 'news', 'vision']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 0, FN: 0
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.400
+  high: 1.000
+デバッグ: ラウンド 12 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 12 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 13 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この会社では、「ビジョン」と「プラン」は密接に関係しています。この会社のビジョンが達成されるために、どのような具体的な行動や決定が計画されており、会社内の誰がその責任を持っているのでしょうか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.381597 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.957799 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.448014 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.939612 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.418812 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.902573 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 13 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 13 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 13 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果:
+
+1. 学生H1
+2. 学生H2
+3. 学生H3
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 13 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+**学生H3**
+分類:
+学習課題または理解障壁により、回答は適切ではないように見えますが、明らかな欠陥もありません。しかし、面接中、何度も同じ質問をすることで、回答が不十分であることを示唆しています。
+欠損項目キー: []
+
+---
+
+**学生H2**
+
+分析:
+この候補者は、複数の質問に対してAPI呼び出しエラーに関する回答しか残っていません。これは、質問に対する意図された回答ではなく、面接中に問題が生じたための一過性の出来事であれば良いのですが、再現されない可能性があります。質問に対する正しい回答がないことから、知識の欠如が疑われます。また、質問に対する正しくて明快な回答がいずれもないことも考えられます。
+欠損項目キー: ['basic_info', 'business', 'plan','partnerships', 'advantages']
+
+---
+
+**学生H1**
+
+分析:
+この候補者は、複数の質問に対してAPI呼び出しエラーに関する回答しか残っていません。これは、質問に対する意図された回答ではなく、面接中に問題が生じたための一過性の出来事であれば良いのですが、再現されない可能性があります。質問に対する正しい回答がないことから、知識の欠如が疑われますまた、質問に対する正しくて明快な回答がいずれもうかないことも考えられます。
+欠損項目キー: ['basic_info', 'business', 'plan','partnerships', 'advantages']
+
+[デバッグ] セクション数: 1
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+**学生H3**
+分類:
+学習課題または理解障壁により、回答は適切ではないように見えますが、明らかな欠陥もありません。しかし、面接中、何度も同じ質問をすることで、回答が不十分であることを示唆しています。
+欠損項目キー: []
+
+---
+
+**学生H2**
+
+分析:
+この候補者は、複数の質問に対してAPI呼び出しエラーに関する回答しか残っていません。これは、質問に対する意図された回答ではなく、面接
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.133
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['id', 'plan', 'news', 'basic_info', 'partnerships', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生H1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.000
+  high: 0.000
+デバッグ: ラウンド 13 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 13 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.389190 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.947006 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.415778 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.986196 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.430598 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.842157 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 14 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この会社のビジネスモデルの構造とそれに伴う変遷について説明してほしいと思います。これには、市場規模や競争環境に対処するための長期的な戦略がどのように形作られているのか、および短期的にも使える戦略がいかに多様かを教えて頂きたいのです。
+INFO:openai._base_client:Retrying request to /chat/completions in 0.425943 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.915897 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 14 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 14 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 14 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果:
+
+1. 学生H3
+2. 学生H2
+3. 学生H1
+
+上記のランキングは、候補者全員が質問に回答せず、代わりにAPI呼び出しのエラーメッセージを返したため、企業に関する知識や熱意の表示がないことを考慮しました。その他の回答も不明な点が多いように見えました。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 14 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析:
+* 候補者H3は、質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていません。
+* 彼氏は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+学生H2:
+
+分析:
+* 候補者H2も同様に質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていました。
+* 彼女は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","adavntages","recruit"]
+
+学生H1:
+
+分析:
+* 候補者H1も同じように質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていました。
+* 彼氏は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析:
+* 候補者H3は、質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていません。
+* 彼氏は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","part
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 5, TN: 1, FP: 3, FN: 1
+  Precision: 0.625, Recall: 0.833, Accuracy: 0.600, F1: 0.714
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析:
+* 候補者H2も同様に質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていました。
+* 彼女は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","pa
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","adavntages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'adavntages', 'recruit', 'basic_info', 'news', 'vision'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'adavntages', 'recruit', 'basic_info', 'news', 'vision'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 2, TN: 1, FP: 6, FN: 2
+  Precision: 0.250, Recall: 0.500, Accuracy: 0.300, F1: 0.333
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析:
+* 候補者H1も同じように質問に対して企業情報に触れないままAPI呼び出しエラー: Connection error. としか答えていました。
+* 彼氏は企業情報に関する質問に正しく答えることができないため、企業情報に関する知識が十分ではないと考えられます。
+
+欠損項目キー: ["basic_info","business","vision","news","plan","
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 2, FP: 8, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.200, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.367
+平均F1スコア: 0.349
+平均Precision: 0.292
+平均Recall: 0.444
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.625
+  Recall: 0.833
+  F1スコア: 0.714
+  TP: 5, TN: 1, FP: 3, FN: 1
+  正しく検出された欠損 (TP): ['plan', 'partnerships', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['recruit', 'vision', 'business']
+  見逃された欠損 (FN): ['id']
+
+学生H2 (準備レベル: medium):
+  精度: 0.300
+  Precision: 0.250
+  Recall: 0.500
+  F1スコア: 0.333
+  TP: 2, TN: 1, FP: 6, FN: 2
+  正しく検出された欠損 (TP): ['basic_info', 'plan']
+  誤検出された欠損 (FP): ['news', 'partnerships', 'business', 'recruit', 'adavntages', 'vision']
+  見逃された欠損 (FN): ['id', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.200
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 2, FP: 8, FN: 0
+  誤検出された欠損 (FP): ['plan', 'partnerships', 'business', 'recruit', 'basic_info', 'news', 'vision', 'advantages']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.300
+  high: 0.200
+デバッグ: ラウンド 14 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 14 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 15 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この企業の『アドバンテージ』にある独自の価値観や強みを活かし、個々のキャリア発展を促進させるための、現状の作業環境内での具体的な施策やインフラストラクチャーはありますか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.453351 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.841685 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.458095 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.770908 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.437633 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.927494 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 15 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 15 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H1
+
+次の個別質問の対象: 学生H1
+============================================================
+
+【ラウンド 15 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+1. 学生H1
+2. 学生H2
+3. 学生H3
+
+精度スコア: 0.000
+============================================================
+
+【ラウンド 15 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析:
+学習状況から考えられる可能性はあるが、
+* 「API呼び出しエラー: Connection error」の繰り返し回答は、質問に対する意図的な回答がないことを示唆している
+* 質問に対する明確な理解も見られず、企業に関する主要な情報である 'basic_info', 'business', 'plan','partnerships','advantages' に関わる部分だけが不十分であったように表れた
+また、他の候補者同様に質問に対する意図的な回答がなく、質問に対する認識も乏しくあったため、評価が難しかった
+
+欠損項目キー: ["basic_info","business","plan","partnerships","advantages"]
+
+student H2 :
+
+分析:
+学生H3 と似た問題点が存在する
+まず、質問に対する明確な理解も見られないことに加えて、学生H2 は「基本情報」や「ビジネスモデル」の説明もなかった。また、"news" の事項に触れても、該当の情報が不十分だった
+
+欠損項目キー: ["basic_info","business","plan","news"]
+
+student H1 :
+
+分析:
+学生H3 と同じく質問に対する明確な理解もないのに加えて、
+学生H1 も学生H2 と同じく「news」の事項に触れても該当の情報が不十分だった
+その他の主な項目も学生H3 と同じく不十分していた
+
+欠損項目キー: ["basic_info","business","plan","partnerships","advantages","news"]
+最終結果的に、すべての学生の回答が不完全で、学生H3 の回答は最も不完全だった
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析:
+学習状況から考えられる可能性はあるが、
+* 「API呼び出しエラー: Connection error」の繰り返し回答は、質問に対する意図的な回答がないことを示唆している
+* 質問に対する明確な理解も見られず、企業に関する主要な情報である 'basic_info', 'business', 'plan','partnerships','advantages' に関わる部分だ
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","plan","partnerships","advantages"]]
+[デバッグ] パース成功: 検出された欠損キー = {'partnerships', 'plan', 'business', 'basic_info', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'partnerships', 'plan', 'business', 'basic_info', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 4, TN: 3, FP: 1, FN: 2
+  Precision: 0.800, Recall: 0.667, Accuracy: 0.700, F1: 0.727
+
+[デバッグ] 抽出された候補者名（生）: 'studentH2'
+[デバッグ] 数字部分でマッチ: 'studentH2' → '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+student H2 :
+
+分析:
+学生H3 と似た問題点が存在する
+まず、質問に対する明確な理解も見られないことに加えて、学生H2 は「基本情報」や「ビジネスモデル」の説明もなかった。また、"news" の事項に触れても、該当の情報が不十分だった
+
+欠損項目キー: ["basic_info","business","plan","news"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","plan","news"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'news', 'plan', 'business'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'basic_info', 'news', 'plan', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 2, TN: 4, FP: 2, FN: 2
+  Precision: 0.500, Recall: 0.500, Accuracy: 0.600, F1: 0.500
+
+[デバッグ] 抽出された候補者名（生）: 'studentH1'
+[デバッグ] 数字部分でマッチ: 'studentH1' → '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+student H1 :
+
+分析:
+学生H3 と同じく質問に対する明確な理解もないのに加えて、
+学生H1 も学生H2 と同じく「news」の事項に触れても該当の情報が不十分だった
+その他の主な項目も学生H3 と同じく不十分していた
+
+欠損項目キー: ["basic_info","business","plan","partnerships","advantages","news"]
+最終結果的に
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business","plan","partnerships","advantages","news"]]
+[デバッグ] パース成功: 検出された欠損キー = {'partnerships', 'plan', 'business', 'basic_info', 'news', 'advantages'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'partnerships', 'plan', 'business', 'basic_info', 'news', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 4, FP: 6, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.567
+平均F1スコア: 0.409
+平均Precision: 0.433
+平均Recall: 0.389
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.700
+  Precision: 0.800
+  Recall: 0.667
+  F1スコア: 0.727
+  TP: 4, TN: 3, FP: 1, FN: 2
+  正しく検出された欠損 (TP): ['plan', 'basic_info', 'partnerships', 'advantages']
+  誤検出された欠損 (FP): ['business']
+  見逃された欠損 (FN): ['id', 'news']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.500
+  Recall: 0.500
+  F1スコア: 0.500
+  TP: 2, TN: 4, FP: 2, FN: 2
+  正しく検出された欠損 (TP): ['basic_info', 'plan']
+  誤検出された欠損 (FP): ['news', 'business']
+  見逃された欠損 (FN): ['id', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 6, FN: 0
+  誤検出された欠損 (FP): ['plan', 'news', 'basic_info', 'partnerships', 'business', 'advantages']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.700
+  medium: 0.600
+  high: 0.400
+デバッグ: ラウンド 15 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 15 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.403076 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.935965 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.477957 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.930642 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.397560 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.843617 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 16 (個別質問) ---
+対象候補者: 学生H1
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H1へ）: この企業における『基本情報』についてもっと詳しくお聞きしたいと思います。これは、他の多くの企業と同様に、重要な基盤となる情報ですが、この候補者の理解度を測る上で、まだ十分に話題に上げられていないようです。また、『基本情報』は、企業の根本的な特徴や特徵を表すため、個々のキャリア発展を推進させるためのインフラストラクチャーの構築にも影響します。
+INFO:openai._base_client:Retrying request to /chat/completions in 0.466195 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.839405 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 16 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 16 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H1
+
+次の個別質問の対象: 学生H1
+============================================================
+
+【ラウンド 16 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+この問題を解決するために、各候補者の回答を分析し、ランキングを行います。
+
+**ランキング結果**
+
+1. **学生H3**: 候補者1はすべての質問に対してAPI呼び出しのエラーを返しました。その結果、志望度が極端に低くなりました。
+2. **学生H2**: 候補者2もまた、同じ理由でAPI呼び出しのエラーを返しました。しかし、学習曲線的に考えられるように、志望度が僅かに高い傾向があります。
+3. **学生H1**: 候補者3もまた、API呼び出しのエラーを返しました。ただし、他の2つの候補者よりも少しだけ回答が見つかりました。
+
+これらの結果から、志望度が低い順に、次の方がいます:
+
+1. 学生 H3
+2. 学生 H2
+3. 学生 H1
+
+最終的な答えは：
+
+1. 学生 H3
+2. 学生 H2
+3. 学生 H1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 16 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者H3は、質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。その結果、彼女は企業に関する基本情報やビジョン、プランなど、いくつかの主要な側面について明確な理解がないように見えました。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+学生H2:
+
+分析: 候補者H2も同じ状況でした。彼は質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。したがって、彼は企業に関する主な側面について明確な理解がないように見えました。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+学生H1:
+
+分析: 候補者H1は質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。ただし、質問が再度投げられるたびに、質問に対する回答は残念ながらAPI呼び出しエラーであるままになりました。さらに、質問7の後に追加された質問13において、彼女は「基本情報」の部分について少し話しました。しかし、他の質問に対して、API呼び出しエラー以外の回答を提示するようになっていませんでした。
+
+欠損項目キー: ["基本情報","ビジョン","プラン" ]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者H3は、質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。その結果、彼女は企業に関する基本情報やビジョン、プランなど、いくつかの主要な側面について明確な理解がないように見えました。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","ビジョン","プラン"]]
+[デバッグ] パース成功: 検出された欠損キー = {'ビジョン', '基本情報', 'プラン'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'ビジョン', '基本情報', 'プラン'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 4, FP: 3, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者H2も同じ状況でした。彼は質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。したがって、彼は企業に関する主な側面について明確な理解がないように見えました。
+
+欠損項目キー: ["基本情報","ビジョン","プラン"]
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","ビジョン","プラン"]]
+[デバッグ] パース成功: 検出された欠損キー = {'ビジョン', '基本情報', 'プラン'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'ビジョン', '基本情報', 'プラン'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 0, TN: 6, FP: 3, FN: 4
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.600, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者H1は質問に対してAPI呼び出しエラー: Connection error. としか回答しませんでした。ただし、質問が再度投げられるたびに、質問に対する回答は残念ながらAPI呼び出しエラーであるままになりました。さらに、質問7の後に追加された質問13において、彼女は「基本情報」の部分について少し話しました。しかし、他の質問に対して、API呼び出しエラー以外の回答を提示す
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","ビジョン","プラン" ]]
+[デバッグ] パース成功: 検出された欠損キー = {'ビジョン', '基本情報', 'プラン'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'ビジョン', '基本情報', 'プラン'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 3, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.667
+平均F1スコア: 0.000
+平均Precision: 0.000
+平均Recall: 0.000
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 3, FN: 6
+  誤検出された欠損 (FP): ['ビジョン', '基本情報', 'プラン']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 6, FP: 3, FN: 4
+  誤検出された欠損 (FP): ['ビジョン', '基本情報', 'プラン']
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 3, FN: 0
+  誤検出された欠損 (FP): ['ビジョン', '基本情報', 'プラン']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 16 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 16 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 17 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この企業の《共通の未言及項目》" '_基本情報_' " に関する詳細な説明がありますか。また、《基本情報》的内容は今後の私のキャリア開発においてどのような影響を与えるのでしょうか。
+INFO:openai._base_client:Retrying request to /chat/completions in 0.495179 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.970087 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.419809 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.851163 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.459252 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.857194 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 17 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 17 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H3
+
+次の個別質問の対象: 学生H3
+============================================================
+
+【ラウンド 17 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+1. 学生H3
+2. 学生H2
+3. 学生H1
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 17 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析:
+この候補者は、質問ごとにAPI呼び出しエラーが表示されました。しかし、質問の流れ中でその情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりと、いくつかの状況からも知識が欠如しているようだ。
+
+欠損項目キー: ["基本情報","business","vision","news","plan","partnerships","advantages","recruit"]
+
+student H2:
+
+分析:
+この候補者も同じ問題になっているようです。他人の質問に対して、自分の意見や考えなどに関する回答をしたり、自分の経験や学習によって得た事実に依存するように回答していたりしました。その結果、質問の主題とは無関係な回答となり、また複数の分野の知識を必要とする企業の情報を扱っていないこともあります。
+
+欠損項目キー: ["基本情報","news","plan"]
+
+学生H1:
+
+分析:
+この候補者は、質問に対して適切な回答を行われませんでした。それぞれの質問に対してAPI呼び出しエラーが出てしまいました。そして、質問に対して自己の意見や考えを述べても、それは企業の特徴や、企業が抱える課題などの質問とは全く異なる内容でした。
+
+欠損項目キー: ["基本情報"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析:
+この候補者は、質問ごとにAPI呼び出しエラーが表示されました。しかし、質問の流れ中でその情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりと、いくつかの状況からも知識が欠如しているようだ。
+
+欠損項目キー: ["基本情報","business","vision","news","plan","partnerships",
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'基本情報', 'plan', 'partnerships', 'business', 'recruit', 'news', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'基本情報', 'plan', 'partnerships', 'business', 'recruit', 'news', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 4, TN: 1, FP: 4, FN: 2
+  Precision: 0.500, Recall: 0.667, Accuracy: 0.500, F1: 0.571
+
+[デバッグ] 抽出された候補者名（生）: 'studentH2'
+[デバッグ] 数字部分でマッチ: 'studentH2' → '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+student H2:
+
+分析:
+この候補者も同じ問題になっているようです。他人の質問に対して、自分の意見や考えなどに関する回答をしたり、自分の経験や学習によって得た事実に依存するように回答していたりしました。その結果、質問の主題とは無関係な回答となり、また複数の分野の知識を必要とする企業の情報を扱っていないこともあります。
+
+欠損項目キー: ["基本情報","news","plan"]
+
+[デバッグ] 抽出されたキー文字列: [["基本情報","news","plan"]]
+[デバッグ] パース成功: 検出された欠損キー = {'plan', 'news', '基本情報'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'plan', 'news', '基本情報'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 1, TN: 5, FP: 2, FN: 3
+  Precision: 0.333, Recall: 0.250, Accuracy: 0.600, F1: 0.286
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析:
+この候補者は、質問に対して適切な回答を行われませんでした。それぞれの質問に対してAPI呼び出しエラーが出てしまいました。そして、質問に対して自己の意見や考えを述べても、それは企業の特徴や、企業が抱える課題などの質問とは全く異なる内容でした。
+
+欠損項目キー: ["基本情報"]
+
+[デバッグ] 抽出されたキー文字列: [["基本情報"]]
+[デバッグ] パース成功: 検出された欠損キー = {'基本情報'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'基本情報'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 10, FP: 1, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 1.000, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.700
+平均F1スコア: 0.286
+平均Precision: 0.278
+平均Recall: 0.306
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.500
+  Precision: 0.500
+  Recall: 0.667
+  F1スコア: 0.571
+  TP: 4, TN: 1, FP: 4, FN: 2
+  正しく検出された欠損 (TP): ['plan', 'partnerships', 'news', 'advantages']
+  誤検出された欠損 (FP): ['vision', '基本情報', 'recruit', 'business']
+  見逃された欠損 (FN): ['id', 'basic_info']
+
+学生H2 (準備レベル: medium):
+  精度: 0.600
+  Precision: 0.333
+  Recall: 0.250
+  F1スコア: 0.286
+  TP: 1, TN: 5, FP: 2, FN: 3
+  正しく検出された欠損 (TP): ['plan']
+  誤検出された欠損 (FP): ['news', '基本情報']
+  見逃された欠損 (FN): ['id', 'basic_info', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 1.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 10, FP: 1, FN: 0
+  誤検出された欠損 (FP): ['基本情報']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.500
+  medium: 0.600
+  high: 1.000
+デバッグ: ラウンド 17 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 17 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.480177 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.786360 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.442557 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.760165 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.393660 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.982502 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 18 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この会社の《基本情報》における、個人データ保護条例などの法律事項に関する注意書きやガイドラインは、どのようなものですか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.439539 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.988242 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 18 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 18 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+この問題を解決するために、各候補者の回答を分析しましょう。
+
+候補者1:
+* 企業知識の深さ: 非常に浅い (すべての質問にAPI呼び出しエラーが出た)
+* 回答の具体性: 非存在
+* 熱意の表現: 非存在
+
+これらの点から、候補者1は非常に不適切であると結論付けることができます。
+
+候補者2:
+* 企業知識の深さ: 浅い (一部の質問にAPI呼び出しエラーが出た)
+* 回答の具体性: 非存在
+* 熱意の表現: 非存在
+
+ここでも、候補者2は不適切であると評価されます。
+
+候補者3:
+* 企業知識の深さ: 浮動している (一部の質問にAPI呼び出しエラーが出たが、一部の質問には回答があった)
+* 回答の具体性: 非存在
+* 熱意の表現: 非存在
+
+しかし、候補者3は候補者1および候補者2よりも少し良い印象を残
+
+============================================================
+
+【ラウンド 18 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング結果：
+
+1. 学生H3
+2. 学生H2
+3. 学生H1
+
+注：すべての候補者がAPI呼び出しのエラーを繰り返していることに留意してください。そのため、回答の評価は困難になりました。しかし、質問に対する回答の数や回答の内容から推定すると、次の方程式が得られます。
+
+ランク付け: (質問数 / 回答数) + (回答の具体性/熱意の表現)
+
+このスコアを使用して、各候補者のランキングルーティンを計算しました。
+
+学生H3: (14/0) = ∞ (無限)
+学生H2: (10/0) = ∞
+学生H1: (9/0) = ∞
+
+ただし、すべての候補者がAPI呼び出しのエラーを繰り返していたため、実際のスコアを算出できない状況となりました。したがって、ランキング結果は完全ではない可能性があります。
+
+しかし、問題文から判断できるように、学生 H3 の回答はまったくないのに対し、学生 H1 と学生 H2 は少なくとも 8 問以上の質問に対して同じ回答を繰り返していることを考えると、学生 H3 がランク 1 位であると結論付けることができます。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 18 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析:
+この候補者は、すべての質問に対してAPI呼び出しエラー: Connection error. としか答えていませんでした。その結果、企業情報のどの部分も明確に把握できない状態となりました。
+
+
+欠損項目キー: ["id","name","basic_info","established","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+---
+
+学生H2:
+
+分析:
+これもまた同じ問題が起こっていました。質問に対してAPI呼び出しエラー: Connection error. が繰り返され、企業情報の要素ごとに理解不能な状況になりました。
+
+
+欠損項目キー: ["id","name","basic_info","established","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]
+
+
+
+---
+学生H1:
+
+
+分析:
+この候補者も同じように振る舞いました。質問全てにAPI呼び出しエラー: Connection error. の答えが出たことで、企業情報の要素間のつながりと、キャリア発展などに関わる情報を把握する必要性が増しました。
+
+
+
+欠損項目キー: ["id","name","basic_info","established","capital","employees","hq","news","plan","partnerships","advantages","recruit"]
+
+[デバッグ] セクション数: 3
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析:
+この候補者は、すべての質問に対してAPI呼び出しエラー: Connection error. としか答えていませんでした。その結果、企業情報のどの部分も明確に把握できない状態となりました。
+
+
+欠損項目キー: ["id","name","basic_info","established","capital","employees","hq","business","visi
+
+[デバッグ] 抽出されたキー文字列: [["id","name","basic_info","established","capital","employees","hq","business","vision","news","plan","partnerships","advantages","recruit"]]
+[デバッグ] パース成功: 検出された欠損キー = {'id', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'established', 'vision', 'advantages'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'id', 'hq', 'capital', 'plan', 'partnerships', 'business', 'recruit', 'employees', 'basic_info', 'name', 'news', 'established', 'vision', 'advantages'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 6, TN: 0, FP: 8, FN: 0
+  Precision: 0.429, Recall: 1.000, Accuracy: 0.600, F1: 0.600
+
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+[デバッグ] 警告: 候補者名を抽出できませんでした。セクションの最初の行: -
+
+--- 評価3: 全体統計 ---
+平均精度: 0.200
+平均F1スコア: 0.200
+平均Precision: 0.143
+平均Recall: 0.333
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.600
+  Precision: 0.429
+  Recall: 1.000
+  F1スコア: 0.600
+  TP: 6, TN: 0, FP: 8, FN: 0
+  正しく検出された欠損 (TP): ['id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages']
+  誤検出された欠損 (FP): ['hq', 'capital', 'business', 'recruit', 'employees', 'name', 'established', 'vision']
+
+学生H2 (準備レベル: medium):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 4
+  見逃された欠損 (FN): ['id', 'basic_info', 'plan', 'advantages']
+  注意: LLM output for this candidate was not found or failed to parse.
+
+学生H1 (準備レベル: high):
+  精度: 0.000
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 0, FP: 0, FN: 0
+  注意: LLM output for this candidate was not found or failed to parse.
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.600
+  medium: 0.000
+  high: 0.000
+デバッグ: ラウンド 18 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 18 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 19 (全体質問) ---
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（全員へ）: この企業の《基本情報》' " のうち、個人のキャリア発展にとってどのような意味合いがあり、また会社内部でのそれらの情報の扱われ方はいかにされているのでしょうか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.481462 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.838411 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.388591 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.770370 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.498803 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.967454 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 19 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 19 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+この質問に回答するには、各候補者の回答から得られる情報を分析する必要があります。しかし、問題文を見てみると、すべての候補者からの回答が同じであることに気づくことができません。そのため、状況を想定しながら、次の方針で分析を行います。
+
+まず、企業側の立場になってみました。各候補者がインターネット上に公開されたコンテンツ（たとえば、ウェブサイトなど）ではなくても、直接的に提案したり、提供したりすることを期待されていなかった場合、全員がAPI呼び出しエラーを返しているように見えるのは、何か不自然ではないでしょうか。それぞれの回答は、複数回繰り返されていることも考えにいただければ幸いです。
+
+ここまで来たところで、どちらかの候補者を選ぶには、一般的な認識と前向きな評価の根拠がない限り、それ以上行かないといけないでしょう。つまり、残念ながら、志望度が低いと判断できる候補者は存在しません。
+
+しかし、最終的な答えを出す必要がある場合は、候
+
+============================================================
+
+【ラウンド 19 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+志望度が低い順にランク付けすると次のようになります。
+
+1. 学生H3
+2. 学生H2
+3. 学生H1
+
+この結果は、すべての質問に対してAPI呼び出しが失敗していることを考えると、予想通りです。しかし、それ以上の分析を行えば、各候補者の回答が空いているように見えたり、または質問に対する理解不足が明らかなように見えたりと異なる印象が得られる可能性があります。ただし、ランク付けの基準である企業知識の深さ、回答の具体性、熱意の表現などからみて、全員がこれまで経験したことなく、これだけの質問に答える必要があった場合は、学習コンテキスト下で十分な知識がないケースであれば、ランク付けは可能です。
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 19 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者は質問に対して明確な回答を行わず、API呼び出しエラーが繰り返されました。その結果、会社の基本情報やビジョンなど、重要な要素に関する知識が不足しているように見えます。
+
+欠損項目キー: ["basic_info", "business", "vision"]
+
+学生H2:
+
+分析: 値打ちを認めない答えを提示しました。しかし、問題が起こっていることに気付いた後に、より良い提案を行えないのは困難だ。たとえば、適切な回答がない場合は、さらに質問をすることで、潜在的に彼らが持つ知識の幅を知る可能性も増します。
+
+欠損項目キー: ["basic_info","business", "vision", "advsntges"]
+
+学生H1:
+
+分析: 倫理的な意図から、候補者は質問に対して明確な回答行わなかった。その結果、会社の基本情報やビジョンなど、重要な要素に関する知識が不足しているように見えます。
+
+欠損項目キー: ["basic_info", "business", "vision", "advsntges"]
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者は質問に対して明確な回答を行わず、API呼び出しエラーが繰り返されました。その結果、会社の基本情報やビジョンなど、重要な要素に関する知識が不足しているように見えます。
+
+欠損項目キー: ["basic_info", "business", "vision"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info", "business", "vision"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'vision', 'business'}
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: {'basic_info', 'vision', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 1, TN: 2, FP: 2, FN: 5
+  Precision: 0.333, Recall: 0.167, Accuracy: 0.300, F1: 0.222
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 値打ちを認めない答えを提示しました。しかし、問題が起こっていることに気付いた後に、より良い提案を行えないのは困難だ。たとえば、適切な回答がない場合は、さらに質問をすることで、潜在的に彼らが持つ知識の幅を知る可能性も増します。
+
+欠損項目キー: ["basic_info","business", "vision", "advsntges"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info","business", "vision", "advsntges"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'advsntges', 'vision', 'business'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'basic_info', 'advsntges', 'vision', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 1, TN: 4, FP: 3, FN: 3
+  Precision: 0.250, Recall: 0.250, Accuracy: 0.500, F1: 0.250
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 倫理的な意図から、候補者は質問に対して明確な回答行わなかった。その結果、会社の基本情報やビジョンなど、重要な要素に関する知識が不足しているように見えます。
+
+欠損項目キー: ["basic_info", "business", "vision", "advsntges"]
+
+[デバッグ] 抽出されたキー文字列: [["basic_info", "business", "vision", "advsntges"]]
+[デバッグ] パース成功: 検出された欠損キー = {'basic_info', 'advsntges', 'vision', 'business'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'basic_info', 'advsntges', 'vision', 'business'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 7, FP: 4, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.700, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.500
+平均F1スコア: 0.157
+平均Precision: 0.194
+平均Recall: 0.139
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.300
+  Precision: 0.333
+  Recall: 0.167
+  F1スコア: 0.222
+  TP: 1, TN: 2, FP: 2, FN: 5
+  正しく検出された欠損 (TP): ['basic_info']
+  誤検出された欠損 (FP): ['business', 'vision']
+  見逃された欠損 (FN): ['id', 'partnerships', 'plan', 'news', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.250
+  Recall: 0.250
+  F1スコア: 0.250
+  TP: 1, TN: 4, FP: 3, FN: 3
+  正しく検出された欠損 (TP): ['basic_info']
+  誤検出された欠損 (FP): ['advsntges', 'business', 'vision']
+  見逃された欠損 (FN): ['id', 'plan', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.700
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 7, FP: 4, FN: 0
+  誤検出された欠損 (FP): ['basic_info', 'advsntges', 'vision', 'business']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.300
+  medium: 0.500
+  high: 0.700
+デバッグ: ラウンド 19 (全体質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+ラウンド 19 完了。次のラウンドに進みます...
+============================================================
+INFO:openai._base_client:Retrying request to /chat/completions in 0.446856 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.914243 seconds
+
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.419757 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.850574 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H2: API呼び出しエラー: Connection error.
+INFO:openai._base_client:Retrying request to /chat/completions in 0.423300 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.884868 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H1: API呼び出しエラー: Connection error.
+
+--- ラウンド 20 (個別質問) ---
+対象候補者: 学生H3
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+面接官の質問（学生H3へ）: この企業の《基本情報》における、個人データ保護条例などの法律事項に関する注意書きやガイドラインは、どのようなものですか？
+INFO:openai._base_client:Retrying request to /chat/completions in 0.390046 seconds
+INFO:openai._base_client:Retrying request to /chat/completions in 0.822681 seconds
+エラー: API呼び出しエラー: Connection error.
+
+学生H3: API呼び出しエラー: Connection error.
+
+============================================================
+ラウンド 20 (個別質問) 終了後の評価
+============================================================
+
+【ラウンド 20 - 評価1: 最も志望度が低い候補者の選定】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+学生H1
+
+次の個別質問の対象: 学生H1
+============================================================
+
+【ラウンド 20 - 評価2: 志望度ランキング（低い順）】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+ランキング:
+
+3. 学生H1
+2. 学生H2
+1. 学生H3
+
+精度スコア: 1.000
+============================================================
+
+【ラウンド 20 - 評価3: 知識欠損検出】
+Setting `pad_token_id` to `eos_token_id`:128009 for open-end generation.
+
+[デバッグ] LLM出力テキスト（最初の1000文字）:
+学生H3:
+
+分析: 候補者3は、質問に対する回答が明らかに不適切または無意味であることを認めました。しかし、質問に対する正当な回答がないこともわかりません。その一方、候補者はこれまでのところ問題なくインターネットに接続していたはずであり、API呼び出しエラーではないはずです。さらに、学習過程で、複数回同じ質問を受けたにもかかわらず、答えなかったり誤った情報を述べたりしました。このように学習過程で質問に対して適切な回答を行っていない状況を見せた結果、欠如の可能性は高いと考えられる。
+
+欠損項目キー: []
+
+学生H2:
+
+分析: 候補者2も、質問に対する回答が明らかに不適切または無意味であったことに気付いたでしょう。他の2つの候補者と比べて、少しずつ適切な回答を行っていたようです。それでも、質問に対する回答が完全に適切ではなく、不満足とするべきだ。候補者2は質問に対して適切な回答を行っていませんでしたが、質問に対する回答が明らかに不適切または無意味ではありません。
+
+欠損項目キー: ['_basic_info_', 'news', 'plan', 'partnerships']
+
+学生H1:
+
+分析: 候補者1は質問に対して適切な回答を行いませんでした。彼/彼女は質問に対する回答が明らかに不適切または無意味ではありませんでした。ただし、質問に対する回答が完全に適切ではなく、不満足とするべきだ。
+
+欠損項目キー: ['_basic_info_', 'news']
+
+[デバッグ] セクション数: 5
+[デバッグ] 候補者名マップ: ['学生H3', '学生H2', '学生H1']
+
+[デバッグ] 抽出された候補者名（生）: '学生H3'
+[デバッグ] 最終的に使用する候補者名: '学生H3'
+[デバッグ] セクション内容（最初の200文字）:
+学生H3:
+
+分析: 候補者3は、質問に対する回答が明らかに不適切または無意味であることを認めました。しかし、質問に対する正当な回答がないこともわかりません。その一方、候補者はこれまでのところ問題なくインターネットに接続していたはずであり、API呼び出しエラーではないはずです。さらに、学習過程で、複数回同じ質問を受けたにもかかわらず、答えなかったり誤った情報を述べたりしました。このように学習過程で
+
+[デバッグ] 抽出されたキー文字列: [[]]
+[デバッグ] パース成功: 検出された欠損キー = set()
+[デバッグ] 学生H3:
+  実際の欠損キー: {'id', 'partnerships', 'plan', 'basic_info', 'news', 'advantages'}
+  実際の保持キー: {'name', 'recruit', 'vision', 'business'}
+  検出された欠損キー: set()
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H3 のメトリクス:
+  TP: 0, TN: 4, FP: 0, FN: 6
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.400, F1: 0.000
+
+[デバッグ] 抽出された候補者名（生）: '学生H2'
+[デバッグ] 最終的に使用する候補者名: '学生H2'
+[デバッグ] セクション内容（最初の200文字）:
+学生H2:
+
+分析: 候補者2も、質問に対する回答が明らかに不適切または無意味であったことに気付いたでしょう。他の2つの候補者と比べて、少しずつ適切な回答を行っていたようです。それでも、質問に対する回答が完全に適切ではなく、不満足とするべきだ。候補者2は質問に対して適切な回答を行っていませんでしたが、質問に対する回答が明らかに不適切または無意味ではありません。
+
+欠損項目キー: ['_basic_
+
+[デバッグ] 抽出されたキー文字列: [['_basic_info_', 'news', 'plan', 'partnerships']]
+[デバッグ] パース成功: 検出された欠損キー = {'_basic_info_', 'partnerships', 'news', 'plan'}
+[デバッグ] 学生H2:
+  実際の欠損キー: {'id', 'basic_info', 'plan', 'advantages'}
+  実際の保持キー: {'partnerships', 'business', 'recruit', 'name', 'news', 'vision'}
+  検出された欠損キー: {'_basic_info_', 'partnerships', 'news', 'plan'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H2 のメトリクス:
+  TP: 1, TN: 4, FP: 3, FN: 3
+  Precision: 0.250, Recall: 0.250, Accuracy: 0.500, F1: 0.250
+
+[デバッグ] 抽出された候補者名（生）: '学生H1'
+[デバッグ] 最終的に使用する候補者名: '学生H1'
+[デバッグ] セクション内容（最初の200文字）:
+学生H1:
+
+分析: 候補者1は質問に対して適切な回答を行いませんでした。彼/彼女は質問に対する回答が明らかに不適切または無意味ではありませんでした。ただし、質問に対する回答が完全に適切ではなく、不満足とするべきだ。
+
+欠損項目キー: ['_basic_info_', 'news']
+
+[デバッグ] 抽出されたキー文字列: [['_basic_info_', 'news']]
+[デバッグ] パース成功: 検出された欠損キー = {'_basic_info_', 'news'}
+[デバッグ] 学生H1:
+  実際の欠損キー: set()
+  実際の保持キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+  検出された欠損キー: {'_basic_info_', 'news'}
+  全企業キー: {'id', 'plan', 'partnerships', 'business', 'recruit', 'basic_info', 'name', 'news', 'vision', 'advantages'}
+
+[デバッグ] 学生H1 のメトリクス:
+  TP: 0, TN: 9, FP: 2, FN: 0
+  Precision: 0.000, Recall: 0.000, Accuracy: 0.900, F1: 0.000
+
+
+--- 評価3: 全体統計 ---
+平均精度: 0.600
+平均F1スコア: 0.083
+平均Precision: 0.083
+平均Recall: 0.083
+
+--- 評価3: 各候補者ごとの詳細 ---
+
+学生H3 (準備レベル: low):
+  精度: 0.400
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 4, FP: 0, FN: 6
+  見逃された欠損 (FN): ['id', 'plan', 'news', 'basic_info', 'partnerships', 'advantages']
+
+学生H2 (準備レベル: medium):
+  精度: 0.500
+  Precision: 0.250
+  Recall: 0.250
+  F1スコア: 0.250
+  TP: 1, TN: 4, FP: 3, FN: 3
+  正しく検出された欠損 (TP): ['plan']
+  誤検出された欠損 (FP): ['_basic_info_', 'partnerships', 'news']
+  見逃された欠損 (FN): ['id', 'basic_info', 'advantages']
+
+学生H1 (準備レベル: high):
+  精度: 0.900
+  Precision: 0.000
+  Recall: 0.000
+  F1スコア: 0.000
+  TP: 0, TN: 9, FP: 2, FN: 0
+  誤検出された欠損 (FP): ['_basic_info_', 'news']
+
+--- 評価3: 志望度レベル別統計 ---
+  low: 0.400
+  medium: 0.500
+  high: 0.900
+デバッグ: ラウンド 20 (個別質問) のwandbログを記録しました（メトリクス数: 25）
+
+============================================================
+結果を保存しました: /host/home/yanai-lab/Sotsuken24/fujita-h/penguin-paper/mochi/results/interview_result_sim75_20251205_121557.json
+============================================================
+
+--- プロンプトログをwandbに記録しました (150件) ---
