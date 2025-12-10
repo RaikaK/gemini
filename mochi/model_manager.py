@@ -58,6 +58,12 @@ class HuggingFaceModelManager:
                 "description": "Llama 3 ELYZA JP 8B - 日本語最適化モデル",
                 "recommended_gpu": "RTX 4090, A100"
             },
+            "Phi-4-mini-instruct": {
+                "model_id": "microsoft/Phi-4-mini-instruct",
+                "size_gb": 8,
+                "description": "Microsoft Phi-4 Mini Instruct - 軽量高性能モデル",
+                "recommended_gpu": "RTX 3060, RTX 4060"
+            },
             
             # 軽量モデル
             "calm2-3b": {
