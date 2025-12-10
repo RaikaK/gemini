@@ -1,0 +1,39 @@
+[34m[1mwandb[0m: Detected [openai] in use.
+[34m[1mwandb[0m: Use W&B Weave for improved LLM call tracing. Install Weave with `pip install weave` then add `import weave` to the top of your script.
+[34m[1mwandb[0m: For more information, check out the docs at: https://weave-docs.wandb.ai/
+--- 全体実行用wandb runを開始しました (run: llama3_overall_20sims_20251210_005642, model: llama3) ---
+WARNING:spreadsheet_integration:スプレッドシート設定ファイルが見つかりません
+WARNING:spreadsheet_integration:スプレッドシート設定が読み込めません。連携機能は無効です。
+警告: スプレッドシート連携の設定が見つかりません。連携は無効です。
+
+--- ローカルモデル (llama3) を初期化します（全シミュレーションで再利用） ---
+--- ローカルモデル (llama3) の初期化を開始 ---
+モデル llama3 は既にダウンロード済みです
+モデル llama3 を初期化中...
+INFO:model_manager:モデル llama3 (meta-llama/Llama-3.1-8B-Instruct) を初期化中...
+WARNING:model_manager:モデル llama3 のダウンロードが不完全です。ローカルファイルからロードを試みます（欠けているファイルは自動ダウンロードされます）。
+INFO:model_manager:4bit量子化を有効にしました
+You are using the default legacy behaviour of the <class 'transformers.models.llama.tokenization_llama.LlamaTokenizer'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565 - if you loaded a llama tokenizer from a GGUF file you can ignore this message
+ERROR:model_manager:モデル初期化エラー: not a string
+ERROR:model_manager:Traceback (most recent call last):
+  File "/host/home/yanai-lab/Sotsuken24/fujita-h/penguin-paper/mochi/model_manager.py", line 333, in initialize_model
+    tokenizer = AutoTokenizer.from_pretrained(
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/models/auto/tokenization_auto.py", line 1159, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2097, in from_pretrained
+    return cls._from_pretrained(
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2135, in _from_pretrained
+    slow_tokenizer = (cls.slow_tokenizer_class)._from_pretrained(
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2343, in _from_pretrained
+    tokenizer = cls(*init_inputs, **init_kwargs)
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/models/llama/tokenization_llama.py", line 171, in __init__
+    self.sp_model = self.get_spm_processor(kwargs.pop("from_slow", False))
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/transformers/models/llama/tokenization_llama.py", line 198, in get_spm_processor
+    tokenizer.Load(self.vocab_file)
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/sentencepiece/__init__.py", line 961, in Load
+    return self.LoadFromFile(model_file)
+  File "/host/data/space9/fujita-h/penguin-paper/.venv/lib/python3.10/site-packages/sentencepiece/__init__.py", line 316, in LoadFromFile
+    return _sentencepiece.SentencePieceProcessor_LoadFromFile(self, arg)
+TypeError: not a string
+--- ローカルモデルの初期化に失敗 ---
+ローカルモデルの初期化に失敗しました。

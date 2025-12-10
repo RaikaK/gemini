@@ -35,7 +35,7 @@ APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
-MAX_ROUNDS = 5     # 面接ラウンド数（デフォルト）
+MAX_ROUNDS = 20     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
@@ -104,6 +104,6 @@ MODEL_TYPE_MAPPING = {
 LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定
 
 # --- wandb設定 ---
-ENABLE_WANDB = False  # wandbログを有効にするかどうか
+ENABLE_WANDB = True  # wandbログを有効にするかどうか
 WANDB_PROJECT = "penguin-paper-interviews"  # wandbプロジェクト名
 WANDB_ENTITY = None  # wandbエンティティ（Noneの場合はデフォルト）
