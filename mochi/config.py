@@ -83,6 +83,7 @@ AVAILABLE_LOCAL_MODELS = {
     "gemma-2-2b-jpn-it": "google/gemma-2-2b-jpn-it",
     "gemma-3-4b-it": "google/gemma-3-4b-it",
     "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
+    "Phi-4-mini-instruct": "microsoft/Phi-4-mini-instruct",
     # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
 }
@@ -98,6 +99,7 @@ MODEL_TYPE_MAPPING = {
     "qwen2.5-7b-instruct": "qwen",
     "gemma-2-2b-jpn-it": "gemma",  # Gemmaモデルはsystemロールをサポートしていないため、専用処理を使用
     "gemma-3-4b-it": "gemma",  # Gemma 3モデルもsystemロールをサポートしていないため、専用処理を使用
+    "Phi-4-mini-instruct": "phi",
 }
 
 # デフォルトのローカルモデル
