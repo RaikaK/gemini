@@ -35,7 +35,7 @@ APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
-MAX_ROUNDS = 5     # 面接ラウンド数（デフォルト）
+MAX_ROUNDS = 20     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
@@ -83,6 +83,7 @@ AVAILABLE_LOCAL_MODELS = {
     "gemma-2-2b-jpn-it": "google/gemma-2-2b-jpn-it",
     "gemma-3-4b-it": "google/gemma-3-4b-it",
     "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
+    "qwen3-8b": "Qwen/Qwen3-8B",
     "Phi-4-mini-instruct": "microsoft/Phi-4-mini-instruct",
     # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
@@ -99,6 +100,7 @@ MODEL_TYPE_MAPPING = {
     "qwen2.5-7b-instruct": "qwen",
     "gemma-2-2b-jpn-it": "gemma",  # Gemmaモデルはsystemロールをサポートしていないため、専用処理を使用
     "gemma-3-4b-it": "gemma",  # Gemma 3モデルもsystemロールをサポートしていないため、専用処理を使用
+    "qwen3-8b": "qwen",
     "Phi-4-mini-instruct": "phi",
 }
 
