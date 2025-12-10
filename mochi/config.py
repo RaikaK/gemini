@@ -35,7 +35,7 @@ APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
-MAX_ROUNDS = 20     # 面接ラウンド数（デフォルト）
+MAX_ROUNDS = 5     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
