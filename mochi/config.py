@@ -82,9 +82,9 @@ AVAILABLE_LOCAL_MODELS = {
     "qwen2.5-7b-instruct": "Qwen/Qwen2.5-7B-Instruct",
     "gemma-2-2b-jpn-it": "google/gemma-2-2b-jpn-it",
     "gemma-3-4b-it": "google/gemma-3-4b-it",
+    "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
     # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
-    # "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
 }
 
 # モデルタイプのマッピング（チャットテンプレートの形式を決定）
