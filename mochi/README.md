@@ -23,6 +23,16 @@ pip install -r requirements.txt
 python main.py
 ```
 
+APIプロバイダーを指定して実行 (デフォルトはconfig.pyの設定、またはgoogle):
+
+```bash
+# Google API (Gemini) を使用
+python main.py --api-provider google
+
+# OpenAI API を使用
+python main.py --api-provider openai
+```
+
 複数回のシミュレーションを実行:
 
 ```bash
@@ -37,7 +47,8 @@ python main.py -n 3 -s 0
 
 - **シンプルな構成**: WebGUIなし、CLIベースで実行
 - **3者間ロールプレイ**: 面接官1名 + 応募者3名でシミュレーション
-- **API使用**: OpenAI APIを使用（ローカルモデル非対応）
+- **マルチAPI対応**: OpenAI API と Google API (Gemini) の切り替えが可能
+- **ローカルモデル対応**: ローカルLLMを使用したシミュレーションも可能
 - **複数回シミュレーション対応**: コマンドライン引数で実行回数を指定可能
 - **スプレッドシート連携**: オプションでGoogleスプレッドシートに結果を記録
 - **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）
@@ -74,14 +85,56 @@ mochi/
 
 2. **APIキーの設定**
    
-   方法1: 環境変数で設定（推奨）
+   **Mac/Linux (bash/zsh):**
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   $env:OPENAI_API_KEY="your-api-key-here"
+   ```
+
+   **Windows (Command Prompt):**
+   ```cmd
+   set OPENAI_API_KEY=your-api-key-here
+   ```
    
-   方法2: config.pyを直接編集
+   方法2: `local_config.py`を作成（推奨・Git管理外）
+   プロジェクトルートに `local_config.py` を作成し、以下のように記述します。このファイルはGitにコミットされません。
+   （テンプレート `local_config.example.py` をコピーして使用できます）
    ```python
    OPENAI_API_KEY = "your-api-key-here"
+   # 必要に応じて他も上書き可能
+   # API_PROVIDER = "openai"
+   ```
+
+   方法3: config.pyを直接編集（非推奨）
+   ```python
+   OPENAI_API_KEY = "your-api-key-here"
+   ```
+
+3. **Google APIキーの設定 (Gemini使用時)**
+   
+   **Mac/Linux (bash/zsh):**
+   ```bash
+   export GOOGLE_API_KEY="your-google-api-key-here"
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   $env:GOOGLE_API_KEY="your-google-api-key-here"
+   ```
+
+   **Windows (Command Prompt):**
+   ```cmd
+   set GOOGLE_API_KEY=your-google-api-key-here
+   ```
+
+   または `local_config.py` に記述:
+   ```python
+   GOOGLE_API_KEY = "your-google-api-key-here"
+   API_PROVIDER = "google"
    ```
    
 
@@ -105,6 +158,9 @@ python main.py --num-simulations 5
 
 # 特定のデータセットを指定して3回実行
 python main.py -n 3 -s 0
+
+# APIプロバイダーを指定
+python main.py --api-provider google
 ```
 
 ### スプレッドシート連携の設定
@@ -128,8 +184,9 @@ python main.py -n 3 -s 0
 
 - `NUM_CANDIDATES`: 候補者数（デフォルト: 3）
 - `MAX_ROUNDS`: 面接ラウンド数（デフォルト: 5）
-- `INTERVIEWER_MODEL`: 面接官のモデル名（デフォルト: "gpt-4o-mini"）
-- `APPLICANT_MODEL`: 応募者のモデル名（デフォルト: "gpt-4o-mini"）
+- `INTERVIEWER_MODEL`: 面接官のモデル名（デフォルト: "gemini-2.5-flash-lite"）
+- `APPLICANT_MODEL`: 応募者のモデル名（デフォルト: "gemini-2.5-flash-lite"）
+- `API_PROVIDER`: 使用するAPIプロバイダー ("google" または "openai")
 - `NUM_SIMULATIONS`: デフォルトのシミュレーション実行回数（デフォルト: 1）
 - `ENABLE_SPREADSHEET`: スプレッドシート連携を有効にするか（デフォルト: False）
 
@@ -190,7 +247,8 @@ python main.py -n 3 -s 0
 元の`experiment_inter/app.py`との主な違い：
 
 - **WebGUI削除**: Flask、テンプレート、静的ファイルなし
-- **ローカルモデル非対応**: APIのみ使用
+- **ローカルモデル対応**: APIだけでなくローカルLLMもサポート
+- **マルチAPI対応**: OpenAIに加えGoogle (Gemini) もサポート
 - **スプレッドシート連携**: オプション機能として実装（設定で有効化可能）
 - **複数回シミュレーション**: コマンドライン引数で実行回数を指定可能
 - **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）

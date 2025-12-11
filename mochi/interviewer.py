@@ -5,7 +5,7 @@ import json
 import re
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from utils import call_openai_api
+from utils import call_openai_api, get_api_client
 import config
 
 # MODEL_TYPE_MAPPINGをインポート（config.pyから直接取得）
@@ -26,7 +26,7 @@ except ImportError:
 class Interviewer:
     """面接官役のLLM（ローカルモデルとAPIモデルの両方に対応）"""
     
-    def __init__(self, company_profile, model_name=None, model_type='api', model=None, tokenizer=None, local_model_key=None):
+    def __init__(self, company_profile, model_name=None, model_type='api', model=None, tokenizer=None, local_model_key=None, api_provider=None):
         """
         Args:
             company_profile (dict): 企業情報
@@ -35,6 +35,7 @@ class Interviewer:
             model (AutoModelForCausalLM, optional): ローカルモデル（model_type='local'の場合）
             tokenizer (AutoTokenizer, optional): ローカルモデル用トークナイザ（model_type='local'の場合）
             local_model_key (str, optional): ローカルモデルのキー（例: "llama3", "ELYZA-japanese-Llama-2"）
+            api_provider (str, optional): 使用するAPIプロバイダー ('openai' または 'google')
         """
         self.company = company_profile
         self.model_type = model_type
@@ -42,6 +43,9 @@ class Interviewer:
         self.model = model
         self.tokenizer = tokenizer
         self.local_model_key = local_model_key
+        
+        # APIプロバイダーの設定（指定がない場合はconfigから取得）
+        self.api_provider = api_provider or config.API_PROVIDER
         
         # モデルタイプを決定（チャットテンプレートの形式を決定するため）
         if self.model_type == 'local' and local_model_key:
@@ -130,6 +134,25 @@ class Interviewer:
                     full_prompt = f"{system_content}\n\n{prompt}"
                     encoded = self.tokenizer(full_prompt, return_tensors="pt")
                     inputs = encoded['input_ids'].to(self.model.device)
+            elif self.chat_template_type == "llm-jp":
+                # llm-jpモデル用の形式（手動構築）
+                # Instruction形式: ### 指示:\n{system}\n{user}\n\n### 応答:\n
+                # 末尾の「質問:」などはモデルを混乱させる可能性があるため削除
+                clean_prompt = prompt.strip()
+                if clean_prompt.endswith("質問:"):
+                    clean_prompt = clean_prompt[:-3].strip()
+                
+                # system_contentとpromptを結合
+                combined_input = f"{system_content}\n\n{clean_prompt}"
+                
+                full_prompt = f"以下は、タスクを説明する指示です。指示を適切に完了する応答を記述してください。\n### 指示:\n{combined_input}\n### 応答:\n"
+                encoded = self.tokenizer(full_prompt, return_tensors="pt", add_special_tokens=False)
+                if hasattr(encoded, "input_ids"):
+                    inputs = encoded.input_ids.to(self.model.device)
+                elif isinstance(encoded, dict) and "input_ids" in encoded:
+                    inputs = encoded["input_ids"].to(self.model.device)
+                else:
+                    inputs = encoded.to(self.model.device)
             else:
                 # Llama-3系やその他のモデル（デフォルト）
                 messages = [
@@ -161,6 +184,17 @@ class Interviewer:
                     "temperature": 0.8,  # より高いtemperature
                     "top_p": 0.95,  # より高いtop_p
                     "repetition_penalty": 1.1,  # より低いrepetition_penalty
+                    "pad_token_id": self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
+                }
+            elif self.chat_template_type == "llm-jp":
+                # llm-jp-1.8bは小さいモデルなので、制約を緩める
+                generation_kwargs = {
+                    "max_new_tokens": max_tokens,
+                    "eos_token_id": self.tokenizer.eos_token_id,
+                    "do_sample": True,
+                    "temperature": 0.7,
+                    "top_p": 0.95,
+                    "repetition_penalty": 1.05, # 強くしすぎるとおかしくなることがある
                     "pad_token_id": self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
                 }
             else:
@@ -362,6 +396,11 @@ class Interviewer:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
                     )
+                elif self.chat_template_type == "llm-jp":
+                    # llm-jp系（手動構築）
+                    # 公式フォーマット: 以下は、タスクを説明する指示です。指示を適切に完了する応答を記述してください。\n### 指示:\n{input}\n### 応答:\n
+                    user_message = f"以下は、タスクを説明する指示です。指示を適切に完了する応答を記述してください。\n### 指示:\n{messages[0]['content']}\n\n{messages[1]['content']}\n### 応答:\n"
+                    formatted_prompt = user_message
                 else:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
@@ -396,8 +435,7 @@ class Interviewer:
                 system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
                 
                 # OpenAI APIのJSONモードで呼び出し
-                from openai import OpenAI
-                client = OpenAI(api_key=config.OPENAI_API_KEY)
+                client = get_api_client(self.api_provider)
                 
                 response = client.chat.completions.create(
                     model=self.model_name,
@@ -557,6 +595,11 @@ class Interviewer:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
                     )
+                elif self.chat_template_type == "llm-jp":
+                    # llm-jp系（手動構築）
+                    # 公式フォーマット: 以下は、タスクを説明する指示です。指示を適切に完了する応答を記述してください。\n### 指示:\n{input}\n### 応答:\n
+                    user_message = f"以下は、タスクを説明する指示です。指示を適切に完了する応答を記述してください。\n### 指示:\n{messages[0]['content']}\n\n{messages[1]['content']}\n### 応答:\n"
+                    formatted_prompt = user_message
                 else:
                     formatted_prompt = self.tokenizer.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
@@ -589,8 +632,7 @@ class Interviewer:
                 system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
                 
                 # OpenAI APIのJSONモードで呼び出し
-                from openai import OpenAI
-                client = OpenAI(api_key=config.OPENAI_API_KEY)
+                client = get_api_client(self.api_provider)
                 
                 response = client.chat.completions.create(
                     model=self.model_name,

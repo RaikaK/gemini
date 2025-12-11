@@ -70,3 +70,39 @@ def call_openai_api(model_name, prompt):
             error_message = f"API呼び出しエラー (Provider: {API_PROVIDER}): {error_str}"
         print(f"エラー: {error_message}")
         return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+def get_api_client(provider=None):
+    """
+    設定または指定されたプロバイダーに基づいてAPIクライアントを取得する
+    
+    Args:
+        provider (str, optional): 使用するAPIプロバイダー ('openai' または 'google')。
+                                  Noneの場合は config.API_PROVIDER が使用されます。
+    
+    Returns:
+        OpenAI: 初期化されたOpenAIクライアント（または互換クライアント）
+    """
+    if provider is None:
+        from config import API_PROVIDER
+        provider = API_PROVIDER
+    
+    api_key = None
+    base_url = None
+    
+    if provider == "google":
+        from config import GOOGLE_API_KEY
+        api_key = GOOGLE_API_KEY
+        base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        if not api_key or api_key == "YOUR_GOOGLE_API_KEY_HERE":
+             print("警告: Google APIキーが設定されていません。")
+    else:
+        # デフォルトはOpenAI
+        from config import OPENAI_API_KEY
+        api_key = OPENAI_API_KEY
+        if not api_key or api_key == "YOUR_OPENAI_API_KEY_HERE":
+            print("警告: OpenAI APIキーが設定されていません。")
+    
+    if base_url:
+        return OpenAI(api_key=api_key, base_url=base_url)
+    else:
+        return OpenAI(api_key=api_key)

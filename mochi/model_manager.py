@@ -123,8 +123,13 @@ class HuggingFaceModelManager:
                 "size_gb": 2,
                 "description": "Gemma 3 1B IT - 軽量高性能モデル",
                 "recommended_gpu": "RTX 3060, CPU"
+            },
+            "llm-jp-3.1-1.8b": {
+                "model_id": "llm-jp/llm-jp-3.1-1.8b",
+                "size_gb": 4,
+                "description": "llm-jp 3.1 1.8B - 軽量な日本語モデル",
+                "recommended_gpu": "RTX 3060, CPU"
             }
-
         }
     
     def check_hf_cli_installed(self) -> bool:

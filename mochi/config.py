@@ -10,6 +10,14 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "YOUR_GOOGLE_API_KEY_HERE")
 # APIプロバイダー設定 ("openai" または "google")
 API_PROVIDER = os.environ.get("API_PROVIDER", "google")
 
+# ローカル設定ファイルがあれば読み込んで上書き
+# git管理外の local_config.py に APIキーなどを記述可能
+try:
+    from local_config import *
+except ImportError:
+    pass
+
+
 # APIキーの検証（起動時に警告を表示）
 if API_PROVIDER == "openai" and (OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE" or not OPENAI_API_KEY or not OPENAI_API_KEY.strip()):
     print("=" * 80)
@@ -35,7 +43,7 @@ APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数
-MAX_ROUNDS = 20     # 面接ラウンド数（デフォルト）
+MAX_ROUNDS = 10     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
@@ -84,6 +92,7 @@ AVAILABLE_LOCAL_MODELS = {
     "gemma-3-4b-it": "google/gemma-3-4b-it",
     "llama3-elyza-jp": "elyza/Llama-3-ELYZA-JP-8B",
     "qwen3-8b": "Qwen/Qwen3-8B",
+    "llm-jp-3.1-1.8b": "llm-jp/llm-jp-3.1-1.8b",
     "Phi-4-mini-instruct": "microsoft/Phi-4-mini-instruct",
     # "tinyllama": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", # 日本語がまともに出力されないのでなし。　
     # "ELYZA-japanese-Llama-2": "elyza/ELYZA-japanese-Llama-2-7b-instruct",
@@ -101,6 +110,7 @@ MODEL_TYPE_MAPPING = {
     "gemma-2-2b-jpn-it": "gemma",  # Gemmaモデルはsystemロールをサポートしていないため、専用処理を使用
     "gemma-3-4b-it": "gemma",  # Gemma 3モデルもsystemロールをサポートしていないため、専用処理を使用
     "qwen3-8b": "qwen",
+    "llm-jp-3.1-1.8b": "llm-jp",
     "Phi-4-mini-instruct": "phi",
 }
 

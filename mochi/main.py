@@ -584,7 +584,7 @@ def _get_last_common_question_knowledge_gaps_metrics(round_evaluations):
             return eval_data.get('knowledge_gaps_metrics')
     return None
 
-def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, local_model=None, local_tokenizer=None):
+def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, local_model=None, local_tokenizer=None, api_provider=None):
     """単一の面接シミュレーションを実行
     
     Args:
@@ -637,14 +637,16 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             model_type='local',
             model=local_model,
             tokenizer=local_tokenizer,
-            local_model_key=interviewer_model_name
+            local_model_key=interviewer_model_name,
+            api_provider=api_provider
         )
         print(f"--- 面接官タイプ: ローカルモデル ({interviewer_model_name}) ---")
     else:
         interviewer = Interviewer(
             company_profile,
             model_name=interviewer_model_name,
-            model_type='api'
+            model_type='api',
+            api_provider=api_provider
         )
         print(f"--- 面接官タイプ: APIモデル ({interviewer_model_name}) ---")
     
@@ -1637,7 +1639,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     return result_data
 
 
-def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None):
+def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, api_provider=None):
     """複数回の面接シミュレーションを実行"""
     print("\n" + "="*80)
     print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
@@ -1748,7 +1750,8 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             interviewer_model_name=interviewer_model_name,
             max_rounds=max_rounds,
             local_model=shared_local_model,
-            local_tokenizer=shared_local_tokenizer
+            local_tokenizer=shared_local_tokenizer,
+            api_provider=api_provider
         )
         
         if result:
@@ -2103,6 +2106,13 @@ if __name__ == '__main__':
         default=None,
         help=f'面接ラウンド数 (デフォルト: {MAX_ROUNDS})'
     )
+    parser.add_argument(
+        '--api-provider',
+        type=str,
+        choices=['openai', 'google'],
+        default=None,
+        help='使用するAPIプロバイダー (openai または google)'
+    )
     
     args = parser.parse_args()
     
@@ -2134,5 +2144,6 @@ if __name__ == '__main__':
         set_index=args.set_index,
         interviewer_model_type=args.model_type,
         interviewer_model_name=args.model_name,
-        max_rounds=args.max_rounds
+        max_rounds=args.max_rounds,
+        api_provider=args.api_provider
     )
