@@ -97,6 +97,7 @@ def prepare_data() -> tuple[DataLoader, DataLoader]:
     train_dataset, valid_dataset = create_hierarchical_datasets(
         feature_manager=feature_manager,
         valid_ratio=params.VALID_RATIO,
+        only_win=params.ONLY_WIN,
     )
 
     # データローダー作成
