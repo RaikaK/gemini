@@ -100,6 +100,12 @@ def _safe_wandb_log(wandb_run, data, step=None):
         print(f"警告: wandb.log中にエラーが発生しました: {e}")
 
 
+def _avg(values):
+    """Noneを除外して平均を計算（値がなければ0.0）"""
+    cleaned = [v for v in values if v is not None]
+    return sum(cleaned) / len(cleaned) if cleaned else 0.0
+
+
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
     try:
@@ -358,6 +364,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     eval2_hits_series = []
     eval3_accuracy_series = []
     eval3_f1_series = []
+    per_round_metrics = []
 
     # シミュレーション全体のトークン集計
     simulation_token_totals = {
@@ -365,7 +372,37 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         'completion_tokens': 0,
         'total_tokens': 0
     }
-    
+
+    # wandb Run（ラウンド単位のログを送るため先に初期化）
+    wandb_run = None
+    if WANDB_AVAILABLE:
+        try:
+            run_name = f"{interviewer_model_name}_sim{simulation_num}_set{actual_set_index}"
+            group_name = wandb_group or f"interviewer_model_name:{interviewer_model_name}"
+            wandb_run = wandb.init(
+                project="mochi-interview",
+                name=run_name,
+                config={
+                    "simulation_num": simulation_num,
+                    "set_index": actual_set_index,
+                    "interviewer_model_type": interviewer_model_type,
+                    "interviewer_model_name": interviewer_model_name,
+                    "applicant_model_name": APPLICANT_MODEL,
+                    "max_rounds": max_rounds,
+                    "api_provider": api_provider,
+                    "experiment_id": experiment_id,
+                },
+                group=group_name,
+                tags=[
+                    f"interviewer_model_name:{interviewer_model_name}",
+                    f"applicant_model_name:{APPLICANT_MODEL}",
+                    f"set:{actual_set_index}",
+                ],
+                reinit=True,
+            )
+        except Exception as e:
+            wandb_run = None
+            print(f"警告: wandbの初期化に失敗しました: {e}")
     
     for round_num in range(1, max_rounds + 1):
         round_start_time = time.time()
@@ -373,6 +410,14 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             'prompt_tokens': 0,
             'completion_tokens': 0,
             'total_tokens': 0
+        }
+        current_round_metrics = {
+            'round': round_num,
+            'eval1/accuracy': 0.0,
+            'eval1/f1': 0.0,
+            'eval2/hits': 0.0,
+            'eval3/accuracy': 0.0,
+            'eval3/f1': 0.0,
         }
         
         is_common_question = (round_num % 2 == 1)  # 奇数のラウンドは全体質問
@@ -434,6 +479,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価1正解判定（1/0）
             eval1_hit = _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval)
             eval1_hits_series.append(eval1_hit)
+            current_round_metrics['eval1/accuracy'] = eval1_hit
+            current_round_metrics['eval1/f1'] = eval1_hit
             
             # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             target_state = _extract_candidate_from_text(candidate_states, least_motivated_eval)
@@ -463,6 +510,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
                 else:
                     print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
+            current_round_metrics['eval2/hits'] = perfect_match
             
             # 評価2と評価3の区切り
             print(f"{'='*60}\n")
@@ -478,8 +526,12 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
             if knowledge_gaps_metrics:
-                eval3_accuracy_series.append(knowledge_gaps_metrics.get('avg_accuracy', 0))
-                eval3_f1_series.append(knowledge_gaps_metrics.get('avg_f1_score', 0))
+                eval3_accuracy_val = knowledge_gaps_metrics.get('avg_accuracy', 0)
+                eval3_f1_val = knowledge_gaps_metrics.get('avg_f1_score', 0)
+                eval3_accuracy_series.append(eval3_accuracy_val)
+                eval3_f1_series.append(eval3_f1_val)
+                current_round_metrics['eval3/accuracy'] = eval3_accuracy_val
+                current_round_metrics['eval3/f1'] = eval3_f1_val
                 print(f"\n--- 評価3: 全体統計 ---")
                 print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
                 print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
@@ -612,6 +664,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価1正解判定（1/0）
             eval1_hit = _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval)
             eval1_hits_series.append(eval1_hit)
+            current_round_metrics['eval1/accuracy'] = eval1_hit
+            current_round_metrics['eval1/f1'] = eval1_hit
             
             # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
             import re
@@ -667,6 +721,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
                 else:
                     print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
+            current_round_metrics['eval2/hits'] = perfect_match
             
             # 評価2と評価3の区切り
             print(f"{'='*60}\n")
@@ -687,11 +742,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
             if knowledge_gaps_metrics:
-                eval3_accuracy_series.append(knowledge_gaps_metrics.get('avg_accuracy', 0))
-                eval3_f1_series.append(knowledge_gaps_metrics.get('avg_f1_score', 0))
+                eval3_accuracy_val = knowledge_gaps_metrics.get('avg_accuracy', 0)
+                eval3_f1_val = knowledge_gaps_metrics.get('avg_f1_score', 0)
+                eval3_accuracy_series.append(eval3_accuracy_val)
+                eval3_f1_series.append(eval3_f1_val)
+                current_round_metrics['eval3/accuracy'] = eval3_accuracy_val
+                current_round_metrics['eval3/f1'] = eval3_f1_val
                 print(f"\n--- 評価3: 全体統計 ---")
-                print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
-                print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
+                print(f"平均精度: {eval3_accuracy_val:.3f}")
+                print(f"平均F1スコア: {eval3_f1_val:.3f}")
                 print(f"平均Precision: {knowledge_gaps_metrics.get('avg_precision', 0):.3f}")
                 print(f"平均Recall: {knowledge_gaps_metrics.get('avg_recall', 0):.3f}")
                 
@@ -738,6 +797,10 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             else:
                 eval3_accuracy_series.append(0)
                 eval3_f1_series.append(0)
+                current_round_metrics['eval3/accuracy'] = 0.0
+                current_round_metrics['eval3/f1'] = 0.0
+                current_round_metrics['eval3/accuracy'] = 0.0
+                current_round_metrics['eval3/f1'] = 0.0
             
             # 個別質問ラウンドの評価結果を保存
             round_evaluations.append({
@@ -754,12 +817,28 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
-        
+
         # ラウンド間の区切り
         if round_num < max_rounds:
             print(f"\n{'='*60}")
             print(f"ラウンド {round_num} 完了。次のラウンドに進みます...")
             print(f"{'='*60}\n")
+
+        # ラウンドメトリクスを保存（wandb用の折れ線に使用）
+        per_round_metrics.append(current_round_metrics)
+
+        # ラウンドごとのwandbログ（ステップにラウンド番号を使用）
+        if wandb_run:
+            _safe_wandb_log(
+                wandb_run,
+                {
+                    'eval1/hits': eval1_hits_series[-1] if eval1_hits_series else None,
+                    'eval2/hits': eval2_hits_series[-1] if eval2_hits_series else None,
+                    'eval3/accuracy': eval3_accuracy_series[-1] if eval3_accuracy_series else None,
+                    'eval3/f1': eval3_f1_series[-1] if eval3_f1_series else None,
+                },
+                step=round_num,
+            )
 
         # ラウンドごとのトークンをシミュレーショントータルに集計
         simulation_token_totals['prompt_tokens'] += round_token_info.get('prompt_tokens', 0)
@@ -797,7 +876,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         'eval3_accuracy_series': eval3_accuracy_series,
         'eval3_f1_series': eval3_f1_series,
         'token_usage': simulation_token_totals,
-        'round_evaluations': round_evaluations  # 全ラウンドの評価結果
+        'round_evaluations': round_evaluations,  # 全ラウンドの評価結果
+        'per_round_metrics': per_round_metrics   # ラウンドごとの評価値（プロット用）
     }
     
     result_file = results_dir / f'interview_result_sim{simulation_num}_{timestamp}.json'
@@ -808,26 +888,9 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     print(f"結果を保存しました: {result_file}")
     print(f"{'='*60}\n")
 
-    # wandbへのログ出力：シミュレーション単位で1 runを作成し、ターン配列をそのまま保存
-    if WANDB_AVAILABLE:
+    # wandbへのログ出力：ループ中にステップログ済み。ここでは配列全体をまとめて保存して終了。
+    if wandb_run:
         try:
-            run_name = f"{interviewer_model_name}_sim{simulation_num}_set{actual_set_index}"
-            wandb_run = wandb.init(
-                project="mochi-interview",
-                name=run_name,
-                config={
-                    "simulation_num": simulation_num,
-                    "set_index": actual_set_index,
-                    "interviewer_model_type": interviewer_model_type,
-                    "interviewer_model_name": interviewer_model_name,
-                    "applicant_model_name": APPLICANT_MODEL,
-                    "max_rounds": max_rounds,
-                    "api_provider": api_provider,
-                    "experiment_id": experiment_id,
-                },
-                group=wandb_group or experiment_id,
-                reinit=True,
-            )
             _safe_wandb_log(
                 wandb_run,
                 {
@@ -836,11 +899,15 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     "eval3/accuracy": eval3_accuracy_series,
                     "eval3/f1": eval3_f1_series,
                 },
-                step=0,
+                step=max_rounds + 1,
             )
-            wandb_run.finish()
         except Exception as e:
             print(f"警告: wandbへの記録に失敗しました: {e}")
+        finally:
+            try:
+                wandb_run.finish()
+            except Exception:
+                pass
 
     return result_data
 
