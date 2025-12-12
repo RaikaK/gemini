@@ -71,9 +71,6 @@ DEFAULT_KNOWLEDGE_RETENTION_RATIO = 0.2  # 不明な志望度レベルのデフ�
 # --- 複数回シミュレーション設定 ---
 NUM_SIMULATIONS = 1  # デフォルトのシミュレーション実行回数
 
-# --- スプレッドシート連携設定 ---
-ENABLE_SPREADSHEET = True  # スプレッドシート連携を有効にするかどうか
-
 # --- ローカルモデル設定 ---
 # 面接官モデルタイプ: 'api' または 'local'
 INTERVIEWER_MODEL_TYPE = 'api'  # デフォルトはAPI
@@ -116,8 +113,3 @@ MODEL_TYPE_MAPPING = {
 
 # デフォルトのローカルモデル
 LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定
-
-# --- wandb設定 ---
-ENABLE_WANDB = True  # wandbログを有効にするかどうか
-WANDB_PROJECT = "penguin-paper-interviews"  # wandbプロジェクト名
-WANDB_ENTITY = None  # wandbエンティティ（Noneの場合はデフォルト）

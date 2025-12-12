@@ -10,21 +10,12 @@ from pathlib import Path
 
 from config import (
     INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS, 
-    ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS, ENABLE_SPREADSHEET,
-    INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS,
-    ENABLE_WANDB, WANDB_PROJECT, WANDB_ENTITY
+    ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH, NUM_SIMULATIONS,
+    INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS
 )
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
 import re
-
-# スプレッドシート連携のインポート（オプション）
-try:
-    from spreadsheet_integration import get_spreadsheet_integration
-    SPREADSHEET_AVAILABLE = True
-except ImportError:
-    SPREADSHEET_AVAILABLE = False
-    print("警告: spreadsheet_integrationモジュールが見つかりません。スプレッドシート連携は無効です。")
 
 # ローカルモデル管理のインポート（オプション）
 try:
@@ -34,13 +25,6 @@ except ImportError:
     MODEL_MANAGER_AVAILABLE = False
     print("警告: model_managerモジュールが見つかりません。ローカルモデルは使用できません。")
 
-# wandbのインポート（オプション）
-try:
-    import wandb
-    WANDB_AVAILABLE = True
-except ImportError:
-    WANDB_AVAILABLE = False
-    print("警告: wandbモジュールが見つかりません。wandbログは無効です。")
 
 def generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds=None):
     """実験IDを生成する
@@ -682,60 +666,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     # 直前の全体質問で最も志望度が低いと判断された候補者（個別質問の対象）
     target_candidate_for_individual = None
     
-    # wandbの初期化
-    wandb_run = None
-    if ENABLE_WANDB and WANDB_AVAILABLE:
-        try:
-            # wandbモジュールをインポート（グローバルスコープから取得）
-            import wandb
-            
-            # モデル名を短縮形に変換（Runsの表示で見やすくするため）
-            model_short_name = interviewer_model_name
-            if '/' in model_short_name:
-                # HuggingFace形式の場合、最後の部分だけを使用（例: "microsoft/phi-2" -> "phi-2"）
-                model_short_name = model_short_name.split('/')[-1]
-            if len(model_short_name) > 20:
-                # 長すぎる場合は最初の20文字に制限
-                model_short_name = model_short_name[:20]
-            
-            # Run名にモデル情報を含める
-            run_name = f"{model_short_name}_sim{simulation_num}_set{actual_set_index}"
-            
-            # タグにモデル情報を追加（Runsのフィルタリングに便利）
-            tags = [
-                f"model_type_{interviewer_model_type}",
-                f"model_{model_short_name}",
-                f"simulation_{simulation_num}",
-                f"set_{actual_set_index}"
-            ]
-            
-            wandb.init(
-                project=WANDB_PROJECT,
-                entity=WANDB_ENTITY,
-                name=run_name,
-                tags=tags,
-                config={
-                    'simulation_num': simulation_num,
-                    'set_index': actual_set_index,
-                    'interviewer_model_type': interviewer_model_type,
-                    'interviewer_model_name': interviewer_model_name,
-                    'max_rounds': max_rounds,
-                    'num_candidates': len(candidate_states),
-                    'company_name': company_profile.get('name', 'Unknown'),
-                    'candidate_preparations': [s['profile']['preparation'] for s in candidate_states]
-                },
-                reinit=True
-            )
-            wandb_run = wandb.run
-            print(f"--- wandbログを開始しました (run: {wandb_run.name}, model: {interviewer_model_name}) ---")
-        except Exception as e:
-            print(f"警告: wandbの初期化に失敗しました: {e}")
-            import traceback
-            traceback.print_exc()
-            wandb_run = None
-    
-    # プロンプトと回答を記録するためのリスト（wandb用）
-    prompt_logs = []
     
     for round_num in range(1, max_rounds + 1):
         round_start_time = time.time()
@@ -765,18 +695,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             asked_common_questions.append(question)
             print(f"\n面接官の質問（全員へ）: {question}")
             
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'question_generation',
-                'type': 'common',
-                'candidate': 'all',
-                'prompt': f'Generate common question (round {round_num})',
-                'response': question,
-                'time_seconds': question_time,
-                'token_info': question_token_info
-            })
-        
         # 各候補者が回答
         for state in candidate_states:
             answer_start_time = time.time()
@@ -805,18 +723,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             print(f"\n{state['profile']['name']}: {answer}")
     
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'candidate_answer',
-                'type': 'common' if is_common_question else 'individual',
-                'candidate': state['profile']['name'],
-                'prompt': question,
-                'response': answer,
-                'time_seconds': answer_time,
-                'token_info': token_info
-            })
-        
         # 全体質問後の評価（評価1、2、3を実行）
         if is_common_question:
             print(f"\n{'='*60}")
@@ -836,18 +742,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
             
             print(f"{least_motivated_eval}\n")
-            
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval1_least_motivated',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Select least motivated candidate',
-                'response': least_motivated_eval,
-                'time_seconds': eval1_time,
-                'token_info': eval1_token_info
-            })
             
             # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             import re
@@ -894,18 +788,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             print(f"{ranking_eval}\n")
             
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval2_ranking',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Rank candidates by motivation',
-                'response': ranking_eval,
-                'time_seconds': eval2_time,
-                'token_info': eval2_token_info
-            })
-    
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
             if ranking_accuracy:
@@ -928,18 +810,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['prompt_tokens'] += eval3_token_info.get('prompt_tokens', 0)
                 round_token_info['completion_tokens'] += eval3_token_info.get('completion_tokens', 0)
                 round_token_info['total_tokens'] += eval3_token_info.get('total_tokens', 0)
-            
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval3_knowledge_gaps',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Detect knowledge gaps',
-                'response': knowledge_gaps_eval,
-                'time_seconds': eval3_time,
-                'token_info': eval3_token_info
-            })
             
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
@@ -1003,125 +873,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
-            
-            # wandbにログ（時系列グラフ用に統一されたメトリクス名で記録）
-            if wandb_run:
-                try:
-                    log_dict = {}
-                    
-                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
-                    # 真の最も志望度が低い候補者を特定
-                    true_least_motivated = None
-                    for state in candidate_states:
-                        if state['profile'].get('preparation', 'low') == 'low':
-                            true_least_motivated = state['profile']['name']
-                            break
-                    
-                    # 予測された最も志望度が低い候補者を抽出
-                    predicted_least_motivated = None
-                    if least_motivated_eval:
-                        # 候補者名を抽出
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            if candidate_name in least_motivated_eval:
-                                predicted_least_motivated = candidate_name
-                                break
-                        # 抽出できなかった場合、正規表現で試す
-                        if predicted_least_motivated is None:
-                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                            if match:
-                                extracted_name = match.group(1)
-                                for state in candidate_states:
-                                    if state['profile']['name'] == extracted_name:
-                                        predicted_least_motivated = extracted_name
-                                        break
-                    
-                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
-                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                        true_least_motivated == predicted_least_motivated) else 0.0
-                    log_dict['eval1/least_motivated_accuracy'] = eval1_score
-                    
-                    # 評価2: ランキング精度
-                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                        log_dict['eval2/ranking_accuracy'] = ranking_accuracy.get('accuracy', 0.0)
-                    else:
-                        log_dict['eval2/ranking_accuracy'] = None
-                    
-                    # 評価3: 知識欠損検出のメトリクス
-                    if knowledge_gaps_metrics:
-                        log_dict.update({
-                            'eval3/avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
-                            'eval3/avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
-                            'eval3/avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
-                            'eval3/avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
-                        })
-                        
-                        # 志望度レベル別の精度
-                        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
-                        for level in ['low', 'medium', 'high']:
-                            if level in by_motivation and by_motivation[level] is not None:
-                                log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
-                        
-                        # 各候補者ごとのメトリクスを準備レベルごとに集約
-                        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
-                        # 準備レベルごとにメトリクスを集約する辞書
-                        metrics_by_preparation = {
-                            'low': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
-                            'middle': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
-                            'high': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []}
-                        }
-                        
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            preparation = state['profile'].get('preparation', 'low')
-                            # preparationをwandb用のメトリクス名に変換（medium -> middle）
-                            preparation_label = 'middle' if preparation == 'medium' else preparation
-                            if candidate_name in per_candidate:
-                                candidate_data = per_candidate[candidate_name]
-                                metrics = candidate_data.get('metrics', {})
-                                # 準備レベルごとにメトリクスを集約
-                                if preparation_label in metrics_by_preparation:
-                                    if metrics.get('accuracy') is not None:
-                                        metrics_by_preparation[preparation_label]['accuracy'].append(metrics.get('accuracy', 0.0))
-                                    if metrics.get('f1_score') is not None:
-                                        metrics_by_preparation[preparation_label]['f1'].append(metrics.get('f1_score', 0.0))
-                                    if metrics.get('precision') is not None:
-                                        metrics_by_preparation[preparation_label]['precision'].append(metrics.get('precision', 0.0))
-                                    if metrics.get('recall') is not None:
-                                        metrics_by_preparation[preparation_label]['recall'].append(metrics.get('recall', 0.0))
-                        
-                        # 準備レベルごとの平均を計算して記録
-                        for prep_label in ['low', 'middle', 'high']:
-                            prep_metrics = metrics_by_preparation[prep_label]
-                            if prep_metrics['accuracy']:
-                                log_dict[f'eval3/candidate_{prep_label}_accuracy'] = sum(prep_metrics['accuracy']) / len(prep_metrics['accuracy'])
-                            if prep_metrics['f1']:
-                                log_dict[f'eval3/candidate_{prep_label}_f1'] = sum(prep_metrics['f1']) / len(prep_metrics['f1'])
-                            if prep_metrics['precision']:
-                                log_dict[f'eval3/candidate_{prep_label}_precision'] = sum(prep_metrics['precision']) / len(prep_metrics['precision'])
-                            if prep_metrics['recall']:
-                                log_dict[f'eval3/candidate_{prep_label}_recall'] = sum(prep_metrics['recall']) / len(prep_metrics['recall'])
-                    
-                    # 実行時間とtoken数を追加
-                    round_time = time.time() - round_start_time
-                    log_dict.update({
-                        'timing/round_duration_seconds': round_time,
-                        'tokens/prompt_tokens': round_token_info['prompt_tokens'],
-                        'tokens/completion_tokens': round_token_info['completion_tokens'],
-                        'tokens/total_tokens': round_token_info['total_tokens'],
-                    })
-                    
-                    # stepパラメータでラウンド番号を指定（時系列グラフ用）
-                    if wandb_run:
-                        wandb_run.log(log_dict, step=round_num)
-                        print(f"デバッグ: ラウンド {round_num} (全体質問) のwandbログを記録しました（メトリクス数: {len(log_dict)}）")
-                    else:
-                        print(f"警告: wandb_runがNoneです。ラウンド {round_num} のログを記録できませんでした。")
-                except Exception as e:
-                    print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
-                    import traceback
-                    traceback.print_exc()
-            
         else:
             # 個別質問
             print(f"\n--- ラウンド {round_num} (個別質問) ---")
@@ -1153,18 +904,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             })
             print(f"\n面接官の質問（{target_candidate_name}へ）: {question}")
             
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'question_generation',
-                'type': 'individual',
-                'candidate': target_candidate_name,
-                'prompt': f'Generate individual question for {target_candidate_name} (round {round_num})',
-                'response': question,
-                'time_seconds': question_time,
-                'token_info': question_token_info
-            })
-            
             # 対象候補者のみ回答
             answer_start_time = time.time()
             answer, token_info = applicant.generate_answer(
@@ -1191,19 +930,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             })
             
             print(f"\n{target_candidate_name}: {answer}")
-            
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'candidate_answer',
-                'type': 'individual',
-                'candidate': target_candidate_name,
-                'prompt': question,
-                'response': answer,
-                'time_seconds': answer_time,
-                'token_info': token_info
-            })
-            
             # 個別質問後の評価（すべての個別質問ラウンドで評価を実行）
             print(f"\n{'='*60}")
             print(f"ラウンド {round_num} (個別質問) 終了後の評価")
@@ -1222,18 +948,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
             
             print(f"{least_motivated_eval}\n")
-            
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval1_least_motivated',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Select least motivated candidate',
-                'response': least_motivated_eval,
-                'time_seconds': eval1_time,
-                'token_info': eval1_token_info
-            })
             
             # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
             import re
@@ -1279,19 +993,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['total_tokens'] += eval2_token_info.get('total_tokens', 0)
             
             print(f"{ranking_eval}\n")
-            
-            # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval2_ranking',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Rank candidates by motivation',
-                'response': ranking_eval,
-                'time_seconds': eval2_time,
-                'token_info': eval2_token_info
-            })
-    
+
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
             if ranking_accuracy:
@@ -1316,17 +1018,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['total_tokens'] += eval3_token_info.get('total_tokens', 0)
             
             # プロンプトログに記録
-            prompt_logs.append({
-                'round': round_num,
-                'step': 'eval3_knowledge_gaps',
-                'type': 'evaluation',
-                'candidate': 'all',
-                'prompt': 'Detect knowledge gaps',
-                'response': knowledge_gaps_eval,
-                'time_seconds': eval3_time,
-                'token_info': eval3_token_info
-            })
-            
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
             if knowledge_gaps_metrics:
@@ -1390,124 +1081,6 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
-            
-            # wandbにログ（時系列グラフ用に統一されたメトリクス名で記録）
-            if wandb_run:
-                try:
-                    log_dict = {}
-                    
-                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
-                    # 真の最も志望度が低い候補者を特定
-                    true_least_motivated = None
-                    for state in candidate_states:
-                        if state['profile'].get('preparation', 'low') == 'low':
-                            true_least_motivated = state['profile']['name']
-                            break
-                    
-                    # 予測された最も志望度が低い候補者を抽出
-                    predicted_least_motivated = None
-                    if least_motivated_eval:
-                        # 候補者名を抽出
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            if candidate_name in least_motivated_eval:
-                                predicted_least_motivated = candidate_name
-                                break
-                        # 抽出できなかった場合、正規表現で試す
-                        if predicted_least_motivated is None:
-                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                            if match:
-                                extracted_name = match.group(1)
-                                for state in candidate_states:
-                                    if state['profile']['name'] == extracted_name:
-                                        predicted_least_motivated = extracted_name
-                                        break
-                    
-                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
-                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                        true_least_motivated == predicted_least_motivated) else 0.0
-                    log_dict['eval1/least_motivated_accuracy'] = eval1_score
-                    
-                    # 評価2: ランキング精度
-                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                        log_dict['eval2/ranking_accuracy'] = ranking_accuracy.get('accuracy', 0.0)
-                    else:
-                        log_dict['eval2/ranking_accuracy'] = None
-                    
-                    # 評価3: 知識欠損検出のメトリクス
-                    if knowledge_gaps_metrics:
-                        log_dict.update({
-                            'eval3/avg_accuracy': knowledge_gaps_metrics.get('avg_accuracy', 0.0),
-                            'eval3/avg_f1': knowledge_gaps_metrics.get('avg_f1_score', 0.0),
-                            'eval3/avg_precision': knowledge_gaps_metrics.get('avg_precision', 0.0),
-                            'eval3/avg_recall': knowledge_gaps_metrics.get('avg_recall', 0.0),
-                        })
-                        
-                        # 志望度レベル別の精度
-                        by_motivation = knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
-                        for level in ['low', 'medium', 'high']:
-                            if level in by_motivation and by_motivation[level] is not None:
-                                log_dict[f'eval3/accuracy_{level}'] = by_motivation[level]
-                        
-                        # 各候補者ごとのメトリクスを準備レベルごとに集約
-                        per_candidate = knowledge_gaps_metrics.get('per_candidate_metrics', {})
-                        # 準備レベルごとにメトリクスを集約する辞書
-                        metrics_by_preparation = {
-                            'low': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
-                            'middle': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []},
-                            'high': {'accuracy': [], 'f1': [], 'precision': [], 'recall': []}
-                        }
-                        
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            preparation = state['profile'].get('preparation', 'low')
-                            # preparationをwandb用のメトリクス名に変換（medium -> middle）
-                            preparation_label = 'middle' if preparation == 'medium' else preparation
-                            if candidate_name in per_candidate:
-                                candidate_data = per_candidate[candidate_name]
-                                metrics = candidate_data.get('metrics', {})
-                                # 準備レベルごとにメトリクスを集約
-                                if preparation_label in metrics_by_preparation:
-                                    if metrics.get('accuracy') is not None:
-                                        metrics_by_preparation[preparation_label]['accuracy'].append(metrics.get('accuracy', 0.0))
-                                    if metrics.get('f1_score') is not None:
-                                        metrics_by_preparation[preparation_label]['f1'].append(metrics.get('f1_score', 0.0))
-                                    if metrics.get('precision') is not None:
-                                        metrics_by_preparation[preparation_label]['precision'].append(metrics.get('precision', 0.0))
-                                    if metrics.get('recall') is not None:
-                                        metrics_by_preparation[preparation_label]['recall'].append(metrics.get('recall', 0.0))
-                        
-                        # 準備レベルごとの平均を計算して記録
-                        for prep_label in ['low', 'middle', 'high']:
-                            prep_metrics = metrics_by_preparation[prep_label]
-                            if prep_metrics['accuracy']:
-                                log_dict[f'eval3/candidate_{prep_label}_accuracy'] = sum(prep_metrics['accuracy']) / len(prep_metrics['accuracy'])
-                            if prep_metrics['f1']:
-                                log_dict[f'eval3/candidate_{prep_label}_f1'] = sum(prep_metrics['f1']) / len(prep_metrics['f1'])
-                            if prep_metrics['precision']:
-                                log_dict[f'eval3/candidate_{prep_label}_precision'] = sum(prep_metrics['precision']) / len(prep_metrics['precision'])
-                            if prep_metrics['recall']:
-                                log_dict[f'eval3/candidate_{prep_label}_recall'] = sum(prep_metrics['recall']) / len(prep_metrics['recall'])
-                    
-                    # 実行時間とtoken数を追加
-                    round_time = time.time() - round_start_time
-                    log_dict.update({
-                        'timing/round_duration_seconds': round_time,
-                        'tokens/prompt_tokens': round_token_info['prompt_tokens'],
-                        'tokens/completion_tokens': round_token_info['completion_tokens'],
-                        'tokens/total_tokens': round_token_info['total_tokens'],
-                    })
-                    
-                    # stepパラメータでラウンド番号を指定（時系列グラフ用）
-                    if wandb_run:
-                        wandb_run.log(log_dict, step=round_num)
-                        print(f"デバッグ: ラウンド {round_num} (個別質問) のwandbログを記録しました（メトリクス数: {len(log_dict)}）")
-                    else:
-                        print(f"警告: wandb_runがNoneです。ラウンド {round_num} のログを記録できませんでした。")
-                except Exception as e:
-                    print(f"警告: wandbログの記録中にエラーが発生しました: {e}")
-                    import traceback
-                    traceback.print_exc()
         
         # ラウンド間の区切り
         if round_num < max_rounds:
@@ -1550,185 +1123,34 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     print(f"結果を保存しました: {result_file}")
     print(f"{'='*60}\n")
     
-    # wandbに最終サマリーをログ
-    if wandb_run:
-        try:
-            final_ranking_accuracy = _get_last_common_question_ranking_accuracy(round_evaluations)
-            final_knowledge_gaps_metrics = _get_last_common_question_knowledge_gaps_metrics(round_evaluations)
-            
-            summary_dict = {}
-            
-            # 最終ランキング精度
-            if final_ranking_accuracy and final_ranking_accuracy.get('is_valid'):
-                summary_dict['final/ranking_accuracy'] = final_ranking_accuracy.get('accuracy', 0.0)
-            
-            # 最終評価3メトリクス
-            if final_knowledge_gaps_metrics:
-                summary_dict.update({
-                    'final/eval3_avg_accuracy': final_knowledge_gaps_metrics.get('avg_accuracy', 0.0),
-                    'final/eval3_avg_f1': final_knowledge_gaps_metrics.get('avg_f1_score', 0.0),
-                    'final/eval3_avg_precision': final_knowledge_gaps_metrics.get('avg_precision', 0.0),
-                    'final/eval3_avg_recall': final_knowledge_gaps_metrics.get('avg_recall', 0.0),
-                })
-                
-                # 志望度レベル別の最終精度
-                by_motivation = final_knowledge_gaps_metrics.get('knowledge_gaps_metrics_by_motivation', {})
-                for level in ['low', 'medium', 'high']:
-                    if level in by_motivation and by_motivation[level] is not None:
-                        summary_dict[f'final/eval3_accuracy_{level}'] = by_motivation[level]
-            
-            # 全ラウンドの平均メトリクス
-            common_rounds = [e for e in round_evaluations if e.get('question_type') == 'common']
-            if common_rounds:
-                ranking_accuracies = [e.get('ranking_accuracy', {}).get('accuracy', 0.0) 
-                                    for e in common_rounds 
-                                    if e.get('ranking_accuracy', {}).get('is_valid')]
-                if ranking_accuracies:
-                    summary_dict['avg/ranking_accuracy'] = sum(ranking_accuracies) / len(ranking_accuracies)
-                
-                eval3_accuracies = [e.get('knowledge_gaps_metrics', {}).get('avg_accuracy', 0.0)
-                                  for e in common_rounds
-                                  if e.get('knowledge_gaps_metrics')]
-                if eval3_accuracies:
-                    summary_dict['avg/eval3_accuracy'] = sum(eval3_accuracies) / len(eval3_accuracies)
-            
-            wandb_run.log(summary_dict)
-            
-            # プロンプトと回答をwandbのTableに記録
-            if prompt_logs and WANDB_AVAILABLE and wandb_run:
-                try:
-                    # wandbモジュールがインポートされていることを確認
-                    if 'wandb' not in globals() and 'wandb' not in sys.modules:
-                        import wandb
-                    # Tableの列を定義
-                    columns = ['round', 'step', 'type', 'candidate', 'prompt', 'response', 'time_seconds', 'prompt_tokens', 'completion_tokens', 'total_tokens']
-                    table_data = []
-                    for log_entry in prompt_logs:
-                        token_info = log_entry.get('token_info', {}) or {}
-                        table_data.append([
-                            log_entry.get('round', 0),
-                            log_entry.get('step', ''),
-                            log_entry.get('type', ''),
-                            log_entry.get('candidate', ''),
-                            str(log_entry.get('prompt', ''))[:500],  # 長いプロンプトは切り詰め
-                            str(log_entry.get('response', ''))[:1000],  # 長い回答は切り詰め
-                            log_entry.get('time_seconds', 0.0),
-                            token_info.get('prompt_tokens', 0),
-                            token_info.get('completion_tokens', 0),
-                            token_info.get('total_tokens', 0),
-                        ])
-                    
-                    prompt_table = wandb.Table(columns=columns, data=table_data)
-                    wandb_run.log({f"prompts/simulation_{simulation_num}": prompt_table})
-                    print(f"--- プロンプトログをwandbに記録しました ({len(prompt_logs)}件) ---")
-                except Exception as e:
-                    print(f"警告: プロンプトログの記録中にエラーが発生しました: {e}")
-                    import traceback
-                    traceback.print_exc()
-            
-            wandb_run.finish()
-            print(f"--- wandbログを完了しました ---")
-        except Exception as e:
-            print(f"警告: wandb最終ログの記録中にエラーが発生しました: {e}")
-            if wandb_run:
-                try:
-                    wandb_run.finish()
-                except:
-                    pass
-    
     return result_data
 
 
+
+    
+    
 def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, api_provider=None):
-    """複数回の面接シミュレーションを実行"""
+    """複数回の面接シミュレーションを実行（簡素版）"""
     print("\n" + "="*80)
     print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
     print("="*80)
-    
-    # ラウンド数の設定
+
     if max_rounds is None:
         max_rounds = MAX_ROUNDS
-    
-    # モデル設定の表示
     if interviewer_model_type is None:
         interviewer_model_type = INTERVIEWER_MODEL_TYPE
     if interviewer_model_name is None:
-        if interviewer_model_type == 'local':
-            interviewer_model_name = LOCAL_MODEL_NAME
-        else:
-            interviewer_model_name = INTERVIEWER_MODEL
-    
+        interviewer_model_name = LOCAL_MODEL_NAME if interviewer_model_type == 'local' else INTERVIEWER_MODEL
+
     print(f"面接官モデル: {interviewer_model_type} ({interviewer_model_name})")
-    
-    # wandbの全体実行用runを初期化（複数セット実行時）
-    overall_wandb_run = None
-    if ENABLE_WANDB and WANDB_AVAILABLE and num_simulations > 1:
-        try:
-            import wandb
-            
-            # モデル名を短縮形に変換
-            model_short_name = interviewer_model_name
-            if '/' in model_short_name:
-                model_short_name = model_short_name.split('/')[-1]
-            if len(model_short_name) > 20:
-                model_short_name = model_short_name[:20]
-            
-            # Run名にモデル情報を含める
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-            run_name = f"{model_short_name}_overall_{num_simulations}sims_{timestamp}"
-            
-            # タグにモデル情報を追加
-            tags = [
-                f"model_type_{interviewer_model_type}",
-                f"model_{model_short_name}",
-                "overall_run",
-                f"simulations_{num_simulations}"
-            ]
-            if set_index is not None:
-                tags.append(f"set_{set_index}")
-            
-            overall_wandb_run = wandb.init(
-                project=WANDB_PROJECT,
-                entity=WANDB_ENTITY,
-                name=run_name,
-                tags=tags,
-                config={
-                    'num_simulations': num_simulations,
-                    'set_index': set_index,
-                    'interviewer_model_type': interviewer_model_type,
-                    'interviewer_model_name': interviewer_model_name,
-                    'max_rounds': max_rounds,
-                },
-                reinit=True
-            )
-            print(f"--- 全体実行用wandb runを開始しました (run: {overall_wandb_run.name}, model: {interviewer_model_name}) ---")
-        except Exception as e:
-            print(f"警告: 全体実行用wandb runの初期化に失敗しました: {e}")
-            overall_wandb_run = None
-    
-    # スプレッドシート連携の初期化
-    spreadsheet_integration = None
-    if ENABLE_SPREADSHEET and SPREADSHEET_AVAILABLE:
-        try:
-            spreadsheet_integration = get_spreadsheet_integration()
-            if spreadsheet_integration:
-                print("スプレッドシート連携が有効です")
-            else:
-                print("警告: スプレッドシート連携の設定が見つかりません。連携は無効です。")
-        except Exception as e:
-            print(f"警告: スプレッドシート連携の初期化に失敗しました: {e}")
-    
-    # 結果保存用のディレクトリ作成
+
     results_dir = Path(__file__).parent / 'results'
     results_dir.mkdir(exist_ok=True)
-    
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     all_results = []
-    
-    # ローカルモデルの場合、最初の1回だけ初期化して以降は再利用
+
     shared_local_model = None
     shared_local_tokenizer = None
-    
     if interviewer_model_type == 'local':
         print(f"\n--- ローカルモデル ({interviewer_model_name}) を初期化します（全シミュレーションで再利用） ---")
         shared_local_model, shared_local_tokenizer = initialize_local_model(interviewer_model_name)
@@ -1736,15 +1158,14 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             print("ローカルモデルの初期化に失敗しました。")
             return
         print(f"--- ローカルモデルの初期化完了 ---\n")
-    
-    # 複数回のシミュレーションを実行
+
     for sim_num in range(1, num_simulations + 1):
         print(f"\n{'='*80}")
         print(f"シミュレーション {sim_num}/{num_simulations} を実行中...")
         print(f"{'='*80}")
-        
+
         result = run_single_interview(
-            set_index=set_index, 
+            set_index=set_index,
             simulation_num=sim_num,
             interviewer_model_type=interviewer_model_type,
             interviewer_model_name=interviewer_model_name,
@@ -1753,320 +1174,79 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             local_tokenizer=shared_local_tokenizer,
             api_provider=api_provider
         )
-        
+
         if result:
             all_results.append(result)
-            
-            # 全体実行用wandb runに各シミュレーションの結果を記録（各ラウンドごと）
-            if overall_wandb_run:
-                try:
-                    # runがアクティブかどうかをチェック
-                    if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
-                        print(f"警告: wandb runが既に終了しています。シミュレーション {sim_num} のログをスキップします。")
-                    else:
-                        # round_evaluationsから各ラウンドごとのデータを取得
-                        round_evaluations = result.get('round_evaluations', [])
-                        
-                        # 各ラウンドごとの評価を記録
-                        for eval_data in round_evaluations:
-                            round_num = eval_data.get('round', 0)
-                            question_type = eval_data.get('question_type', '')
-                            
-                            # 全体質問ラウンドのみ記録（個別質問ラウンドも評価は行っているが、全体質問ラウンドの方が重要）
-                            if question_type == 'common':
-                                log_dict = {}
-                                
-                                # 評価1のスコアを計算
-                                least_motivated_eval = eval_data.get('evaluations', {}).get('least_motivated', '')
-                                if least_motivated_eval:
-                                    # 真の最も志望度が低い候補者を特定
-                                    true_least_motivated = None
-                                    for state in result.get('interview_transcripts', []):
-                                        if state.get('preparation') == 'low':
-                                            true_least_motivated = state.get('candidate')
-                                            break
-                                    
-                                    # 予測された最も志望度が低い候補者を抽出
-                                    predicted_least_motivated = None
-                                    for state in result.get('interview_transcripts', []):
-                                        candidate_name = state.get('candidate')
-                                        if candidate_name and candidate_name in least_motivated_eval:
-                                            predicted_least_motivated = candidate_name
-                                            break
-                                    
-                                    # 抽出できなかった場合、正規表現で試す
-                                    if predicted_least_motivated is None:
-                                        import re
-                                        match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                                        if match:
-                                            extracted_name = match.group(1)
-                                            for state in result.get('interview_transcripts', []):
-                                                if state.get('candidate') == extracted_name:
-                                                    predicted_least_motivated = extracted_name
-                                                    break
-                                    
-                                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                                       true_least_motivated == predicted_least_motivated) else 0.0
-                                    log_dict[f'simulation_{sim_num}/eval1_score'] = eval1_score
-                                
-                                # 評価2のスコア
-                                ranking_accuracy = eval_data.get('ranking_accuracy', {})
-                                if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                                    log_dict[f'simulation_{sim_num}/eval2_score'] = ranking_accuracy.get('accuracy', 0.0)
-                                
-                                # 評価3のスコア
-                                knowledge_gaps_metrics = eval_data.get('knowledge_gaps_metrics', {})
-                                if knowledge_gaps_metrics:
-                                    log_dict[f'simulation_{sim_num}/eval3_score'] = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
-                                
-                                # ラウンドごとに記録（step=round_num）
-                                if log_dict:
-                                    try:
-                                        overall_wandb_run.log(log_dict, step=round_num)
-                                    except Exception as log_error:
-                                        error_str = str(log_error)
-                                        if "finished" in error_str.lower() or "active" in error_str.lower():
-                                            print(f"警告: wandb runが終了しています。ラウンド {round_num} のログをスキップします。")
-                                            break  # ループを抜ける（以降のラウンドも記録できないため）
-                                        else:
-                                            raise  # その他のエラーは再発生させる
-                    
-                    # 最終結果も記録（step=sim_numで各シミュレーションごとに記録）
-                    eval1_score = 0.0
-                    eval2_score = 0.0
-                    eval3_score = 0.0
-                    
-                    # 評価1のスコアを計算（最終評価から）
-                    least_motivated = result.get('evaluations', {}).get('least_motivated', '')
-                    if least_motivated:
-                        # 真の最も志望度が低い候補者を特定
-                        true_least_motivated = None
-                        for state in result.get('interview_transcripts', []):
-                            if state.get('preparation') == 'low':
-                                true_least_motivated = state.get('candidate')
-                                break
-                        
-                        # 予測された最も志望度が低い候補者を抽出
-                        predicted_least_motivated = None
-                        for state in result.get('interview_transcripts', []):
-                            candidate_name = state.get('candidate')
-                            if candidate_name and candidate_name in least_motivated:
-                                predicted_least_motivated = candidate_name
-                                break
-                        
-                        eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                           true_least_motivated == predicted_least_motivated) else 0.0
-                    
-                    # 評価2のスコア
-                    ranking_accuracy = result.get('ranking_accuracy', {})
-                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                        eval2_score = ranking_accuracy.get('accuracy', 0.0)
-                    
-                    # 評価3のスコア
-                    knowledge_gaps_metrics = result.get('knowledge_gaps_metrics', {})
-                    if knowledge_gaps_metrics:
-                        eval3_score = knowledge_gaps_metrics.get('avg_accuracy', 0.0)
-                    
-                    # 各シミュレーションの最終スコアをstep=sim_numで記録（グラフで見やすくするため）
-                    try:
-                        # runがアクティブかどうかを再チェック
-                        if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
-                            print(f"警告: wandb runが既に終了しています。シミュレーション {sim_num} の最終スコアを記録できませんでした。")
-                        else:
-                            overall_wandb_run.log({
-                                'overall/eval1_score': eval1_score,
-                                'overall/eval2_score': eval2_score,
-                                'overall/eval3_score': eval3_score,
-                            }, step=sim_num)
-                            print(f"デバッグ: シミュレーション {sim_num} の最終スコアをwandbに記録しました (eval1={eval1_score}, eval2={eval2_score}, eval3={eval3_score})")
-                    except Exception as log_error:
-                        # wandb runが終了している場合など
-                        error_str = str(log_error)
-                        if "finished" in error_str.lower() or "active" in error_str.lower():
-                            print(f"警告: wandb runが終了しています。シミュレーション {sim_num} のログを記録できませんでした。")
-                        else:
-                            print(f"警告: wandbログの記録中にエラーが発生しました: {log_error}")
-                except Exception as e:
-                    print(f"警告: 全体実行用wandbログの記録中にエラーが発生しました: {e}")
-                    import traceback
-                    traceback.print_exc()
-            
-            # スプレッドシートに記録
-            if spreadsheet_integration:
-                try:
-                    print(f"\nスプレッドシートにシミュレーション {sim_num} の結果を記録中...")
-                    record_result = spreadsheet_integration.record_experiment_result(result)
-                    if record_result.get('success'):
-                        print(f"✓ スプレッドシートへの記録が完了しました (行: {record_result.get('row', 'N/A')})")
-                    else:
-                        print(f"✗ スプレッドシートへの記録エラー: {record_result.get('message')}")
-                except Exception as e:
-                    print(f"✗ スプレッドシート記録中にエラーが発生しました: {e}")
-    
-    # 全体結果の保存
-    if all_results:
-        # 実験IDを生成
-        experiment_id = generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds)
-        
-        # 既存のサマリーファイルを検索
-        existing_summary_file = find_existing_summary_file(results_dir, experiment_id)
-        
-        if existing_summary_file:
-            # 既存のファイルを読み込んで追加
-            print(f"\n既存のサマリーファイルを発見: {existing_summary_file.name}")
-            print(f"実験ID: {experiment_id}")
-            print("既存の結果に追加します...")
-            
-            try:
-                with open(existing_summary_file, 'r', encoding='utf-8') as f:
-                    existing_data = json.load(f)
-                
-                # 既存の結果に追加
-                existing_individual_results = existing_data.get('individual_results', [])
-                existing_individual_results.extend(all_results)
-                
-                # サマリー情報を更新
-                existing_summary = existing_data.get('experiment_summary', {})
-                existing_total = existing_summary.get('total_simulations', 0)
-                new_total = existing_total + num_simulations
-                
-                summary_data = {
-                    'experiment_summary': {
-                        'total_simulations': new_total,
-                        'timestamp': datetime.datetime.now().isoformat(),  # 最終更新時刻
-                        'created_timestamp': existing_summary.get('created_timestamp', existing_summary.get('timestamp')),  # 初回作成時刻
-                        'set_index': set_index,
-                        'interviewer_model_type': interviewer_model_type,
-                        'interviewer_model_name': interviewer_model_name,
-                        'max_rounds': max_rounds,
-                        'experiment_id': experiment_id
-                    },
-                    'individual_results': existing_individual_results
-                }
-                
-                # 既存のファイルを更新
-                with open(existing_summary_file, 'w', encoding='utf-8') as f:
-                    json.dump(summary_data, f, ensure_ascii=False, indent=2)
-                
-                print(f"\n{'='*80}")
-                print(f"既存のサマリーファイルを更新しました")
-                print(f"追加した個別結果: {len(all_results)}件")
-                print(f"合計個別結果: {len(existing_individual_results)}件")
-                print(f"合計シミュレーション数: {new_total}件")
-                print(f"サマリーファイル: {existing_summary_file}")
-                print(f"{'='*80}\n")
-                
-            except Exception as e:
-                print(f"警告: 既存ファイルの読み込みに失敗しました: {e}")
-                print("新規ファイルとして保存します...")
-                existing_summary_file = None
-        
-        if not existing_summary_file:
-            # 新規ファイルとして保存
+
+    if not all_results:
+        print("シミュレーション結果が生成されませんでした。")
+        return
+
+    experiment_id = generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds)
+    existing_summary_file = find_existing_summary_file(results_dir, experiment_id)
+
+    if existing_summary_file:
+        print(f"\n既存のサマリーファイルを発見: {existing_summary_file.name}")
+        print(f"実験ID: {experiment_id}")
+        print("既存の結果に追加します...")
+        try:
+            with open(existing_summary_file, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+            existing_individual_results = existing_data.get('individual_results', [])
+            existing_individual_results.extend(all_results)
+            existing_summary = existing_data.get('experiment_summary', {})
+            existing_total = existing_summary.get('total_simulations', 0)
+            new_total = existing_total + num_simulations
             summary_data = {
                 'experiment_summary': {
-                    'total_simulations': num_simulations,
+                    'total_simulations': new_total,
                     'timestamp': datetime.datetime.now().isoformat(),
-                    'created_timestamp': datetime.datetime.now().isoformat(),
+                    'created_timestamp': existing_summary.get('created_timestamp', existing_summary.get('timestamp')),
                     'set_index': set_index,
                     'interviewer_model_type': interviewer_model_type,
                     'interviewer_model_name': interviewer_model_name,
                     'max_rounds': max_rounds,
                     'experiment_id': experiment_id
                 },
-                'individual_results': all_results
+                'individual_results': existing_individual_results
             }
-            
-            summary_file = results_dir / f'experiment_summary_{timestamp_str}_{experiment_id}.json'
-            with open(summary_file, 'w', encoding='utf-8') as f:
+            with open(existing_summary_file, 'w', encoding='utf-8') as f:
                 json.dump(summary_data, f, ensure_ascii=False, indent=2)
-            
             print(f"\n{'='*80}")
-            print(f"全シミュレーション完了")
-            print(f"実験ID: {experiment_id}")
-            print(f"個別結果: {len(all_results)}件")
-            print(f"サマリーファイル: {summary_file}")
+            print("既存のサマリーファイルを更新しました")
+            print(f"追加した個別結果: {len(all_results)}件")
+            print(f"合計個別結果: {len(existing_individual_results)}件")
+            print(f"合計シミュレーション数: {new_total}件")
+            print(f"サマリーファイル: {existing_summary_file}")
             print(f"{'='*80}\n")
-        
-        # 全体実行用wandb runに最終サマリーを記録
-        if overall_wandb_run and len(all_results) > 0:
-            try:
-                # 各評価の平均スコアを計算
-                eval1_scores = []
-                eval2_scores = []
-                eval3_scores = []
-                
-                for result in all_results:
-                    # 評価1のスコア
-                    least_motivated = result.get('evaluations', {}).get('least_motivated', '')
-                    if least_motivated:
-                        true_least_motivated = None
-                        for state in result.get('interview_transcripts', []):
-                            if state.get('preparation') == 'low':
-                                true_least_motivated = state.get('candidate')
-                                break
-                        
-                        predicted_least_motivated = None
-                        for state in result.get('interview_transcripts', []):
-                            candidate_name = state.get('candidate')
-                            if candidate_name and candidate_name in least_motivated:
-                                predicted_least_motivated = candidate_name
-                                break
-                        
-                        score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                       true_least_motivated == predicted_least_motivated) else 0.0
-                        eval1_scores.append(score)
-                    
-                    # 評価2のスコア
-                    ranking_accuracy = result.get('ranking_accuracy', {})
-                    if ranking_accuracy and ranking_accuracy.get('is_valid'):
-                        eval2_scores.append(ranking_accuracy.get('accuracy', 0.0))
-                    
-                    # 評価3のスコア
-                    knowledge_gaps_metrics = result.get('knowledge_gaps_metrics', {})
-                    if knowledge_gaps_metrics:
-                        eval3_scores.append(knowledge_gaps_metrics.get('avg_accuracy', 0.0))
-                
-                # 平均を計算して記録（最終ステップとして）
-                try:
-                    # runがアクティブかどうかをチェック
-                    if hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None:
-                        print(f"警告: wandb runが既に終了しています。最終ログを記録できませんでした。")
-                    else:
-                        # 最終ステップ番号を取得（シミュレーション数 + 1）
-                        final_step = num_simulations + 1
-                        if eval1_scores:
-                            overall_wandb_run.log({'overall/avg_eval1_score': sum(eval1_scores) / len(eval1_scores)}, step=final_step)
-                        if eval2_scores:
-                            overall_wandb_run.log({'overall/avg_eval2_score': sum(eval2_scores) / len(eval2_scores)}, step=final_step)
-                        if eval3_scores:
-                            overall_wandb_run.log({'overall/avg_eval3_score': sum(eval3_scores) / len(eval3_scores)}, step=final_step)
-                    
-                    # runがアクティブな場合のみfinishを呼ぶ
-                    if not (hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None):
-                        overall_wandb_run.finish()
-                except Exception as log_error:
-                    # wandb runが終了している場合など
-                    error_str = str(log_error)
-                    if "finished" in error_str.lower() or "active" in error_str.lower():
-                        print(f"警告: wandb runが既に終了しています。最終ログを記録できませんでした。")
-                    else:
-                        print(f"警告: wandb最終ログの記録中にエラーが発生しました: {log_error}")
-                    try:
-                        # runがアクティブな場合のみfinishを呼ぶ
-                        if not (hasattr(overall_wandb_run, '_run') and overall_wandb_run._run is None):
-                            overall_wandb_run.finish()
-                    except:
-                        pass
-                print(f"--- 全体実行用wandbログを完了しました ---")
-            except Exception as e:
-                print(f"警告: 全体実行用wandb最終ログの記録中にエラーが発生しました: {e}")
-                if overall_wandb_run:
-                    try:
-                        overall_wandb_run.finish()
-                    except:
-                        pass
+        except Exception as e:
+            print(f"警告: 既存ファイルの読み込みに失敗しました: {e}")
+            print("新規ファイルとして保存します...")
+            existing_summary_file = None
 
+    if not existing_summary_file:
+        summary_data = {
+            'experiment_summary': {
+                'total_simulations': num_simulations,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'created_timestamp': datetime.datetime.now().isoformat(),
+                'set_index': set_index,
+                'interviewer_model_type': interviewer_model_type,
+                'interviewer_model_name': interviewer_model_name,
+                'max_rounds': max_rounds,
+                'experiment_id': experiment_id
+            },
+            'individual_results': all_results
+        }
+        summary_file = results_dir / f'experiment_summary_{timestamp_str}_{experiment_id}.json'
+        with open(summary_file, 'w', encoding='utf-8') as f:
+            json.dump(summary_data, f, ensure_ascii=False, indent=2)
+        print(f"\n{'='*80}")
+        print("全シミュレーション完了")
+        print(f"実験ID: {experiment_id}")
+        print(f"個別結果: {len(all_results)}件")
+        print(f"サマリーファイル: {summary_file}")
+        print(f"{'='*80}\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='面接ロールプレイ実行システム')
