@@ -8,7 +8,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "YOUR_OPENAI_API_KEY_HERE")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "YOUR_GOOGLE_API_KEY_HERE")
 
 # APIプロバイダー設定 ("openai" または "google")
-API_PROVIDER = os.environ.get("API_PROVIDER", "google")
+API_PROVIDER = os.environ.get("API_PROVIDER", "openai")
 
 # ローカル設定ファイルがあれば読み込んで上書き
 # git管理外の local_config.py に APIキーなどを記述可能
@@ -37,9 +37,9 @@ elif API_PROVIDER == "google" and (GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE" 
     print()
 
 # 使用するモデル名
-INTERVIEWER_MODEL = "gemini-2.5-flash-lite"  # 面接官役
-# INTERVIEWER_MODEL = "gpt-4o-mini"  # 面接官役 (OpenAI)
-APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
+INTERVIEWER_MODEL = "gpt-4o-mini"  # 面接官役 (OpenAI)
+# INTERVIEWER_MODEL = "gemini-2.5-flash-lite"  # 面接官役 (Google)
+APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
 
 # --- 実験設定 ---
 NUM_CANDIDATES = 3  # 候補者の数

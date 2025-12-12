@@ -7,6 +7,13 @@ import time
 from pathlib import Path
 import re
 
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("警告: wandbモジュールが見つかりません。計測の記録をスキップします。")
+
 from config import (
     INTERVIEWER_MODEL, APPLICANT_MODEL, NUM_CANDIDATES, MAX_ROUNDS,
     ASPIRATION_LEVEL_MAPPING, DB_FILE_PATH,
@@ -81,6 +88,16 @@ def find_existing_summary_file(results_dir, experiment_id):
         # 最新のファイルを返す
         return max(existing_files, key=lambda p: p.stat().st_mtime)
     return None
+
+
+def _safe_wandb_log(wandb_run, data, step=None):
+    """wandb.logのラッパー（wandb未導入や失敗時は黙ってスキップ）"""
+    if wandb_run is None or not data:
+        return
+    try:
+        wandb_run.log(data, step=step)
+    except Exception as e:
+        print(f"警告: wandb.log中にエラーが発生しました: {e}")
 
 
 def load_data_from_db(set_index=None):
@@ -216,7 +233,27 @@ def _extract_candidate_from_text(candidate_states, evaluation_text):
                 return state
     return None
 
-def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, local_model=None, local_tokenizer=None, api_provider=None):
+
+def _get_true_lowest_candidates(candidate_states):
+    """準備レベルから真の「志望度が低い」候補者集合を返す"""
+    level_score = {'low': 1, 'medium': 2, 'high': 3}
+    scores = []
+    for state in candidate_states:
+        prep = state['profile'].get('preparation', 'low')
+        scores.append((state['profile']['name'], level_score.get(prep, 1)))
+    min_score = min(score for _, score in scores)
+    return {name for name, score in scores if score == min_score}
+
+
+def _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval):
+    """評価1の予測が正しいかを1/0で返す"""
+    true_lowest = _get_true_lowest_candidates(candidate_states)
+    pred_state = _extract_candidate_from_text(candidate_states, least_motivated_eval)
+    if pred_state is None:
+        return 0
+    return 1 if pred_state['profile']['name'] in true_lowest else 0
+
+def run_single_interview(set_index=None, simulation_num=1, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, local_model=None, local_tokenizer=None, api_provider=None, experiment_id=None, wandb_group=None):
     """単一の面接シミュレーションを実行
     
     Args:
@@ -227,6 +264,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         max_rounds: 最大ラウンド数
         local_model: 再利用するローカルモデル（オプション、提供されない場合は新規初期化）
         local_tokenizer: 再利用するローカルトークナイザー（オプション、提供されない場合は新規初期化）
+        experiment_id: 実験ID（wandbログ用、任意）
+        wandb_group: wandbのグループ名（同じ実験IDなどを指定）
     """
     print("\n" + "="*60)
     print(f"面接ロールプレイ実行システム - シミュレーション {simulation_num}")
@@ -313,6 +352,19 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     
     # 直前の全体質問で最も志望度が低いと判断された候補者（個別質問の対象）
     target_candidate_for_individual = None
+
+    # ラウンドごとの配列（wandb送信用）
+    eval1_hits_series = []
+    eval2_hits_series = []
+    eval3_accuracy_series = []
+    eval3_f1_series = []
+
+    # シミュレーション全体のトークン集計
+    simulation_token_totals = {
+        'prompt_tokens': 0,
+        'completion_tokens': 0,
+        'total_tokens': 0
+    }
     
     
     for round_num in range(1, max_rounds + 1):
@@ -378,6 +430,10 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             _accumulate_tokens(round_token_info, eval1_token_info)
             
             print(f"{least_motivated_eval}\n")
+
+            # 評価1正解判定（1/0）
+            eval1_hit = _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval)
+            eval1_hits_series.append(eval1_hit)
             
             # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             target_state = _extract_candidate_from_text(candidate_states, least_motivated_eval)
@@ -400,6 +456,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+            perfect_match = 1 if ranking_accuracy and ranking_accuracy.get('is_valid') and ranking_accuracy.get('correct_positions') == ranking_accuracy.get('total_positions') else 0
+            eval2_hits_series.append(perfect_match)
             if ranking_accuracy:
                 if ranking_accuracy.get('is_valid'):
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
@@ -420,6 +478,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
             if knowledge_gaps_metrics:
+                eval3_accuracy_series.append(knowledge_gaps_metrics.get('avg_accuracy', 0))
+                eval3_f1_series.append(knowledge_gaps_metrics.get('avg_f1_score', 0))
                 print(f"\n--- 評価3: 全体統計 ---")
                 print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
                 print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
@@ -476,6 +536,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     'ranking': ranking_eval,
                     'knowledge_gaps': knowledge_gaps_eval
                 },
+                'eval1_hit': eval1_hit,
+                'eval2_perfect_match': perfect_match,
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
@@ -546,6 +608,10 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
             
             print(f"{least_motivated_eval}\n")
+
+            # 評価1正解判定（1/0）
+            eval1_hit = _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval)
+            eval1_hits_series.append(eval1_hit)
             
             # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
             import re
@@ -594,6 +660,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
 
             # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
+            perfect_match = 1 if ranking_accuracy and ranking_accuracy.get('is_valid') and ranking_accuracy.get('correct_positions') == ranking_accuracy.get('total_positions') else 0
+            eval2_hits_series.append(perfect_match)
             if ranking_accuracy:
                 if ranking_accuracy.get('is_valid'):
                     print(f"精度スコア: {ranking_accuracy['accuracy']:.3f}")
@@ -619,6 +687,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3の精度計算
             knowledge_gaps_metrics = calculate_knowledge_gaps_metrics(candidate_states, knowledge_gaps_eval)
             if knowledge_gaps_metrics:
+                eval3_accuracy_series.append(knowledge_gaps_metrics.get('avg_accuracy', 0))
+                eval3_f1_series.append(knowledge_gaps_metrics.get('avg_f1_score', 0))
                 print(f"\n--- 評価3: 全体統計 ---")
                 print(f"平均精度: {knowledge_gaps_metrics.get('avg_accuracy', 0):.3f}")
                 print(f"平均F1スコア: {knowledge_gaps_metrics.get('avg_f1_score', 0):.3f}")
@@ -665,6 +735,9 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                         print(f"  {level}: {accuracy:.3f}")
                     else:
                         print(f"  {level}: データなし")
+            else:
+                eval3_accuracy_series.append(0)
+                eval3_f1_series.append(0)
             
             # 個別質問ラウンドの評価結果を保存
             round_evaluations.append({
@@ -676,6 +749,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     'ranking': ranking_eval,
                     'knowledge_gaps': knowledge_gaps_eval
                 },
+                'eval1_hit': eval1_hit,
+                'eval2_perfect_match': perfect_match,
                 'ranking_accuracy': ranking_accuracy,
                 'knowledge_gaps_metrics': knowledge_gaps_metrics
             })
@@ -685,6 +760,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             print(f"\n{'='*60}")
             print(f"ラウンド {round_num} 完了。次のラウンドに進みます...")
             print(f"{'='*60}\n")
+
+        # ラウンドごとのトークンをシミュレーショントータルに集計
+        simulation_token_totals['prompt_tokens'] += round_token_info.get('prompt_tokens', 0)
+        simulation_token_totals['completion_tokens'] += round_token_info.get('completion_tokens', 0)
+        simulation_token_totals['total_tokens'] += round_token_info.get('total_tokens', 0)
     
     # 結果を保存
     results_dir = Path(__file__).parent / 'results'
@@ -710,6 +790,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         'evaluations': get_last_common_question_evaluations(round_evaluations),
         'ranking_accuracy': get_last_common_question_ranking_accuracy(round_evaluations),
         'knowledge_gaps_metrics': get_last_common_question_knowledge_gaps_metrics(round_evaluations),
+        'eval1_hits': {re['round']: re.get('eval1_hit') for re in round_evaluations},
+        'eval2_perfect_matches': {re['round']: re.get('eval2_perfect_match') for re in round_evaluations},
+        'eval1_hits_series': eval1_hits_series,
+        'eval2_hits_series': eval2_hits_series,
+        'eval3_accuracy_series': eval3_accuracy_series,
+        'eval3_f1_series': eval3_f1_series,
+        'token_usage': simulation_token_totals,
         'round_evaluations': round_evaluations  # 全ラウンドの評価結果
     }
     
@@ -720,7 +807,41 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     print(f"\n{'='*60}")
     print(f"結果を保存しました: {result_file}")
     print(f"{'='*60}\n")
-    
+
+    # wandbへのログ出力：シミュレーション単位で1 runを作成し、ターン配列をそのまま保存
+    if WANDB_AVAILABLE:
+        try:
+            run_name = f"{interviewer_model_name}_sim{simulation_num}_set{actual_set_index}"
+            wandb_run = wandb.init(
+                project="mochi-interview",
+                name=run_name,
+                config={
+                    "simulation_num": simulation_num,
+                    "set_index": actual_set_index,
+                    "interviewer_model_type": interviewer_model_type,
+                    "interviewer_model_name": interviewer_model_name,
+                    "applicant_model_name": APPLICANT_MODEL,
+                    "max_rounds": max_rounds,
+                    "api_provider": api_provider,
+                    "experiment_id": experiment_id,
+                },
+                group=wandb_group or experiment_id,
+                reinit=True,
+            )
+            _safe_wandb_log(
+                wandb_run,
+                {
+                    "eval1/hits": eval1_hits_series,
+                    "eval2/hits": eval2_hits_series,
+                    "eval3/accuracy": eval3_accuracy_series,
+                    "eval3/f1": eval3_f1_series,
+                },
+                step=0,
+            )
+            wandb_run.finish()
+        except Exception as e:
+            print(f"警告: wandbへの記録に失敗しました: {e}")
+
     return result_data
 
 
@@ -742,6 +863,8 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
 
     print(f"面接官モデル: {interviewer_model_type} ({interviewer_model_name})")
 
+    experiment_id = generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds)
+
     results_dir = Path(__file__).parent / 'results'
     results_dir.mkdir(exist_ok=True)
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -749,6 +872,7 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
 
     shared_local_model = None
     shared_local_tokenizer = None
+
     if interviewer_model_type == 'local':
         print(f"\n--- ローカルモデル ({interviewer_model_name}) を初期化します（全シミュレーションで再利用） ---")
         shared_local_model, shared_local_tokenizer = initialize_local_model(interviewer_model_name)
@@ -770,7 +894,9 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             max_rounds=max_rounds,
             local_model=shared_local_model,
             local_tokenizer=shared_local_tokenizer,
-            api_provider=api_provider
+            api_provider=api_provider,
+            experiment_id=experiment_id,
+            wandb_group=experiment_id
         )
 
         if result:
@@ -780,7 +906,6 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
         print("シミュレーション結果が生成されませんでした。")
         return
 
-    experiment_id = generate_experiment_id(set_index, interviewer_model_type, interviewer_model_name, max_rounds)
     existing_summary_file = find_existing_summary_file(results_dir, experiment_id)
 
     if existing_summary_file:

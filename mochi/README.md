@@ -123,6 +123,17 @@ mochi/
    API_PROVIDER = "google"
    ```
    
+4. **（任意）Weights & Biases での計測**
+   
+   `wandb` を使って評価値やトークン数を記録できます。
+   ```bash
+   pip install -r requirements.txt   # wandbも含まれます
+   wandb login                       # ブラウザで発行したAPIキーを入力
+   # もしくは環境変数で
+   export WANDB_API_KEY="your-wandb-key"
+   ```
+   実行すると自動で run が作成され、ランキング精度・知識欠損メトリクス・トークン消費などがログされます。
+
 
 ## 使い方
 
