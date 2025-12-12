@@ -7,13 +7,6 @@ WebGUIを排除し、必要最小限の機能のみを実装しています。
 
 ## クイックスタート
 
-デモを実行してシステムの動作を確認（API呼び出しなし）:
-
-```bash
-cd mochi
-python demo.py
-```
-
 実際の面接シミュレーションを実行:
 
 ```bash
@@ -61,9 +54,9 @@ mochi/
 ├── utils.py                   # ユーティリティ関数（API呼び出し）
 ├── interviewer.py             # 面接官役のクラス
 ├── student.py                 # 応募者役のクラス
-├── main.py                    # メイン実行スクリプト
-├── demo.py                    # デモスクリプト（API呼び出しなし）
-├── validate_structure.py      # 構造検証スクリプト
+├── metrics.py                 # 評価メトリクス計算
+├── runner.py                  # 面接フロー実行ロジック
+├── main.py                    # CLIエントリ
 ├── requirements.txt           # 依存ライブラリ
 ├── results/                   # 結果保存ディレクトリ（自動生成）
 └── README.md                  # このファイル
