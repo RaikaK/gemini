@@ -4,14 +4,17 @@ import json
 from openai import OpenAI
 from config import OPENAI_API_KEY, GOOGLE_API_KEY, API_PROVIDER
 
-def call_openai_api(model_name, prompt):
+def call_openai_api(model_name, prompt, provider=None):
     """APIを呼び出してテキスト応答を取得 (OpenAI / Google)"""
+    
+    # プロバイダーの決定（引数指定があればそれを優先、なければconfig設定に従う）
+    effective_provider = provider if provider else API_PROVIDER
     
     api_key = None
     base_url = None
     
     # プロバイダーごとの設定
-    if API_PROVIDER == "google":
+    if effective_provider == "google":
         api_key = GOOGLE_API_KEY
         base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
         if not api_key or api_key == "YOUR_GOOGLE_API_KEY_HERE":
@@ -32,12 +35,20 @@ def call_openai_api(model_name, prompt):
             client = OpenAI(api_key=api_key, base_url=base_url)
         else:
             client = OpenAI(api_key=api_key)
+        
+        # 特定のモデル（gpt-5-miniなど）はtemperatureパラメータをサポートしていない
+        # これらのモデルではtemperatureを設定しない（デフォルト値1を使用）
+        temperature_unsupported_models = ["gpt-5-mini", "gpt-5"]
+        request_params = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}]
+        }
+        
+        # temperatureをサポートしているモデルのみにtemperatureを設定
+        if model_name not in temperature_unsupported_models:
+            request_params["temperature"] = 0.7
             
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
-        )
+        response = client.chat.completions.create(**request_params)
         
         # トークン数情報を取得
         usage = response.usage
@@ -52,7 +63,7 @@ def call_openai_api(model_name, prompt):
         error_str = str(e)
         # エラーメッセージの整形
         if "401" in error_str or "invalid_api_key" in error_str.lower() or "incorrect api key" in error_str.lower():
-            if API_PROVIDER == "google":
+            if effective_provider == "google":
                 error_message = (
                     "Google APIキーが無効です。以下の点を確認してください:\n"
                     "1. 環境変数GOOGLE_API_KEYに正しいAPIキーが設定されているか\n"
@@ -67,7 +78,7 @@ def call_openai_api(model_name, prompt):
                     f"エラー詳細: {error_str}"
                 )
         else:
-            error_message = f"API呼び出しエラー (Provider: {API_PROVIDER}): {error_str}"
+            error_message = f"API呼び出しエラー (Provider: {effective_provider}): {error_str}"
         print(f"エラー: {error_message}")
         return error_message, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 

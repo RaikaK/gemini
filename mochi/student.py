@@ -51,8 +51,10 @@ class CompanyKnowledgeManager:
 class Applicant:
     """応募者（学生）役のLLM"""
     
-    def __init__(self, model_name):
+    def __init__(self, model_name, api_provider=None):
         self.model_name = model_name
+        # APIプロバイダーの設定（指定がない場合はconfigから取得）
+        self.api_provider = api_provider or config.API_PROVIDER
     
     def generate_answer(self, candidate_profile, company_knowledge, conversation_history, question):
         """面接官の質問に対する回答を生成"""
@@ -99,5 +101,5 @@ class Applicant:
 指示: {candidate_profile['name']} として、上記の設定になりきり、就活生として振る舞ってください。回答は{config.MAX_ANSWER_LENGTH}字程度の自然な日本語で出力してください。前置きや説明は不要です。
 """
         
-        answer, token_info = call_openai_api(self.model_name, prompt)
+        answer, token_info = call_openai_api(self.model_name, prompt, provider=self.api_provider)
         return answer, token_info

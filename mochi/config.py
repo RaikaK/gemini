@@ -37,8 +37,15 @@ elif API_PROVIDER == "google" and (GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE" 
     print()
 
 # 使用するモデル名
-INTERVIEWER_MODEL = "gemini-2.5-flash-lite"  # 面接官役
-# INTERVIEWER_MODEL = "gpt-4o-mini"  # 面接官役 (OpenAI)
+# 使用するモデル名
+DEFAULT_GOOGLE_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_OPENAI_MODEL = "gpt-5-mini" # User requested default
+
+if API_PROVIDER == "google":
+    INTERVIEWER_MODEL = DEFAULT_GOOGLE_MODEL
+else:
+    INTERVIEWER_MODEL = DEFAULT_OPENAI_MODEL
+
 APPLICANT_MODEL = "gemini-2.5-flash-lite"     # 応募者役
 
 # --- 実験設定 ---
@@ -121,3 +128,6 @@ LOCAL_MODEL_NAME = "llama3"  # AVAILABLE_LOCAL_MODELSのキーを指定
 ENABLE_WANDB = True  # wandbログを有効にするかどうか
 WANDB_PROJECT = "penguin-paper-interviews"  # wandbプロジェクト名
 WANDB_ENTITY = None  # wandbエンティティ（Noneの場合はデフォルト）
+
+# --- 評価設定 ---
+EVALUATION_CONFIDENCE_THRESHOLD = 4  # 評価を受け入れる確信度の閾値 (1-5)

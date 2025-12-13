@@ -14,6 +14,7 @@ from config import (
     INTERVIEWER_MODEL_TYPE, LOCAL_MODEL_NAME, AVAILABLE_LOCAL_MODELS,
     ENABLE_WANDB, WANDB_PROJECT, WANDB_ENTITY
 )
+import config
 from interviewer import Interviewer
 from student import CompanyKnowledgeManager, Applicant
 import re
@@ -650,8 +651,16 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
         )
         print(f"--- 面接官タイプ: APIモデル ({interviewer_model_name}) ---")
     
+    # 応募者モデルをプロバイダーに応じて決定
+    applicant_model = config.APPLICANT_MODEL
+    if api_provider:
+        if api_provider == 'openai':
+            applicant_model = config.DEFAULT_OPENAI_MODEL
+        else:
+            applicant_model = config.DEFAULT_GOOGLE_MODEL
+    
     # 応募者を初期化
-    applicant = Applicant(APPLICANT_MODEL)
+    applicant = Applicant(applicant_model, api_provider=api_provider)
     knowledge_manager = CompanyKnowledgeManager(company_profile)
     
     # 候補者の状態を初期化
@@ -826,7 +835,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価1: 最も志望度が低い候補者を選定
             print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
             eval1_start_time = time.time()
-            least_motivated_eval, eval1_token_info = interviewer.select_least_motivated_candidate(candidate_states)
+            least_motivated_result, eval1_token_info = interviewer.select_least_motivated_candidate(
+                candidate_states,
+                current_round=round_num,
+                total_rounds=MAX_ROUNDS
+            )
             eval1_time = time.time() - eval1_start_time
             
             # token数を集計
@@ -835,7 +848,49 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['completion_tokens'] += eval1_token_info.get('completion_tokens', 0)
                 round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
             
-            print(f"{least_motivated_eval}\n")
+            # 結果の取り出し
+            if hasattr(least_motivated_result, 'candidate_name'):
+                least_motivated_eval = least_motivated_result.candidate_name
+                confidence = least_motivated_result.confidence
+                reason = getattr(least_motivated_result, 'reason', '')
+            else:
+                # フォールバックの場合（タプルや文字列の場合）
+                least_motivated_eval = str(least_motivated_result)
+                confidence = 1
+                reason = "Fallback"
+            
+            print(f"選定結果: {least_motivated_eval} (確信度: {confidence}/5)")
+            if reason:
+                print(f"理由: {reason}")
+            print("")
+            
+            # 確信度が閾値未満の場合は評価不能として扱う
+            predicted_least_motivated = None
+            if confidence >= config.EVALUATION_CONFIDENCE_THRESHOLD:
+                # 候補者名を抽出
+                # パターン1: 直接候補者名が含まれている場合
+                for state in candidate_states:
+                    candidate_name = state['profile']['name']
+                    if candidate_name in least_motivated_eval:
+                        predicted_least_motivated = candidate_name
+                        break
+                
+                # パターン2: 正規表現で抽出を試みる
+                if predicted_least_motivated is None:
+                    match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                    if match:
+                        extracted_name = match.group(1)
+                        for state in candidate_states:
+                            if state['profile']['name'] == extracted_name:
+                                predicted_least_motivated = extracted_name
+                                break
+                
+                if predicted_least_motivated:
+                    print(f"→ 予測候補者: {predicted_least_motivated} (採用)")
+                else:
+                    print(f"→ 候補者名を特定できませんでした: {least_motivated_eval}")
+            else:
+                print(f"→ 確信度が低いため評価を保留します (閾値: {config.EVALUATION_CONFIDENCE_THRESHOLD})")
             
             # プロンプトログに記録
             prompt_logs.append({
@@ -845,37 +900,40 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'candidate': 'all',
                 'prompt': 'Select least motivated candidate',
                 'response': least_motivated_eval,
+                'confidence': confidence,
+                'reason': reason,
                 'time_seconds': eval1_time,
                 'token_info': eval1_token_info
             })
             
-            # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
-            import re
-            # より柔軟なパターンで候補者名を抽出
-            target_candidate_name = None
-            # パターン1: 直接候補者名が含まれている場合
-            for state in candidate_states:
-                candidate_name = state['profile']['name']
-                # 候補者名がテキストに含まれているかチェック
-                if candidate_name in least_motivated_eval:
-                    target_candidate_name = candidate_name
-                    target_candidate_for_individual = state
-                    print(f"次の個別質問の対象: {target_candidate_name}")
-                    break
+            # 個別質問の対象（これは確信度に関わらず、モデルが選んだ候補者に対して行う）
+            # 次の個別質問の対象: 予測された候補者（いなければランダムなど、ここでは予測結果を優先）
+            target_candidate_name = predicted_least_motivated
             
-            # パターン2: 正規表現で抽出を試みる
-            if target_candidate_name is None:
-                # 「学生」で始まり、英数字が続くパターン
-                match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                if match:
-                    extracted_name = match.group(1)
-                    # 候補者名リストと照合
-                    for state in candidate_states:
-                        if state['profile']['name'] == extracted_name:
-                            target_candidate_name = extracted_name
-                            target_candidate_for_individual = state
-                            print(f"次の個別質問の対象: {target_candidate_name} (正規表現で抽出)")
-                            break
+            if target_candidate_name:
+                 # 対応するstateを取得
+                for state in candidate_states:
+                    if state['profile']['name'] == target_candidate_name:
+                        target_candidate_for_individual = state
+                        print(f"次の個別質問の対象: {target_candidate_name}")
+                        break
+            else:
+                # 予測できなかった場合、評価テキストから抽出を試みる（確信度低でも質問はする必要があるため）
+                candidates_in_text = []
+                for state in candidate_states:
+                    if state['profile']['name'] in least_motivated_eval:
+                        candidates_in_text.append(state)
+                
+                if candidates_in_text:
+                    target_candidate_for_individual = candidates_in_text[0]
+                    target_candidate_name = target_candidate_for_individual['profile']['name']
+                    print(f"次の個別質問の対象: {target_candidate_name} (テキストから推定)")
+                else:
+                     # それでも決まらない場合は、前の対象を維持するか、ランダム
+                     if target_candidate_for_individual is None:
+                         target_candidate_for_individual = candidate_states[0]
+                         target_candidate_name = target_candidate_for_individual['profile']['name']
+                         print(f"次の個別質問の対象: {target_candidate_name} (デフォルト)")
             
             # 評価1と評価2の区切り
             print(f"{'='*60}\n")
@@ -920,7 +978,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3: 知識欠損検出
             print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
             eval3_start_time = time.time()
-            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(
+                candidate_states, 
+                least_motivated_eval, 
+                ranking_eval,
+                current_round=round_num,
+                total_rounds=MAX_ROUNDS
+            )
             eval3_time = time.time() - eval3_start_time
             
             # token数を集計
@@ -1009,37 +1073,26 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 try:
                     log_dict = {}
                     
-                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
-                    # 真の最も志望度が低い候補者を特定
-                    true_least_motivated = None
+                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか
+                    # 改良版ロジック:
+                    # 1. 確信度が閾値以上であること (predicted_least_motivatedがNoneでないことで担保)
+                    # 2. 選ばれた候補者が真の「志望度low」候補者であれば正解（複数該当する場合はいずれでもOK）
+                    
+                    # 真の最も志望度が低い候補者リストを作成
+                    true_least_motivated_candidates = []
                     for state in candidate_states:
                         if state['profile'].get('preparation', 'low') == 'low':
-                            true_least_motivated = state['profile']['name']
-                            break
+                            true_least_motivated_candidates.append(state['profile']['name'])
                     
-                    # 予測された最も志望度が低い候補者を抽出
-                    predicted_least_motivated = None
-                    if least_motivated_eval:
-                        # 候補者名を抽出
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            if candidate_name in least_motivated_eval:
-                                predicted_least_motivated = candidate_name
-                                break
-                        # 抽出できなかった場合、正規表現で試す
-                        if predicted_least_motivated is None:
-                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                            if match:
-                                extracted_name = match.group(1)
-                                for state in candidate_states:
-                                    if state['profile']['name'] == extracted_name:
-                                        predicted_least_motivated = extracted_name
-                                        break
+                    eval1_score = 0.0
                     
-                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
-                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                        true_least_motivated == predicted_least_motivated) else 0.0
+                    if predicted_least_motivated:
+                        # 確信度が閾値を超えていて、予測候補者が特定できている場合
+                        if predicted_least_motivated in true_least_motivated_candidates:
+                            eval1_score = 1.0
+                            
                     log_dict['eval1/least_motivated_accuracy'] = eval1_score
+                    log_dict['eval1/confidence'] = confidence
                     
                     # 評価2: ランキング精度
                     if ranking_accuracy and ranking_accuracy.get('is_valid'):
@@ -1212,7 +1265,11 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価1: 最も志望度が低い候補者を選定
             print(f"【ラウンド {round_num} - 評価1: 最も志望度が低い候補者の選定】")
             eval1_start_time = time.time()
-            least_motivated_eval, eval1_token_info = interviewer.select_least_motivated_candidate(candidate_states)
+            least_motivated_result, eval1_token_info = interviewer.select_least_motivated_candidate(
+                candidate_states,
+                current_round=round_num,
+                total_rounds=MAX_ROUNDS
+            )
             eval1_time = time.time() - eval1_start_time
             
             # token数を集計
@@ -1221,7 +1278,21 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 round_token_info['completion_tokens'] += eval1_token_info.get('completion_tokens', 0)
                 round_token_info['total_tokens'] += eval1_token_info.get('total_tokens', 0)
             
-            print(f"{least_motivated_eval}\n")
+            # 結果の取り出し
+            if hasattr(least_motivated_result, 'candidate_name'):
+                least_motivated_eval = least_motivated_result.candidate_name
+                confidence = least_motivated_result.confidence
+                reason = getattr(least_motivated_result, 'reason', '')
+            else:
+                # フォールバックの場合（タプルや文字列の場合）
+                least_motivated_eval = str(least_motivated_result)
+                confidence = 1
+                reason = "Fallback"
+                
+            print(f"選定結果: {least_motivated_eval} (確信度: {confidence}/5)")
+            if reason:
+                print(f"理由: {reason}")
+            print("")
             
             # プロンプトログに記録
             prompt_logs.append({
@@ -1231,37 +1302,65 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 'candidate': 'all',
                 'prompt': 'Select least motivated candidate',
                 'response': least_motivated_eval,
+                'confidence': confidence,
+                'reason': reason,
                 'time_seconds': eval1_time,
                 'token_info': eval1_token_info
             })
             
-            # 評価1の結果から候補者名を抽出（次の全体質問での個別質問の対象として保存）
-            import re
-            # より柔軟なパターンで候補者名を抽出
-            next_target_candidate_name = None
-            # パターン1: 直接候補者名が含まれている場合
-            for state in candidate_states:
-                candidate_name = state['profile']['name']
-                # 候補者名がテキストに含まれているかチェック
-                if candidate_name in least_motivated_eval:
-                    next_target_candidate_name = candidate_name
-                    target_candidate_for_individual = state
-                    print(f"次の個別質問の対象: {next_target_candidate_name}")
-                    break
+            # 確信度が閾値未満の場合は評価不能として扱う
+            predicted_least_motivated = None
+            if confidence >= config.EVALUATION_CONFIDENCE_THRESHOLD:
+                # 候補者名を抽出
+                # パターン1: 直接候補者名が含まれている場合
+                for state in candidate_states:
+                    candidate_name = state['profile']['name']
+                    if candidate_name in least_motivated_eval:
+                        predicted_least_motivated = candidate_name
+                        break
+                
+                # パターン2: 正規表現で抽出を試みる
+                if predicted_least_motivated is None:
+                    match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
+                    if match:
+                        extracted_name = match.group(1)
+                        for state in candidate_states:
+                            if state['profile']['name'] == extracted_name:
+                                predicted_least_motivated = extracted_name
+                                break
+                                
+                if predicted_least_motivated:
+                    print(f"→ 予測候補者: {predicted_least_motivated} (採用)")
+                else:
+                    print(f"→ 候補者名を特定できませんでした: {least_motivated_eval}")
+            else:
+                print(f"→ 確信度が低いため評価を保留します (閾値: {config.EVALUATION_CONFIDENCE_THRESHOLD})")
             
-            # パターン2: 正規表現で抽出を試みる
-            if next_target_candidate_name is None:
-                # 「学生」で始まり、英数字が続くパターン
-                match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                if match:
-                    extracted_name = match.group(1)
-                    # 候補者名リストと照合
-                    for state in candidate_states:
-                        if state['profile']['name'] == extracted_name:
-                            next_target_candidate_name = extracted_name
-                            target_candidate_for_individual = state
-                            print(f"次の個別質問の対象: {next_target_candidate_name} (正規表現で抽出)")
-                            break
+            # 評価1の結果から候補者名を抽出（次のラウンドでの個別質問の対象として保存）
+            # ここでは確信度に関わらず、会話を続けるために対象を選定する
+            next_target_candidate_name = predicted_least_motivated
+            
+            if next_target_candidate_name:
+                 # 対応するstateを取得
+                for state in candidate_states:
+                    if state['profile']['name'] == next_target_candidate_name:
+                        target_candidate_for_individual = state
+                        print(f"次の個別質問の対象: {next_target_candidate_name}")
+                        break
+            else:
+                # 予測できなかった場合、評価テキストから抽出を試みる
+                candidates_in_text = []
+                for state in candidate_states:
+                    if state['profile']['name'] in least_motivated_eval:
+                        candidates_in_text.append(state)
+                
+                if candidates_in_text:
+                    target_candidate_for_individual = candidates_in_text[0]
+                    next_target_candidate_name = target_candidate_for_individual['profile']['name']
+                    print(f"次の個別質問の対象: {next_target_candidate_name} (テキストから推定)")
+                else:
+                     # それでも決まらない場合はランダム等はせず、Noneのままにするか（次ラウンドで警告出る）
+                     pass
             
             # 評価1と評価2の区切り
             print(f"{'='*60}\n")
@@ -1306,7 +1405,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             # 評価3: 知識欠損検出
             print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
             eval3_start_time = time.time()
-            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(candidate_states, least_motivated_eval, ranking_eval)
+            knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(
+                candidate_states, 
+                least_motivated_eval, 
+                ranking_eval,
+                current_round=round_num,
+                total_rounds=MAX_ROUNDS
+            )
             eval3_time = time.time() - eval3_start_time
             
             # token数を集計
@@ -1396,37 +1501,26 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 try:
                     log_dict = {}
                     
-                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか（準備レベルがlowの候補者が選ばれているか）
-                    # 真の最も志望度が低い候補者を特定
-                    true_least_motivated = None
+                    # 評価1: 最も志望度が低い候補者が正しく選ばれているか
+                    # 改良版ロジック:
+                    # 1. 確信度が閾値以上であること (predicted_least_motivatedがNoneでないことで担保)
+                    # 2. 選ばれた候補者が真の「志望度low」候補者であれば正解（複数該当する場合はいずれでもOK）
+                    
+                    # 真の最も志望度が低い候補者リストを作成
+                    true_least_motivated_candidates = []
                     for state in candidate_states:
                         if state['profile'].get('preparation', 'low') == 'low':
-                            true_least_motivated = state['profile']['name']
-                            break
+                            true_least_motivated_candidates.append(state['profile']['name'])
                     
-                    # 予測された最も志望度が低い候補者を抽出
-                    predicted_least_motivated = None
-                    if least_motivated_eval:
-                        # 候補者名を抽出
-                        for state in candidate_states:
-                            candidate_name = state['profile']['name']
-                            if candidate_name in least_motivated_eval:
-                                predicted_least_motivated = candidate_name
-                                break
-                        # 抽出できなかった場合、正規表現で試す
-                        if predicted_least_motivated is None:
-                            match = re.search(r'(学生[A-Z]{1,3}\d{0,2})', least_motivated_eval)
-                            if match:
-                                extracted_name = match.group(1)
-                                for state in candidate_states:
-                                    if state['profile']['name'] == extracted_name:
-                                        predicted_least_motivated = extracted_name
-                                        break
+                    eval1_score = 0.0
                     
-                    # 評価1のスコア（正解なら1.0、不正解なら0.0）
-                    eval1_score = 1.0 if (true_least_motivated and predicted_least_motivated and 
-                                        true_least_motivated == predicted_least_motivated) else 0.0
+                    if predicted_least_motivated:
+                        # 確信度が閾値を超えていて、予測候補者が特定できている場合
+                        if predicted_least_motivated in true_least_motivated_candidates:
+                            eval1_score = 1.0
+                            
                     log_dict['eval1/least_motivated_accuracy'] = eval1_score
+                    log_dict['eval1/confidence'] = confidence
                     
                     # 評価2: ランキング精度
                     if ranking_accuracy and ranking_accuracy.get('is_valid'):
@@ -1652,59 +1746,48 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
     # モデル設定の表示
     if interviewer_model_type is None:
         interviewer_model_type = INTERVIEWER_MODEL_TYPE
+        
+    # プロバイダーとモデル名の整合性チェックと自動修正
+    effective_provider = api_provider if api_provider else config.API_PROVIDER
+    
+    # コマンドライン引数で指定されたプロバイダーをconfigに反映
+    if api_provider:
+        config.API_PROVIDER = api_provider
+        # 応募者モデルもプロバイダーに応じて設定
+        if api_provider == 'openai':
+            config.APPLICANT_MODEL = config.DEFAULT_OPENAI_MODEL
+        else:
+            config.APPLICANT_MODEL = config.DEFAULT_GOOGLE_MODEL
+
+    # モデル名が指定されていない場合のデフォルト設定
     if interviewer_model_name is None:
         if interviewer_model_type == 'local':
             interviewer_model_name = LOCAL_MODEL_NAME
         else:
-            interviewer_model_name = INTERVIEWER_MODEL
+            # APIプロバイダーに応じたデフォルトモデルを設定
+            if effective_provider == 'openai':
+                interviewer_model_name = config.DEFAULT_OPENAI_MODEL
+            else:
+                interviewer_model_name = config.DEFAULT_GOOGLE_MODEL
+    
+    if interviewer_model_type == 'api':
+        if effective_provider == 'openai' and 'gemini' in interviewer_model_name.lower():
+            print(f"警告: OpenAIプロバイダーが選択されましたが、モデル名が '{interviewer_model_name}' です。")
+            print(f"自動的に '{config.DEFAULT_OPENAI_MODEL}' に切り替えます。")
+            interviewer_model_name = config.DEFAULT_OPENAI_MODEL
+        elif effective_provider == 'google' and ('gpt' in interviewer_model_name.lower() or 'o1' in interviewer_model_name.lower()):
+            print(f"警告: Googleプロバイダーが選択されましたが、モデル名が '{interviewer_model_name}' です。")
+            print(f"自動的に '{config.DEFAULT_GOOGLE_MODEL}' に切り替えます。")
+            interviewer_model_name = config.DEFAULT_GOOGLE_MODEL
     
     print(f"面接官モデル: {interviewer_model_type} ({interviewer_model_name})")
     
     # wandbの全体実行用runを初期化（複数セット実行時）
     overall_wandb_run = None
-    if ENABLE_WANDB and WANDB_AVAILABLE and num_simulations > 1:
-        try:
-            import wandb
-            
-            # モデル名を短縮形に変換
-            model_short_name = interviewer_model_name
-            if '/' in model_short_name:
-                model_short_name = model_short_name.split('/')[-1]
-            if len(model_short_name) > 20:
-                model_short_name = model_short_name[:20]
-            
-            # Run名にモデル情報を含める
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-            run_name = f"{model_short_name}_overall_{num_simulations}sims_{timestamp}"
-            
-            # タグにモデル情報を追加
-            tags = [
-                f"model_type_{interviewer_model_type}",
-                f"model_{model_short_name}",
-                "overall_run",
-                f"simulations_{num_simulations}"
-            ]
-            if set_index is not None:
-                tags.append(f"set_{set_index}")
-            
-            overall_wandb_run = wandb.init(
-                project=WANDB_PROJECT,
-                entity=WANDB_ENTITY,
-                name=run_name,
-                tags=tags,
-                config={
-                    'num_simulations': num_simulations,
-                    'set_index': set_index,
-                    'interviewer_model_type': interviewer_model_type,
-                    'interviewer_model_name': interviewer_model_name,
-                    'max_rounds': max_rounds,
-                },
-                reinit=True
-            )
-            print(f"--- 全体実行用wandb runを開始しました (run: {overall_wandb_run.name}, model: {interviewer_model_name}) ---")
-        except Exception as e:
-            print(f"警告: 全体実行用wandb runの初期化に失敗しました: {e}")
-            overall_wandb_run = None
+    # if ENABLE_WANDB and WANDB_AVAILABLE and num_simulations > 1:
+    #     try:
+    #         import wandb
+    #         ...
     
     # スプレッドシート連携の初期化
     spreadsheet_integration = None

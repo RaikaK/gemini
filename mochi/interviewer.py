@@ -232,7 +232,7 @@ class Interviewer:
             # APIモデルでの生成ロジック
             system_prompt = "あなたは与えられた指示に日本語で正確に従う、非常に優秀で洞察力のある採用アナリストです。"
             full_prompt = f"システム指示: {system_prompt}\n\nユーザー指示:\n{prompt}"
-            response_text, token_info = call_openai_api(self.model_name, full_prompt)
+            response_text, token_info = call_openai_api(self.model_name, full_prompt, provider=self.api_provider)
             return response_text, token_info
         
         else:
@@ -266,9 +266,10 @@ class Interviewer:
 - 効率的に情報収集を進めたい場合
 
 # 指示
-1.  **全体分析**: 全候補者の会話を俯瞰し、ほとんどの候補者がまだ十分に言及していない「共通の未言及項目」を特定してください。
-2.  **戦略的質問生成**: 特定した項目の中から、候補者たちの企業研究の深さを比較する上で最も重要だと思われるものを1つ選び、それに関する具体的な共通質問を生成してください。
-3.  **比較可能性の確保**: 全候補者が同じ基準で回答できる質問であることを確認してください。
+1.  **カバレッジ分析**: まだ質問されていない「項目リスト」の中の項目を探してください。**過去の質問と重複するトピックは絶対に避けてください**。
+2.  **ターゲット選定**: **完全に新しいトピック**を最優先で選んでください。前の質問の関連質問ではなく、全く異なる分野（例：前の質問が「ビジョン」なら、次は「福利厚生」や「技術スタック」など）に切り替えることを意識してください。
+3.  **戦略的質問生成**: 選んだ新しいトピックについて、候補者の知識を試すための質問を作成してください。
+4.  **比較可能性の確保**: 全候補者が回答できる形式であることを確認してください。
 
 思考プロセスや前置きは一切含めず、質問文だけを出力してください。
 質問:"""
@@ -303,10 +304,10 @@ class Interviewer:
 - 情報が不足している候補者が特定されている場合
 
 # 指示
-1.  **分析**: 上記の「項目リスト」と「会話履歴」を比較し、まだ十分に話題に上がっていない項目は何かを特定してください。
-2.  **戦略的質問生成**: 特定した項目の中から、この学生の企業理解度を測るために最も効果的なものを1つ選び、それに関する具体的な質問を生成してください。
-3.  **個別性の確保**: この候補者に特化した、深掘りできる質問であることを確認してください。
-4.  **知識欠損の特定**: この候補者が特に不足している可能性が高い企業知識に焦点を当ててください。
+1.  **カバレッジ分析**: 上記の「項目リスト」と「会話履歴」を比較し、**まだ一度も話題に上がっていない項目**を特定してください。
+2.  **ターゲット選定**: **未言及の項目を最優先**して質問対象に選んでください。すでに話題に出た項目に関する深掘りは、その項目について明らかに理解が浅い場合のみに限定してください。
+3.  **戦略的質問生成**: 選んだ項目について、学生が本当に理解しているかを確認するための鋭い質問を作成してください。「〜についてどう思いますか？」のような抽象的な質問ではなく、具体的な事実や見解を問う質問にしてください。
+4.  **知識欠損のあぶり出し**: ターゲットとした項目について、知識がなければ答えられないような質問を投げかけ、知識の有無を判定しやすくしてください。
 
 思考プロセスや前置きは一切含めず、質問文だけを出力してください。
 質問:"""
@@ -314,7 +315,7 @@ class Interviewer:
         question, token_info = self._generate_response(prompt, max_tokens=512)
         return question.strip(), token_info
     
-    def select_least_motivated_candidate(self, candidate_states):
+    def select_least_motivated_candidate(self, candidate_states, current_round=1, total_rounds=10):
         """最も志望度が低いと思われる候補者を選定（構造化出力を使用）"""
         
         # 各候補者の会話ログを整形
@@ -333,9 +334,14 @@ class Interviewer:
         
         # Pydanticモデルで選定結果の構造を定義
         class LeastMotivatedResult(BaseModel):
-            candidate_name: str = Field(description="最も志望度が低い候補者名")
+            candidate_name: str = Field(description="最も志望度が低い候補者名。判断できない場合は'none'または有力な候補を記入")
+            confidence: int = Field(description="評価の確信度 (1: 全く自信なし/判断不能, 5: 非常に強い確信)", ge=1, le=5)
+            reason: str = Field(description="その判断に至った理由")
         
         prompt = f"""以下の候補者の面接内容を分析し、最も志望度が低いと思われる候補者を選んでください。
+
+# 現在の状況
+- 現在のラウンド: {current_round} / {total_rounds}
 
 # 面接内容
 {all_conversations}
@@ -348,7 +354,13 @@ class Interviewer:
 - 回答の具体性
 - 熱意の表現
 
-指示: 最も志望度が低いと判断される候補者名のみを出力してください。
+# 確信度のガイドライン
+現在はラウンド {current_round} です。以下の基準で確信度を決定してください：
+- 序盤 (1-{int(total_rounds * 0.3)}): まだ情報が少ない段階です。決定的な証拠がない限り、確信度は1-2に留めてください。「様子見」が適切な判断です。
+- 中盤 ({int(total_rounds * 0.3) + 1}-{int(total_rounds * 0.7)}): 仮説を立てる段階です。確信度は3前後を目安にしてください。
+- 終盤 ({int(total_rounds * 0.7) + 1}-{total_rounds}): 結論を出す段階です。これまでの情報を総合し、4-5の確信度で判断してください。
+
+指示: 最も志望度が低いと判断される候補者名と、その確信度（1-5）を出力してください。情報不足の場合は低い確信度を出力してください。
 """
         
         # ローカルモデルの場合、outlinesを使用
@@ -412,7 +424,7 @@ class Interviewer:
                 # 結果を文字列形式に変換
                 least_motivated_result = LeastMotivatedResult.model_validate(result)
                 
-                return least_motivated_result.candidate_name, None
+                return least_motivated_result, None
                 
             except Exception as e:
                 print(f"警告: outlinesでの構造化生成に失敗しました: {e}")
@@ -422,11 +434,23 @@ class Interviewer:
                     evaluation, token_info = self._generate_response(prompt, max_tokens=256)
                     # フォールバック時は候補者名を抽出を試みる
                     extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
-                    return extracted_name if extracted_name else evaluation, token_info
+                    # 簡易的なResultオブジェクトを作成
+                    class FallbackResult:
+                        def __init__(self, name, conf, reason):
+                            self.candidate_name = name
+                            self.confidence = conf
+                            self.reason = reason
+                    
+                    return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
                 except Exception as fallback_error:
                     print(f"警告: フォールバック生成も失敗しました: {fallback_error}")
+                    class FallbackResult:
+                        def __init__(self, name, conf, reason):
+                            self.candidate_name = name
+                            self.confidence = conf
+                            self.reason = reason
                     # 最後の手段: 最初の候補者を返す
-                    return candidate_names[0] if candidate_names else "不明", None
+                    return FallbackResult(candidate_names[0] if candidate_names else "none", 1, "Error"), None
         
         # APIモデルの場合、JSONモードを使用
         elif self.model_type == 'api':
@@ -437,16 +461,25 @@ class Interviewer:
                 # OpenAI APIのJSONモードで呼び出し
                 client = get_api_client(self.api_provider)
                 
-                response = client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
+                # 特定のモデル（gpt-5-miniなど）はtemperatureとmax_tokensパラメータをサポートしていない
+                temperature_unsupported_models = ["gpt-5-mini", "gpt-5"]
+                request_params = {
+                    "model": self.model_name,
+                    "messages": [
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt + "\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{\n  \"candidate_name\": \"候補者名\"\n}"}
+                        {"role": "user", "content": prompt + "\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{\n  \"candidate_name\": \"候補者名\",\n  \"confidence\": 1,\n  \"reason\": \"理由\"\n}"}
                     ],
-                    response_format={"type": "json_object"},
-                    temperature=0.6,
-                    max_tokens=256
-                )
+                    "response_format": {"type": "json_object"}
+                }
+                
+                # temperatureとmax_tokensをサポートしているモデルのみに設定
+                if self.model_name not in temperature_unsupported_models:
+                    request_params["temperature"] = 0.6
+                    request_params["max_tokens"] = 256
+                else:
+                    request_params["max_completion_tokens"] = 256
+                
+                response = client.chat.completions.create(**request_params)
                 
                 result_json = json.loads(response.choices[0].message.content)
                 least_motivated_result = LeastMotivatedResult.model_validate(result_json)
@@ -457,7 +490,7 @@ class Interviewer:
                     'total_tokens': response.usage.total_tokens
                 }
                 
-                return least_motivated_result.candidate_name, token_info
+                return least_motivated_result, token_info
                 
             except Exception as e:
                 print(f"警告: JSONモードでの生成に失敗しました: {e}")
@@ -466,14 +499,28 @@ class Interviewer:
                 evaluation, token_info = self._generate_response(prompt, max_tokens=256)
                 # フォールバック時は候補者名を抽出を試みる
                 extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
-                return extracted_name if extracted_name else evaluation, token_info
+                
+                class FallbackResult:
+                    def __init__(self, name, conf, reason):
+                        self.candidate_name = name
+                        self.confidence = conf
+                        self.reason = reason
+                        
+                return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
         
         # フォールバック: 通常の生成方法
         else:
             evaluation, token_info = self._generate_response(prompt, max_tokens=256)
             # フォールバック時は候補者名を抽出を試みる
             extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
-            return extracted_name if extracted_name else evaluation, token_info
+            
+            class FallbackResult:
+                def __init__(self, name, conf, reason):
+                    self.candidate_name = name
+                    self.confidence = conf
+                    self.reason = reason
+                    
+            return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
     
     def _extract_candidate_name_from_text(self, text, candidate_names):
         """テキストから候補者名を抽出する（フォールバック用）"""
@@ -634,16 +681,25 @@ class Interviewer:
                 # OpenAI APIのJSONモードで呼び出し
                 client = get_api_client(self.api_provider)
                 
-                response = client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
+                # 特定のモデル（gpt-5-miniなど）はtemperatureとmax_tokensパラメータをサポートしていない
+                temperature_unsupported_models = ["gpt-5-mini", "gpt-5"]
+                request_params = {
+                    "model": self.model_name,
+                    "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt + "\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{\n  \"ranking\": [\n    {\"rank\": 1, \"candidate_name\": \"候補者名\"},\n    {\"rank\": 2, \"candidate_name\": \"候補者名\"},\n    {\"rank\": 3, \"candidate_name\": \"候補者名\"}\n  ]\n}"}
                     ],
-                    response_format={"type": "json_object"},
-                    temperature=0.6,
-                    max_tokens=512
-                )
+                    "response_format": {"type": "json_object"}
+                }
+                
+                # temperatureとmax_tokensをサポートしているモデルのみに設定
+                if self.model_name not in temperature_unsupported_models:
+                    request_params["temperature"] = 0.6
+                    request_params["max_tokens"] = 512
+                else:
+                    request_params["max_completion_tokens"] = 512
+                
+                response = client.chat.completions.create(**request_params)
                 
                 result_json = json.loads(response.choices[0].message.content)
                 ranking_result = RankingResult.model_validate(result_json)
@@ -932,7 +988,7 @@ class Interviewer:
                 }
         return evaluation_results
     
-    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval):
+    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval, current_round=1, total_rounds=10):
         """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う"""
         
         full_company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
@@ -941,8 +997,15 @@ class Interviewer:
         base_prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
 以下の「正解の企業情報」、「各候補者の面接記録」を比較し、候補者の知識の穴を特定してください。
 
+# 現在の状況
+- 現在のラウンド: {current_round} / {total_rounds}
+
 # 重要な注意点
-単に候補者が言及しなかったという理由だけで、知識が欠損していると結論づけないでください。質問の流れの中で、その情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりした場合にのみ「知識欠損」と判断してください。
+単に候補者が言及しなかったという理由だけで、知識が欠損していると結論づけないでください。ただし、現在のラウンド数に応じて以下の基準で判断してください：
+
+1. 序盤 (1-{int(total_rounds * 0.4)}): 慎重に判断してください。明らかな誤りや矛盾がない限り、欠損とはみなさないでください。
+2. 中盤 ({int(total_rounds * 0.4) + 1}-{int(total_rounds * 0.7)}): 標準的な基準で判断してください。自然な文脈で言及すべき情報を逃している場合は欠損の可能性があります。
+3. 終盤 ({int(total_rounds * 0.7) + 1}-{total_rounds}): 総合的に判断してください。これまでの会話全体を通して、重要なトピックについての理解を確認できない場合は、知識欠損の可能性を検討してください。ただし、断定するには根拠（誤った回答、回避的な回答、質問への不自然な沈黙など）が必要です。
 
 # 正解の企業情報 (キーと値のペア)
 ```json
@@ -977,20 +1040,6 @@ class Interviewer:
         conversation_summary = self._format_all_conversations(all_states, max_rounds=max_conversation_rounds)
         
         prompt = f"""{base_prompt}{conversation_summary}
-
-指示:
-以下の「正解の企業情報」、「各候補者の面接記録」を比較し、候補者の知識の穴を特定してください。
-
-# 重要な注意点
-単に候補者が言及しなかったという理由だけで、知識が欠損していると結論づけないでください。質問の流れの中で、その情報に触れるのが自然な機会があったにもかかわらず、言及しなかったり、誤った情報を述べたり、曖昧に答えたりした場合にのみ「知識欠損」と判断してください。
-
-# 正解の企業情報 (キーと値のペア)
-```json
-{full_company_info_str}
-```
-
-# 各候補者の面接記録
-{conversation_summary}
 
 指示:
 各候補者について、以下の思考プロセスに基づき分析し、指定の形式で出力してください。
