@@ -1,8 +1,12 @@
 # utils.py - ユーティリティ関数
 
 import json
+import logging
 from openai import OpenAI
 from config import OPENAI_API_KEY, GOOGLE_API_KEY, API_PROVIDER
+
+# httpxのINFOログを抑制
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def call_openai_api(model_name, prompt):
     """APIを呼び出してテキスト応答を取得 (OpenAI / Google)"""

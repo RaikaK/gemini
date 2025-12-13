@@ -9,8 +9,11 @@ class CompanyKnowledgeManager:
     
     def __init__(self, company_profile):
         self.full_profile = company_profile
+        # 面接で使うキー（id, nameを除外）
+        self.question_keys = [k for k in company_profile.keys() if k not in ('id', 'name')]
+        # 全キー（保持用。id, name も含む）
         self.all_keys = list(company_profile.keys())
-        # 必須項目
+        # 必須項目（現行は未使用だが構造として残す）
         self.essential_keys = ["name", "business", "products", "vision"]
     
     def get_knowledge_for_level(self, level='high'):
@@ -34,16 +37,23 @@ class CompanyKnowledgeManager:
             if sample_size > 0:
                 keys_to_keep.update(random.sample(other_keys, sample_size))
         
-        # 知識辞書を作成
+        # 知識辞書を作成（id/nameは常に保持、質問対象は保持率に従う）
         knowledge_dict = {}
+        known_count = 0
         for key in self.all_keys:
-            if key in keys_to_keep:
-                knowledge_dict[key] = self.full_profile[key]
+            if key in ('id', 'name'):
+                knowledge_dict[key] = self.full_profile.get(key, "")
+                known_count += 1 if knowledge_dict[key] else 0
+            elif key in keys_to_keep:
+                knowledge_dict[key] = self.full_profile.get(key, "")
+                known_count += 1 if knowledge_dict[key] else 0
             else:
-                knowledge_dict[key] = ""  # 欠損
+                knowledge_dict[key] = ""  # 質問対象の欠損
         
-        coverage = int(len(keys_to_keep) / len(self.all_keys) * 100) if self.all_keys else 100
-        coverage_str = f"{len(keys_to_keep)}/{len(self.all_keys)} ({coverage}%)"
+        # カバレッジは質問対象キー数ベースで計算（id/name除外）
+        kept_qkeys = [k for k in self.question_keys if k in keys_to_keep]
+        coverage = int(len(kept_qkeys) / len(self.question_keys) * 100) if self.question_keys else 100
+        coverage_str = f"{len(kept_qkeys)}/{len(self.question_keys)} ({coverage}%)"
         
         return knowledge_dict, coverage_str
 
@@ -59,12 +69,17 @@ class Applicant:
         
         # 知識レベルに応じた指示
         preparation_level = candidate_profile.get('preparation', 'low')
+        bluff_clause = ""
         if preparation_level == "high":
             instruction = "非常に高い志望度と熱意を示してください。知らない情報は前向きな推測で補い、絶対に「知らない」とは言わないでください。"
         elif preparation_level == "medium":
             instruction = "高い志望度を示してください。知っている情報は具体的に述べ、知らない情報は業界の一般論などで補ってください。"
+            bluff_count = random.randint(1, 2)
+            bluff_clause = f"\n- 知らない項目があっても最大{bluff_count}個までは推測で補って構いません（間違いリスクは気にしすぎない）。"
         else:
             instruction = "志望度は示しつつも、企業知識に穴があることを隠しながら回答してください。"
+            bluff_count = random.randint(2, 3)
+            bluff_clause = f"\n- 知らない項目があっても最大{bluff_count}個までは推測やポジティブな言い回しで埋めてください。多少の誤りは気にせず流暢さを優先。"
         
         # 知っている企業情報をフォーマット
         known_info = "\n".join([f"- {k}: {v}" for k, v in company_knowledge.items() if v])
@@ -87,7 +102,7 @@ class Applicant:
 {known_info}
 
 # 回答の基本方針
-{instruction}
+{instruction}{bluff_clause}
 
 # これまでの会話
 {history_str}

@@ -47,8 +47,8 @@ MAX_ROUNDS = 10     # 面接ラウンド数（デフォルト）
 
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
-    'low': 0.2,     # 志望度が低い候補者の知識保持率
-    'medium': 0.5,  # 志望度が中程度の候補者の知識保持率
+    'low': 0.6,     # 志望度が低い候補者の知識保持率
+    'medium': 0.9,  # 志望度が中程度の候補者の知識保持率
     'high': 1.0     # 志望度が高い候補者の知識保持率（全て）
 }
 
@@ -66,7 +66,7 @@ ASPIRATION_LEVEL_MAPPING = {
 DB_FILE_PATH = "./db.json"  # mochiディレクトリから見た相対パス
 
 # デフォルト値
-DEFAULT_KNOWLEDGE_RETENTION_RATIO = 0.2  # 不明な志望度レベルのデフォルト保持率
+DEFAULT_KNOWLEDGE_RETENTION_RATIO = 0.6  # 不明な志望度レベルのデフォルト保持率
 
 # --- 複数回シミュレーション設定 ---
 NUM_SIMULATIONS = 1  # デフォルトのシミュレーション実行回数
