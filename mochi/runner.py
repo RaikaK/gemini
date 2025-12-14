@@ -90,6 +90,16 @@ def find_existing_summary_file(results_dir, experiment_id):
     return None
 
 
+def _format_gap_summary(missing_predictions):
+    """欠損予測のサマリ文字列を生成（評価1/2用の参考情報）"""
+    lines = []
+    for cname, mp in missing_predictions.items():
+        missing = [k for k, v in mp.items() if v]
+        known = [k for k, v in mp.items() if not v]
+        lines.append(f"{cname}: missing={missing if missing else 'none'}, known={known if known else 'none'}")
+    return "\n".join(lines) if lines else "（まだ欠損推定はありません）"
+
+
 def _safe_wandb_log(wandb_run, data, step=None):
     """wandb.logのラッパー（wandb未導入や失敗時は黙ってスキップ）"""
     if wandb_run is None or not data:
@@ -106,6 +116,35 @@ def _avg(values):
     return sum(cleaned) / len(cleaned) if cleaned else 0.0
 
 
+def _compute_knowledge_gap_metrics(question_keys, candidate_states, missing_predictions):
+    """欠損予測の進捗から精度指標を計算する（未予測キーは欠損なし扱い）"""
+    tp = tn = fp = fn = 0
+    for state in candidate_states:
+        cname = state['profile']['name']
+        for k in question_keys:
+            actual_missing = not bool(state['knowledge'].get(k, ""))
+            predicted_missing = missing_predictions.get(cname, {}).get(k, False)
+            tp += int(predicted_missing and actual_missing)
+            tn += int((not predicted_missing) and (not actual_missing))
+            fp += int(predicted_missing and (not actual_missing))
+            fn += int((not predicted_missing) and actual_missing)
+    denom = tp + tn + fp + fn
+    accuracy = (tp + tn) / denom if denom else 0.0
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return {
+        "accuracy": round(accuracy, 3),
+        "precision": round(precision, 3),
+        "recall": round(recall, 3),
+        "f1_score": round(f1, 3),
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+    }
+
+
 def load_data_from_db(set_index=None):
     """db.jsonからデータを読み込む"""
     try:
@@ -119,12 +158,16 @@ def load_data_from_db(set_index=None):
             print("エラー: db.jsonの形式が不正です")
             return None, None, None
         
-        # セットインデックスが指定されていない場合はランダムに選択
+        # セットインデックスが指定されていない場合はランダムに選択（21-39を除外）
+        allowed_indices = [i for i in range(len(data)) if not (21 <= i <= 39)]
         if set_index is None:
-            set_index = random.randint(0, len(data) - 1)
-        elif set_index >= len(data):
-            print(f"警告: 指定されたインデックス {set_index} が範囲外です")
-            set_index = random.randint(0, len(data) - 1)
+            set_index = random.choice(allowed_indices)
+        elif set_index >= len(data) or not (0 <= set_index < len(data)):
+            print(f"警告: 指定されたインデックス {set_index} が範囲外です。許可された範囲から再選択します。")
+            set_index = random.choice(allowed_indices)
+        elif 21 <= set_index <= 39:
+            print(f"警告: インデックス {set_index} は使用禁止範囲(21-39)です。許可された範囲から再選択します。")
+            set_index = random.choice(allowed_indices)
         
         selected_set = data[set_index]
         
@@ -329,15 +372,16 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
     
     # 応募者を初期化
     applicant = Applicant(APPLICANT_MODEL)
-    knowledge_manager = CompanyKnowledgeManager(company_profile)
+    knowledge_manager = CompanyKnowledgeManager(company_profile, experiment_id=experiment_id)
     
-    # 質問に使う企業キー（id, nameは除外）※ company_profile を取得後に設定
-    question_keys = [k for k in company_profile.keys() if k not in ("id", "name")] if company_profile else []
+    # 質問に使う企業キー（固定リスト）
+    question_keys = knowledge_manager.question_keys
     # 候補者の状態を初期化
     candidate_states = []
     for profile in candidate_profiles:
         knowledge_dict, coverage_str = knowledge_manager.get_knowledge_for_level(
-            profile.get('preparation', 'low')
+            profile.get('preparation', 'low'),
+            candidate_name=profile.get('name')
         )
         candidate_states.append({
             'profile': profile,
@@ -422,6 +466,8 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             'eval2/hits': 0.0,
             'eval3/accuracy': 0.0,
             'eval3/f1': 0.0,
+            'eval3/precision': 0.0,
+            'eval3/recall': 0.0,
         }
         
         # 全ラウンドを全体質問に統一
@@ -478,37 +524,26 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
             eval1_start_time = time.time()
             least_motivated_eval, eval1_token_info = interviewer.select_least_motivated_candidate(candidate_states)
             eval1_time = time.time() - eval1_start_time
-            
             _accumulate_tokens(round_token_info, eval1_token_info)
-            
             print(f"{least_motivated_eval}\n")
-
-            # 評価1正解判定（1/0）
             eval1_hit = _is_least_motivated_prediction_correct(candidate_states, least_motivated_eval)
             eval1_hits_series.append(eval1_hit)
             current_round_metrics['eval1/accuracy'] = eval1_hit
             current_round_metrics['eval1/f1'] = eval1_hit
-            
-            # 評価1の結果から候補者名を抽出（個別質問の対象として保存）
             target_state = _extract_candidate_from_text(candidate_states, least_motivated_eval)
             if target_state:
                 target_candidate_for_individual = target_state
                 print(f"次の個別質問の対象: {target_state['profile']['name']}")
-            
-            # 評価1と評価2の区切り
+
             print(f"{'='*60}\n")
-            
+
             # 評価2: ランキング
             print(f"【ラウンド {round_num} - 評価2: 志望度ランキング（低い順）】")
             eval2_start_time = time.time()
             ranking_eval, eval2_token_info = interviewer.rank_candidates_by_motivation(candidate_states)
             eval2_time = time.time() - eval2_start_time
-            
             _accumulate_tokens(round_token_info, eval2_token_info)
-            
             print(f"{ranking_eval}\n")
-            
-            # 評価2: ランキング精度の計算
             ranking_accuracy = calculate_ranking_accuracy(candidate_states, ranking_eval)
             perfect_match = 1 if ranking_accuracy and ranking_accuracy.get('is_valid') and ranking_accuracy.get('correct_positions') == ranking_accuracy.get('total_positions') else 0
             eval2_hits_series.append(perfect_match)
@@ -518,40 +553,34 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 else:
                     print(f"警告: {ranking_accuracy.get('message', 'ランキングが正しく抽出できませんでした')}")
             current_round_metrics['eval2/hits'] = perfect_match
-            
-            # 評価2と評価3の区切り
-            print(f"{'='*60}\n")
-            
+
             # 評価3: 知識欠損検出
             print(f"【ラウンド {round_num} - 評価3: 知識欠損検出】")
             eval3_start_time = time.time()
-            # 直近ラウンドのみの会話を使って、その項目についての欠損判定を実施
-            latest_round_only = []
-            for state in candidate_states:
-                filtered_log = [turn for turn in state['conversation_log'] if turn.get('round') == round_num]
-                # フォーマット用に一時的に置き換えた shallow copy を渡す
-                latest_round_state = dict(state)
-                latest_round_state['conversation_log'] = filtered_log
-                latest_round_only.append(latest_round_state)
-
             knowledge_gaps_eval, eval3_token_info = interviewer.detect_knowledge_gaps(
-                latest_round_only,
-                least_motivated_eval,
-                ranking_eval,
-                target_keys=[target_key_for_common],
-                conversation_summary=None,  # detect側で最新ラウンドのみのログを使用
-                max_rounds=1
+                candidate_states,
+                None,
+                None,
+                target_keys=[target_key_for_common]
             )
             eval3_time = time.time() - eval3_start_time
-            
-            _accumulate_tokens(round_token_info, eval3_token_info)
-            
-            # 評価3: 欠損予測のみ保存（集計は全ラウンド後）
+            if eval3_token_info:
+                round_token_info['prompt_tokens'] += eval3_token_info.get('prompt_tokens', 0)
+                round_token_info['completion_tokens'] += eval3_token_info.get('completion_tokens', 0)
+                round_token_info['total_tokens'] += eval3_token_info.get('total_tokens', 0)
             per_pred = knowledge_gaps_eval.get("per_candidate_predictions", {}) if knowledge_gaps_eval else {}
             for state in candidate_states:
                 cname = state['profile']['name']
                 pred = per_pred.get(cname, {})
                 missing_predictions[cname][target_key_for_common] = bool(pred.get("missing", False))
+            # ラウンド時点の欠損判定指標（未予測キーは欠損なしで計算）
+            kg_metrics_progress = _compute_knowledge_gap_metrics(question_keys, candidate_states, missing_predictions)
+            current_round_metrics.update({
+                'eval3/accuracy': kg_metrics_progress['accuracy'],
+                'eval3/f1': kg_metrics_progress['f1_score'],
+                'eval3/precision': kg_metrics_progress['precision'],
+                'eval3/recall': kg_metrics_progress['recall'],
+            })
 
             # ラウンドの評価結果を保存
             round_evaluations.append({
@@ -730,8 +759,13 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                 cname = state['profile']['name']
                 pred = per_pred.get(cname, {})
                 missing_predictions[cname][target_key_for_common] = bool(pred.get("missing", False))
-                current_round_metrics['eval3/accuracy'] = 0.0
-                current_round_metrics['eval3/f1'] = 0.0
+            kg_metrics_progress = _compute_knowledge_gap_metrics(question_keys, candidate_states, missing_predictions)
+            current_round_metrics.update({
+                'eval3/accuracy': kg_metrics_progress['accuracy'],
+                'eval3/f1': kg_metrics_progress['f1_score'],
+                'eval3/precision': kg_metrics_progress['precision'],
+                'eval3/recall': kg_metrics_progress['recall'],
+            })
             
             # ラウンドの評価結果を保存（共通質問のみ）
             round_evaluations.append({
@@ -759,6 +793,10 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
                     'eval1/hits': eval1_hits_series[-1] if eval1_hits_series else None,
                     'eval2/hits': eval2_hits_series[-1] if eval2_hits_series else None,
                     'eval2/accuracy': ranking_accuracy.get('accuracy') if (ranking_accuracy and ranking_accuracy.get('is_valid')) else None,
+                    'eval3/accuracy': current_round_metrics.get('eval3/accuracy'),
+                    'eval3/f1': current_round_metrics.get('eval3/f1'),
+                    'eval3/precision': current_round_metrics.get('eval3/precision'),
+                    'eval3/recall': current_round_metrics.get('eval3/recall'),
                 },
                 step=round_num,
             )

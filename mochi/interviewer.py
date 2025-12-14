@@ -302,23 +302,24 @@ class Interviewer:
             candidates_info.append(f"候補者{i+1}: {name}\n{conv_str}")
         
         all_conversations = "\n\n".join(candidates_info)
-        
         # Pydanticモデルで選定結果の構造を定義
         class LeastMotivatedResult(BaseModel):
             candidate_name: str = Field(description="最も志望度が低い候補者名")
         
+        company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
+        
         prompt = f"""以下の候補者の面接内容を分析し、最も志望度が低いと思われる候補者を選んでください。
+
+# 正解の企業情報 (参考)
+```json
+{company_info_str}
+```
 
 # 面接内容
 {all_conversations}
 
 # 候補者名リスト
 {', '.join(candidate_names)}
-
-# 分析のポイント
-- 企業知識の深さ
-- 回答の具体性
-- 熱意の表現
 
 指示: 最も志望度が低いと判断される候補者名のみを出力してください。
 """
@@ -505,18 +506,20 @@ class Interviewer:
         class RankingResult(BaseModel):
             ranking: List[RankingEntry] = Field(description="志望度が低い順のランキング")
         
+        company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
+        
         prompt = f"""以下の候補者の面接内容を分析し、志望度の低い順にランキングしてください。
+
+# 正解の企業情報 (参考)
+```json
+{company_info_str}
+```
 
 # 面接内容
 {all_conversations}
 
 # 候補者名リスト
 {', '.join(candidate_names)}
-
-# ランキングの基準
-- 企業知識の深さ
-- 回答の具体性
-- 熱意の表現
 
 指示: 志望度が低い順（1位が最も志望度が低い）に、候補者名のみを簡潔にランキングしてください。
 """

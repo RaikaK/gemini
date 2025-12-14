@@ -45,6 +45,18 @@ APPLICANT_MODEL = "gpt-4o-mini"     # 応募者役
 NUM_CANDIDATES = 3  # 候補者の数
 MAX_ROUNDS = 10     # 面接ラウンド数（デフォルト）
 
+# 面接で質問する企業情報のキー（id, name は除外）
+QUESTION_KEYS = [
+    "basic_info",
+    "business",
+    "vision",
+    "news",
+    "plan",
+    "partnerships",
+    "advantages",
+    "recruit"
+]
+
 # 知識レベルの設定
 KNOWLEDGE_RETENTION_RATIO = {
     'low': 0.6,     # 志望度が低い候補者の知識保持率
