@@ -158,16 +158,13 @@ def load_data_from_db(set_index=None):
             print("エラー: db.jsonの形式が不正です")
             return None, None, None
         
-        # セットインデックスが指定されていない場合はランダムに選択（21-39を除外）
-        allowed_indices = [i for i in range(len(data)) if not (21 <= i <= 39)]
+        # セットインデックスが指定されていない場合はランダムに選択（除外なし）
+        allowed_indices = list(range(len(data)))
         if set_index is None:
             set_index = random.choice(allowed_indices)
-        elif set_index >= len(data) or not (0 <= set_index < len(data)):
-            print(f"警告: 指定されたインデックス {set_index} が範囲外です。許可された範囲から再選択します。")
-            set_index = random.choice(allowed_indices)
-        elif 21 <= set_index <= 39:
-            print(f"警告: インデックス {set_index} は使用禁止範囲(21-39)です。許可された範囲から再選択します。")
-            set_index = random.choice(allowed_indices)
+        elif set_index >= len(data) or set_index < 0:
+            print(f"警告: 指定されたインデックス {set_index} が範囲外です。データ数 {len(data)} でラップします。")
+            set_index = set_index % len(data)
         
         selected_set = data[set_index]
         
@@ -958,8 +955,11 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
         print(f"シミュレーション {sim_num}/{num_simulations} を実行中...")
         print(f"{'='*80}")
 
+        # set_index未指定ならシミュレーション番号に応じて 0,1,2,... と順番に使用
+        current_set_index = set_index if set_index is not None else (sim_num - 1)
+
         result = run_single_interview(
-            set_index=set_index,
+            set_index=current_set_index,
             simulation_num=sim_num,
             interviewer_model_type=interviewer_model_type,
             interviewer_model_name=interviewer_model_name,
