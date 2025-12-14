@@ -56,6 +56,17 @@ class Interviewer:
         
         if self.model_type == 'local' and (not self.model or not self.tokenizer):
             raise ValueError("ローカルモデルタイプには 'model' と 'tokenizer' が必要です。")
+
+    def _remaining_keys(self, question_texts, candidate_keys):
+        """これまでの質問文に含まれていない企業キーを返す"""
+        asked_keys = set()
+        for k in candidate_keys:
+            for q in question_texts:
+                if k and isinstance(q, str) and k in q:
+                    asked_keys.add(k)
+                    break
+        remaining = [k for k in candidate_keys if k not in asked_keys]
+        return remaining if remaining else candidate_keys  # すべて聞き終えていたら全体を返す（フォールバック）
     
     def _generate_response(self, prompt, max_tokens=512):
         """モデルタイプに応じて応答を生成する"""
@@ -238,81 +249,41 @@ class Interviewer:
         else:
             raise ValueError(f"無効なモデルタイプです: {self.model_type}")
     
-    def ask_common_question(self, asked_questions):
-        """全候補者に対する全体質問を生成"""
-        all_company_keys = list(self.company.keys())
-        history_str = "\n".join(f"- {q}" for q in asked_questions) if asked_questions else "  (なし)"
+    def ask_common_question(self, target_key):
+        """全候補者に対する全体質問を生成（未質問の単一項目に限定）"""
+        # recruitは「求める人物像・採用要件」と明示して誤質問を防ぐ
+        key_label = f"当社の{target_key}"
+        if target_key == "recruit":
+            key_label = "recruit（求める人物像・採用要件）"
 
-        prompt = f"""あなたは、面接全体を俯瞰し、全候補者の理解度を効率的に測る、戦略的な採用面接官です。
-これから全候補者に対して同じ共通質問をします。
+        prompt = f"""あなたは、全候補者に同じ条件で質問する戦略的な採用面接官です。
+今回確認したい企業情報の項目は: {key_label}
 
-# あなたが質問できる企業情報の項目リスト
-{all_company_keys}
+要件:
+- 項目の中身（具体情報）は一切明かさない。
+- 候補者が自力で具体内容を述べられるかを測る、ややオープンな質問を1つだけ作る。
+- ヒントや例示で答えを漏らさない。
 
-# これまでに行った全ての質問（重複しないように）
-{history_str}
-
-【全体質問の戦略的役割】
-全体質問は以下の目的で使用されます：
-1. **比較基準の確立**: 全候補者が同じ条件で回答するため、公平な比較が可能
-2. **基盤情報の収集**: 候補者間の差別化に必要な基本的な企業理解度を測定
-3. **効率的な情報収集**: 一度の質問で全候補者から情報を収集し、時間を節約
-4. **共通トピックの深掘り**: 特定の重要な企業情報について全員の見解を比較
-
-【全体質問を選ぶべき戦略的状況】
-- 候補者間の比較材料が不足している場合
-- 特定の重要な企業情報について全員の理解度を測りたい場合
-- 個別質問で深掘りする前に基盤となる情報が必要な場合
-- 効率的に情報収集を進めたい場合
-
-# 指示
-1.  **カバレッジ分析**: まだ質問されていない「項目リスト」の中の項目を探してください。**過去の質問と重複するトピックは絶対に避けてください**。
-2.  **ターゲット選定**: **完全に新しいトピック**を最優先で選んでください。前の質問の関連質問ではなく、全く異なる分野（例：前の質問が「ビジョン」なら、次は「福利厚生」や「技術スタック」など）に切り替えることを意識してください。
-3.  **戦略的質問生成**: 選んだ新しいトピックについて、候補者の知識を試すための質問を作成してください。
-4.  **比較可能性の確保**: 全候補者が回答できる形式であることを確認してください。
-
-思考プロセスや前置きは一切含めず、質問文だけを出力してください。
+質問文だけ日本語で出力してください。
 質問:"""
         
-        question, token_info = self._generate_response(prompt, max_tokens=512)
+        question, token_info = self._generate_response(prompt, max_tokens=256)
         return question.strip(), token_info
     
-    def ask_question(self, conversation_history, asked_questions=None):
-        """特定の候補者への個別質問を生成"""
-        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in conversation_history])
-        all_company_keys = list(self.company.keys())
-
+    def ask_question(self, target_key, conversation_history):
+        """特定の候補者への個別質問を生成（未質問の単一項目に限定）"""
+        history_str = "\n".join([f"Q: {turn['question']}\nA: {turn['answer']}" for turn in conversation_history]) if conversation_history else "（まだ会話はありません）"
         prompt = f"""あなたは、学生の企業研究の深さを測る、戦略的な採用面接官です。
-# あなたが質問できる企業情報の項目リスト
-{all_company_keys}
+# 今回この候補者に聞くべき企業情報の項目
+- {target_key}
 # これまでの会話履歴
-{history_str if history_str else "（まだ会話はありません）"}
+{history_str}
 
-【個別質問の戦略的役割】
-個別質問は以下の目的で使用されます：
-1. **深掘り調査**: 特定の候補者の回答をより深く探り、詳細な情報を収集
-2. **個人的動機の探求**: 候補者固有の志望動機や背景を理解
-3. **知識欠損の特定**: この候補者が特に不足している企業知識を特定
-4. **差別化要因の発見**: 他の候補者との違いを明確にする情報を収集
-5. **曖昧な回答の明確化**: 以前の回答で不明確だった部分を明確にする
-
-【個別質問を選ぶべき戦略的状況】
-- 特定の候補者の回答をより深く探る必要がある場合
-- 候補者ごとに異なる角度からの質問が効果的な場合
-- 志望度の判定に必要な個人的な動機を探る必要がある場合
-- 十分な全体質問が既に実施されている場合
-- 情報が不足している候補者が特定されている場合
-
-# 指示
-1.  **カバレッジ分析**: 上記の「項目リスト」と「会話履歴」を比較し、**まだ一度も話題に上がっていない項目**を特定してください。
-2.  **ターゲット選定**: **未言及の項目を最優先**して質問対象に選んでください。すでに話題に出た項目に関する深掘りは、その項目について明らかに理解が浅い場合のみに限定してください。
-3.  **戦略的質問生成**: 選んだ項目について、学生が本当に理解しているかを確認するための鋭い質問を作成してください。「〜についてどう思いますか？」のような抽象的な質問ではなく、具体的な事実や見解を問う質問にしてください。
-4.  **知識欠損のあぶり出し**: ターゲットとした項目について、知識がなければ答えられないような質問を投げかけ、知識の有無を判定しやすくしてください。
-
-思考プロセスや前置きは一切含めず、質問文だけを出力してください。
-質問:"""
+指示: 上記の項目について、この候補者に対して1つだけ具体的な質問を日本語で出力してください。
+前置きや思考プロセスは不要です。質問文のみを出力してください。
+"""
         
-        question, token_info = self._generate_response(prompt, max_tokens=512)
+        question, token_info = self._generate_response(prompt, max_tokens=256)
         return question.strip(), token_info
     
     def select_least_motivated_candidate(self, candidate_states, current_round=1, total_rounds=10):
@@ -331,17 +302,18 @@ class Interviewer:
             candidates_info.append(f"候補者{i+1}: {name}\n{conv_str}")
         
         all_conversations = "\n\n".join(candidates_info)
-        
         # Pydanticモデルで選定結果の構造を定義
         class LeastMotivatedResult(BaseModel):
-            candidate_name: str = Field(description="最も志望度が低い候補者名。判断できない場合は'none'または有力な候補を記入")
-            confidence: int = Field(description="評価の確信度 (1: 全く自信なし/判断不能, 5: 非常に強い確信)", ge=1, le=5)
-            reason: str = Field(description="その判断に至った理由")
+            candidate_name: str = Field(description="最も志望度が低い候補者名")
+        
+        company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
         
         prompt = f"""以下の候補者の面接内容を分析し、最も志望度が低いと思われる候補者を選んでください。
 
-# 現在の状況
-- 現在のラウンド: {current_round} / {total_rounds}
+# 正解の企業情報 (参考)
+```json
+{company_info_str}
+```
 
 # 面接内容
 {all_conversations}
@@ -349,18 +321,7 @@ class Interviewer:
 # 候補者名リスト
 {', '.join(candidate_names)}
 
-# 分析のポイント
-- 企業知識の深さ
-- 回答の具体性
-- 熱意の表現
-
-# 確信度のガイドライン
-現在はラウンド {current_round} です。以下の基準で確信度を決定してください：
-- 序盤 (1-{int(total_rounds * 0.3)}): まだ情報が少ない段階です。決定的な証拠がない限り、確信度は1-2に留めてください。「様子見」が適切な判断です。
-- 中盤 ({int(total_rounds * 0.3) + 1}-{int(total_rounds * 0.7)}): 仮説を立てる段階です。確信度は3前後を目安にしてください。
-- 終盤 ({int(total_rounds * 0.7) + 1}-{total_rounds}): 結論を出す段階です。これまでの情報を総合し、4-5の確信度で判断してください。
-
-指示: 最も志望度が低いと判断される候補者名と、その確信度（1-5）を出力してください。情報不足の場合は低い確信度を出力してください。
+指示: 最も志望度が低いと判断される候補者名のみを出力してください。
 """
         
         # ローカルモデルの場合、outlinesを使用
@@ -634,18 +595,20 @@ class Interviewer:
         class RankingResult(BaseModel):
             ranking: List[RankingEntry] = Field(description="志望度が低い順のランキング")
         
+        company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
+        
         prompt = f"""以下の候補者の面接内容を分析し、志望度の低い順にランキングしてください。
+
+# 正解の企業情報 (参考)
+```json
+{company_info_str}
+```
 
 # 面接内容
 {all_conversations}
 
 # 候補者名リスト
 {', '.join(candidate_names)}
-
-# ランキングの基準
-- 企業知識の深さ
-- 回答の具体性
-- 熱意の表現
 
 指示: 志望度が低い順（1位が最も志望度が低い）に、候補者名のみを簡潔にランキングしてください。
 """
@@ -1042,10 +1005,18 @@ class Interviewer:
                 }
         return evaluation_results
     
-    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval, current_round=1, total_rounds=10):
-        """評価タスク3: 知識欠損の定性分析と定量評価を同時に行う"""
+    def detect_knowledge_gaps(self, all_states, least_motivated_eval, ranking_eval, target_keys=None, max_rounds=None, conversation_summary=None):
+        """評価タスク3: 知識欠損の有無を返す（各候補者ごとにmissing: bool）
         
-        full_company_info_str = json.dumps(self.company, ensure_ascii=False, indent=2)
+        - 対象キー: target_keys（単一キー想定）
+        - 会話範囲: 呼び出し元で絞り込んだログをそのまま使用（会話要約は不要）
+        - メトリクス計算は呼び出し元でまとめて実施
+        """
+        
+        # 対象キーを絞る（未指定なら全キー）
+        target_keys = target_keys or list(self.company.keys())
+        company_subset = {k: v for k, v in self.company.items() if k in target_keys}
+        full_company_info_str = json.dumps(company_subset, ensure_ascii=False, indent=2)
         
         # プロンプトの基本部分のトークン数を計算
         base_prompt = f"""あなたは、極めて洞察力の鋭い採用アナリストです。
@@ -1073,55 +1044,46 @@ class Interviewer:
 # 各候補者の面接記録
 """
         
-        # Gemmaモデルの場合、動的に会話履歴を調整
-        max_conversation_rounds = None
-        if self.chat_template_type == "gemma":
-            # 基本プロンプトのトークン数を計算
-            base_tokenized = self.tokenizer(base_prompt, return_tensors="pt")
-            base_token_count = base_tokenized['input_ids'].shape[1]
-            
-            # コンテキストウィンドウは20kトークン、出力用に500トークン程度残す
-            available_tokens = 19500 - base_token_count
-            
-            # 1ラウンドあたりの平均トークン数を推定（質問+回答で約200-300トークン）
-            avg_tokens_per_round = 250
-            estimated_rounds = available_tokens // avg_tokens_per_round
-            
-            # 利用可能なラウンド数を計算（最低3ラウンドは確保）
-            if estimated_rounds < len(all_states[0]['conversation_log']):
-                max_conversation_rounds = max(3, estimated_rounds)
-                print(f"デバッグ: Gemmaモデル使用のため、会話履歴を最新{max_conversation_rounds}ラウンドに制限します。")
-                print(f"デバッグ: 基本プロンプトトークン数: {base_token_count}, 利用可能トークン数: {available_tokens}")
-            else:
-                print(f"デバッグ: 全ての会話履歴を使用可能です。")
-        
-        conversation_summary = self._format_all_conversations(all_states, max_rounds=max_conversation_rounds)
+        # 会話サマリは呼び出し元で限定されたログをそのまま使用
+        if conversation_summary is None:
+            conversation_summary = self._format_all_conversations(all_states, max_rounds=max_rounds)
         
         prompt = f"""{base_prompt}{conversation_summary}
 
 指示:
-各候補者について、以下の思考プロセスに基づき分析し、指定の形式で出力してください。
-1. **思考**: 候補者の各回答を検証します。「この質問に対して、この企業情報（例：'business'）に触れるのが自然だったか？」「回答が具体的か、それとも一般論に終始しているか？」「誤った情報はないか？」といった観点で、知識が欠けていると判断できる「根拠」を探します。
-2. **分析**: 上記の思考に基づき、知識が不足していると判断した理由を簡潔に記述します。
-3. **キーの列挙**: 知識不足の根拠があると判断した情報の「キー」のみをJSONのリスト形式で列挙してください。根拠がなければ、空のリスト `[]` を返してください。
+上記の【対象キー】について、各候補者が知識欠損しているかを判定してください。
+- 欠損している: このターンの質問に対し、そのキーの情報を示せていない/誤っている/曖昧である。
+- 欠損していない: このターンの回答で、そのキーの情報を具体的かつ正しく示している。
 
-厳格な出力形式:
-- {all_states[0]['profile']['name']}:
-  分析: [ここに分析内容を記述]
-  欠損項目キー: ["キー1", "キー2", ...]
-- {all_states[1]['profile']['name']}:
-  分析: [ここに分析内容を記述]
-  欠損項目キー: ["キーA", "キーB", ...]
-- {all_states[2]['profile']['name']}:
-  分析: [ここに分析内容を記述]
-  欠損項目キー: []
+出力はJSONのみ。前置きや追加テキストは禁止。
+出力例:
+{{
+  "candidates": [
+    {{"name": "{all_states[0]['profile']['name']}", "missing": true, "note": "根拠を1行で"}},
+    {{"name": "{all_states[1]['profile']['name']}", "missing": false, "note": "根拠を1行で"}},
+    {{"name": "{all_states[2]['profile']['name']}", "missing": true, "note": "根拠を1行で"}}
+  ]
+}}
 """
 
-        llm_analysis_text, token_info = self._generate_response(prompt, max_tokens=8192)
-        
-        performance_metrics = self._calculate_detection_metrics(llm_analysis_text, all_states)
-        
+        llm_analysis_text, token_info = self._generate_response(prompt, max_tokens=1024)
+
+        # パースのみ（集計は呼び出し元で実施）
+        per_candidate_predictions = {}
+        try:
+            parsed = json.loads(llm_analysis_text)
+            candidates_pred = parsed.get("candidates", []) if isinstance(parsed, dict) else []
+            for item in candidates_pred:
+                if isinstance(item, dict) and "name" in item:
+                    per_candidate_predictions[item["name"]] = {
+                        "missing": bool(item.get("missing", False)),
+                        "note": item.get("note", ""),
+                        "target_key": target_keys[0] if target_keys else None
+                    }
+        except Exception as e:
+            print(f"警告: 知識欠損出力のパースに失敗しました: {e}")
+
         return {
             "llm_qualitative_analysis": llm_analysis_text,
-            "quantitative_performance_metrics": performance_metrics
+            "per_candidate_predictions": per_candidate_predictions
         }, token_info

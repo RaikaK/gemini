@@ -7,13 +7,6 @@ WebGUIを排除し、必要最小限の機能のみを実装しています。
 
 ## クイックスタート
 
-デモを実行してシステムの動作を確認（API呼び出しなし）:
-
-```bash
-cd mochi
-python demo.py
-```
-
 実際の面接シミュレーションを実行:
 
 ```bash
@@ -50,7 +43,6 @@ python main.py -n 3 -s 0
 - **マルチAPI対応**: OpenAI API と Google API (Gemini) の切り替えが可能
 - **ローカルモデル対応**: ローカルLLMを使用したシミュレーションも可能
 - **複数回シミュレーション対応**: コマンドライン引数で実行回数を指定可能
-- **スプレッドシート連携**: オプションでGoogleスプレッドシートに結果を記録
 - **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）
 - **最小限の依存**: 必要なライブラリを最小化
 
@@ -62,10 +54,9 @@ mochi/
 ├── utils.py                   # ユーティリティ関数（API呼び出し）
 ├── interviewer.py             # 面接官役のクラス
 ├── student.py                 # 応募者役のクラス
-├── main.py                    # メイン実行スクリプト
-├── demo.py                    # デモスクリプト（API呼び出しなし）
-├── spreadsheet_integration.py # スプレッドシート連携モジュール
-├── validate_structure.py      # 構造検証スクリプト
+├── metrics.py                 # 評価メトリクス計算
+├── runner.py                  # 面接フロー実行ロジック
+├── main.py                    # CLIエントリ
 ├── requirements.txt           # 依存ライブラリ
 ├── results/                   # 結果保存ディレクトリ（自動生成）
 └── README.md                  # このファイル
@@ -78,11 +69,6 @@ mochi/
    pip install -r requirements.txt
    ```
    
-   または個別にインストール:
-   ```bash
-   pip install openai requests
-   ```
-
 2. **APIキーの設定**
    
    **Mac/Linux (bash/zsh):**
@@ -137,6 +123,17 @@ mochi/
    API_PROVIDER = "google"
    ```
    
+4. **（任意）Weights & Biases での計測**
+   
+   `wandb` を使って評価値やトークン数を記録できます。
+   ```bash
+   pip install -r requirements.txt   # wandbも含まれます
+   wandb login                       # ブラウザで発行したAPIキーを入力
+   # もしくは環境変数で
+   export WANDB_API_KEY="your-wandb-key"
+   ```
+   実行すると自動で run が作成され、ランキング精度・知識欠損メトリクス・トークン消費などがログされます。
+
 
 ## 使い方
 
@@ -163,12 +160,6 @@ python main.py -n 3 -s 0
 python main.py --api-provider google
 ```
 
-### スプレッドシート連携の設定
-
-1. `spreadsheet_config.json`を作成（`spreadsheet_integration.py`を実行するとテンプレートが生成されます）
-2. `config.py`で`ENABLE_SPREADSHEET = True`に設定
-3. Google Apps ScriptのWebアプリURLを`spreadsheet_config.json`に設定
-
 ### 動作の流れ
 
 1. `experiment_inter/db.json`からランダムに企業情報と候補者情報を読み込む
@@ -188,7 +179,6 @@ python main.py --api-provider google
 - `APPLICANT_MODEL`: 応募者のモデル名（デフォルト: "gemini-2.5-flash-lite"）
 - `API_PROVIDER`: 使用するAPIプロバイダー ("google" または "openai")
 - `NUM_SIMULATIONS`: デフォルトのシミュレーション実行回数（デフォルト: 1）
-- `ENABLE_SPREADSHEET`: スプレッドシート連携を有効にするか（デフォルト: False）
 
 ## 出力例
 
@@ -249,7 +239,6 @@ python main.py --api-provider google
 - **WebGUI削除**: Flask、テンプレート、静的ファイルなし
 - **ローカルモデル対応**: APIだけでなくローカルLLMもサポート
 - **マルチAPI対応**: OpenAIに加えGoogle (Gemini) もサポート
-- **スプレッドシート連携**: オプション機能として実装（設定で有効化可能）
 - **複数回シミュレーション**: コマンドライン引数で実行回数を指定可能
 - **評価2の精度計算**: ランキング予測の精度を自動計算（正しく抽出できた場合のみ）
 - **統計分析削除**: 基本的な評価のみ

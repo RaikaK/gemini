@@ -1,0 +1,148 @@
+[34m[1mwandb[0m: Detected [openai] in use.
+[34m[1mwandb[0m: Use W&B Weave for improved LLM call tracing. Install Weave with `pip install weave` then add `import weave` to the top of your script.
+[34m[1mwandb[0m: For more information, check out the docs at: https://weave-docs.wandb.ai/
+
+--- ラウンド 1 (全体質問) ---
+
+[質問項目] basic_info
+面接官の質問（全員へ）: 当社の基本情報について、あなたが知っていることや、どのようにしてその情報を得たかを教えてください。
+
+学生J3: 株式会社スタイルテックは、テクノロジーを活用してファッションをパーソナライズする企業であると認識しています。また、グローバル展開やサステナビリティ技術の開発にも力を入れているとのことです。私がこの情報を得たのは、企業の公式ウェブサイトやニュース記事を通じてです。ファッションに対する感度や持続可能性への意識を重視している点に非常に共感しています。入社し、貢献できることを楽しみにしています。
+
+学生J1: 株式会社スタイルテックは2020年に設立され、東京都渋谷区に本社を構えています。現在280名の社員が在籍し、AIファッション提案やバーチャル試着システムを通じて、テクノロジーで個々のファッションをパーソナライズすることを目指しています。これらの情報は、企業の公式サイトや最近のニュース記事から得ました。私もこのビジョンに共感し、スタイルテックでの貢献を強く希望しています。
+
+学生J2: 株式会社スタイルテックは2020年設立で、東京都渋谷区に本社を構え、280名の社員が在籍しています。AIファッション提案やバーチャル試着システムを通じて、ファッションをテクノロジーでパーソナライズするというビジョンに強く共感しています。私のアパレル廃棄物削減研究の経験を活かし、サステナブルファッションの分野で貢献できると考えています。この情報は企業の公式サイトや業界ニュースから得ました。
+
+============================================================
+ラウンド 1 (全体質問) 終了後の評価
+============================================================
+
+【ラウンド 1 - 評価1: 最も志望度が低い候補者の選定】
+学生J3
+
+次の個別質問の対象: 学生J3
+============================================================
+
+【ラウンド 1 - 評価2: 志望度ランキング（低い順）】
+1位: 学生J3
+2位: 学生J1
+3位: 学生J2
+
+精度スコア: 0.667
+【ラウンド 1 - 評価3: 知識欠損検出】
+
+============================================================
+ラウンド 1 完了。次のラウンドに進みます...
+============================================================
+
+
+--- ラウンド 2 (全体質問) ---
+
+[質問項目] business
+面接官の質問（全員へ）: 当社のビジネスモデルや提供しているサービスについて、あなたが知っていることや理解していることを教えてください。
+
+学生J3: 株式会社スタイルテックのビジネスモデルは、テクノロジーを活用した高精度なパーソナライゼーションに基づいていると理解しています。具体的には、顧客の好みやスタイルを分析し、最適な商品提案を行うことで、よりパーソナルなショッピング体験を提供していると思います。また、持続可能なファッションの実現に取り組む姿勢にも共感しており、私自身もその一員として貢献したいと強く思っています。
+Traceback (most recent call last):
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\main.py", line 61, in <module>
+    main()
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\main.py", line 50, in main
+    run_interviews(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\runner.py", line 961, in run_interviews
+    result = run_single_interview(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\runner.py", line 495, in run_single_interview
+    answer, token_info = applicant.generate_answer(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\student.py", line 118, in generate_answer
+    answer, token_info = call_openai_api(self.model_name, prompt)
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\utils.py", line 40, in call_openai_api
+    response = client.chat.completions.create(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_utils\_utils.py", line 287, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\resources\chat\completions\completions.py", line 1150, in create
+    return self._post(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_base_client.py", line 1259, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_base_client.py", line 982, in request
+    response = self._client.send(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_backends\sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\ssl.py", line 1259, in recv
+    return self.read(buflen)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\ssl.py", line 1132, in read
+    return self._sslobj.read(len)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\main.py", line 61, in <module>
+    main()
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\main.py", line 50, in main
+    run_interviews(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\runner.py", line 961, in run_interviews
+    result = run_single_interview(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\runner.py", line 495, in run_single_interview
+    answer, token_info = applicant.generate_answer(
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\student.py", line 118, in generate_answer
+    answer, token_info = call_openai_api(self.model_name, prompt)
+  File "C:\Users\yukis\Documents\penguin-paper\mochi\utils.py", line 40, in call_openai_api
+    response = client.chat.completions.create(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_utils\_utils.py", line 287, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\resources\chat\completions\completions.py", line 1150, in create
+    return self._post(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_base_client.py", line 1259, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\openai\_base_client.py", line 982, in request
+    response = self._client.send(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\site-packages\httpcore\_backends\sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\ssl.py", line 1259, in recv
+    return self.read(buflen)
+  File "C:\Users\yukis\AppData\Local\Programs\Python\Python310\lib\ssl.py", line 1132, in read
+    return self._sslobj.read(len)
+KeyboardInterrupt

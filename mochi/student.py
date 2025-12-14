@@ -7,43 +7,58 @@ import config
 class CompanyKnowledgeManager:
     """学生が知っている企業情報を管理するクラス"""
     
-    def __init__(self, company_profile):
+    def __init__(self, company_profile, experiment_id=None):
         self.full_profile = company_profile
-        self.all_keys = list(company_profile.keys())
-        # 必須項目
-        self.essential_keys = ["name", "business", "products", "vision"]
+        # 面接で使うキー（固定リスト。id/nameは除外）
+        self.question_keys = config.QUESTION_KEYS
+        # 全キー（id,name と質問キーの和集合）
+        self.all_keys = ['id', 'name'] + self.question_keys
+        self.experiment_id = experiment_id
+        # 必須項目は使わず、全質問キーを保持率に従ってサンプリングする
     
-    def get_knowledge_for_level(self, level='high'):
+    def get_knowledge_for_level(self, level='high', candidate_name=None):
         """
         知識レベルに応じた企業情報を返す
         'high': 全項目を知っている（志望度高）
         'medium': 必須項目 + その他の50%
         'low': 必須項目 + その他の20%（志望度低）
         """
-        keys_to_keep = set()
-        
+        question_keys = self.question_keys
+
+        # 保持数を保持率で決定し、欠損数を固定（同じ実験・候補者なら同じ欠損数に）
         if level == 'high':
-            keys_to_keep = set(self.all_keys)
+            keep_count = len(question_keys)
         else:
-            keys_to_keep.update(self.essential_keys)
-            other_keys = [k for k in self.all_keys if k not in self.essential_keys]
             ratio = config.KNOWLEDGE_RETENTION_RATIO.get(level, config.DEFAULT_KNOWLEDGE_RETENTION_RATIO)
-            sample_size = int(len(other_keys) * ratio)
-            # sample_sizeがother_keysの長さを超えないように制限
-            sample_size = min(sample_size, len(other_keys))
-            if sample_size > 0:
-                keys_to_keep.update(random.sample(other_keys, sample_size))
+            keep_count = round(len(question_keys) * ratio)
+            keep_count = max(0, min(len(question_keys), keep_count))
+        missing_count = len(question_keys) - keep_count
+
+        rng = random.Random()
+        seed_basis = f"{self.experiment_id}_{candidate_name}_{level}" if candidate_name else None
+        if seed_basis:
+            rng.seed(seed_basis)
+
+        missing_keys = set(rng.sample(question_keys, missing_count)) if missing_count > 0 else set()
+        keep_keys = set(question_keys) - missing_keys
         
-        # 知識辞書を作成
+        # 知識辞書を作成（id/nameは常に保持、質問対象は保持率に従う）
         knowledge_dict = {}
+        known_count = 0
         for key in self.all_keys:
-            if key in keys_to_keep:
-                knowledge_dict[key] = self.full_profile[key]
+            if key in ('id', 'name'):
+                knowledge_dict[key] = self.full_profile.get(key, "")
+                known_count += 1 if knowledge_dict[key] else 0
+            elif key in keep_keys:
+                knowledge_dict[key] = self.full_profile.get(key, "")
+                known_count += 1 if knowledge_dict[key] else 0
             else:
-                knowledge_dict[key] = ""  # 欠損
+                knowledge_dict[key] = ""  # 質問対象の欠損
         
-        coverage = int(len(keys_to_keep) / len(self.all_keys) * 100) if self.all_keys else 100
-        coverage_str = f"{len(keys_to_keep)}/{len(self.all_keys)} ({coverage}%)"
+        # カバレッジは質問対象キー数ベースで計算（id/name除外）
+        kept_qkeys = [k for k in self.question_keys if k in keep_keys]
+        coverage = int(len(kept_qkeys) / len(self.question_keys) * 100) if self.question_keys else 100
+        coverage_str = f"{len(kept_qkeys)}/{len(self.question_keys)} ({coverage}%)"
         
         return knowledge_dict, coverage_str
 
@@ -61,6 +76,7 @@ class Applicant:
         
         # 知識レベルに応じた指示
         preparation_level = candidate_profile.get('preparation', 'low')
+        bluff_clause = ""
         if preparation_level == "high":
             instruction = "非常に高い志望度と熱意を示してください。知らない情報は前向きな推測で補い、絶対に「知らない」とは言わないでください。"
         elif preparation_level == "medium":
@@ -89,7 +105,7 @@ class Applicant:
 {known_info}
 
 # 回答の基本方針
-{instruction}
+{instruction}{bluff_clause}
 
 # これまでの会話
 {history_str}
