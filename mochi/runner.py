@@ -917,7 +917,7 @@ def run_single_interview(set_index=None, simulation_num=1, interviewer_model_typ
 
     
     
-def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, api_provider=None):
+def run_interviews(num_simulations=1, set_index=None, set_start=None, set_end=None, interviewer_model_type=None, interviewer_model_name=None, max_rounds=None, api_provider=None):
     """複数回の面接シミュレーションを実行（簡素版）"""
     print("\n" + "="*80)
     print(f"面接ロールプレイ実行システム - {num_simulations}回のシミュレーション")
@@ -950,13 +950,24 @@ def run_interviews(num_simulations=1, set_index=None, interviewer_model_type=Non
             return
         print(f"--- ローカルモデルの初期化完了 ---\n")
 
+    # セット範囲（set_index未指定時に使用）
+    range_start = set_start if set_start is not None else 0
+    range_end = set_end if set_end is not None else None  # Noneならデータ件数で後でラップ
+
     for sim_num in range(1, num_simulations + 1):
         print(f"\n{'='*80}")
         print(f"シミュレーション {sim_num}/{num_simulations} を実行中...")
         print(f"{'='*80}")
 
-        # set_index未指定ならシミュレーション番号に応じて 0,1,2,... と順番に使用
-        current_set_index = set_index if set_index is not None else (sim_num - 1)
+        # set_index未指定なら範囲内で順番に使用（終了インデックス指定があればそこでループ）
+        if set_index is None:
+            if range_end is None:
+                current_set_index = range_start + (sim_num - 1)
+            else:
+                range_len = max(1, range_end - range_start + 1)
+                current_set_index = range_start + ((sim_num - 1) % range_len)
+        else:
+            current_set_index = set_index
 
         result = run_single_interview(
             set_index=current_set_index,

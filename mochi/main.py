@@ -12,6 +12,10 @@ def parse_args():
                         help=f'シミュレーション実行回数 (デフォルト: {NUM_SIMULATIONS})')
     parser.add_argument('-s', '--set-index', type=int, default=None,
                         help='使用するデータセットのインデックス（指定しない場合はランダム）')
+    parser.add_argument('--set-start', type=int, default=None,
+                        help='セット番号の開始インデックス（未指定時は0）。--set-indexを指定した場合は無視される。')
+    parser.add_argument('--set-end', type=int, default=None,
+                        help='セット番号の終了インデックス（未指定時はデータ件数-1）。--set-indexを指定した場合は無視される。')
     parser.add_argument('-t', '--model-type', type=str, choices=['api', 'local'], default=INTERVIEWER_MODEL_TYPE,
                         help=f'面接官モデルタイプ: api または local (デフォルト: {INTERVIEWER_MODEL_TYPE})')
     parser.add_argument('-m', '--model-name', type=str, default=None,
@@ -50,6 +54,8 @@ def main():
     run_interviews(
         num_simulations=args.num_simulations,
         set_index=args.set_index,
+        set_start=args.set_start,
+        set_end=args.set_end,
         interviewer_model_type=args.model_type,
         interviewer_model_name=args.model_name,
         max_rounds=args.max_rounds,
