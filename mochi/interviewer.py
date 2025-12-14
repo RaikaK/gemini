@@ -441,7 +441,7 @@ class Interviewer:
                             self.confidence = conf
                             self.reason = reason
                     
-                    return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
+                    return FallbackResult(extracted_name if extracted_name else "none", 3, evaluation), token_info
                 except Exception as fallback_error:
                     print(f"警告: フォールバック生成も失敗しました: {fallback_error}")
                     class FallbackResult:
@@ -450,7 +450,7 @@ class Interviewer:
                             self.confidence = conf
                             self.reason = reason
                     # 最後の手段: 最初の候補者を返す
-                    return FallbackResult(candidate_names[0] if candidate_names else "none", 1, "Error"), None
+                    return FallbackResult(candidate_names[0] if candidate_names else "none", 3, "Error"), None
         
         # APIモデルの場合、JSONモードを使用
         elif self.model_type == 'api':
@@ -467,7 +467,7 @@ class Interviewer:
                     "model": self.model_name,
                     "messages": [
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt + "\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{\n  \"candidate_name\": \"候補者名\",\n  \"confidence\": 1,\n  \"reason\": \"理由\"\n}"}
+                        {"role": "user", "content": prompt + "\n\n出力形式: JSON形式で、以下の構造で出力してください:\n{\n  \"candidate_name\": \"候補者名\",\n  \"confidence\": 3,\n  \"reason\": \"理由\"\n}"}
                     ],
                     "response_format": {"type": "json_object"}
                 }
@@ -481,7 +481,7 @@ class Interviewer:
                 
                 response = client.chat.completions.create(**request_params)
                 
-                result_json = json.loads(response.choices[0].message.content)
+                result_json = self._extract_json_from_text(response.choices[0].message.content)
                 least_motivated_result = LeastMotivatedResult.model_validate(result_json)
                 
                 token_info = {
@@ -497,8 +497,8 @@ class Interviewer:
                 print("フォールバック: 通常の生成方法を使用します。")
                 # フォールバック: 通常の生成方法
                 evaluation, token_info = self._generate_response(prompt, max_tokens=256)
-                # フォールバック時は候補者名を抽出を試みる
-                extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
+                # フォールバック時は候補者名と確信度抽出を試みる
+                extracted_name, extracted_confidence = self._extract_candidate_info_from_text(evaluation, candidate_names)
                 
                 class FallbackResult:
                     def __init__(self, name, conf, reason):
@@ -506,13 +506,13 @@ class Interviewer:
                         self.confidence = conf
                         self.reason = reason
                         
-                return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
+                return FallbackResult(extracted_name if extracted_name else "none", extracted_confidence, evaluation), token_info
         
         # フォールバック: 通常の生成方法
         else:
             evaluation, token_info = self._generate_response(prompt, max_tokens=256)
-            # フォールバック時は候補者名を抽出を試みる
-            extracted_name = self._extract_candidate_name_from_text(evaluation, candidate_names)
+            # フォールバック時は候補者名と確信度抽出を試みる
+            extracted_name, extracted_confidence = self._extract_candidate_info_from_text(evaluation, candidate_names)
             
             class FallbackResult:
                 def __init__(self, name, conf, reason):
@@ -520,11 +520,56 @@ class Interviewer:
                     self.confidence = conf
                     self.reason = reason
                     
-            return FallbackResult(extracted_name if extracted_name else "none", 1, evaluation), token_info
+            return FallbackResult(extracted_name if extracted_name else "none", extracted_confidence, evaluation), token_info
     
-    def _extract_candidate_name_from_text(self, text, candidate_names):
-        """テキストから候補者名を抽出する（フォールバック用）"""
+    def _extract_json_from_text(self, text):
+        """テキストからJSONを抽出する"""
         import re
+        import json
+        
+        # コードブロックの削除
+        text = re.sub(r'^```json\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'```$', '', text, flags=re.MULTILINE)
+        
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # 中括弧で囲まれた部分を抽出してみる
+            match = re.search(r'(\{.*\})', text, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except:
+                    pass
+            raise
+    
+    def _extract_candidate_info_from_text(self, text, candidate_names):
+        """テキストから候補者名と確信度を抽出する（フォールバック用）"""
+        import re
+        
+        candidate_name = None
+        confidence = 3  # デフォルト
+        
+        # 確信度の抽出 (確信度: X, confidence: X, etc.)
+        conf_patterns = [
+            r'確信度\s*[:：]\s*(\d+)',
+            r'confidence\s*[:：]\s*(\d+)',
+            r'確信度\s*(\d+)',
+            r'\((\d+)/5\)'
+        ]
+        
+        for p in conf_patterns:
+            match = re.search(p, text, re.IGNORECASE)
+            if match:
+                try:
+                    conf_val = int(match.group(1))
+                    # 1-5の範囲に収める
+                    confidence = max(1, min(5, conf_val))
+                    break
+                except:
+                    continue
+
         # テキスト内の「學生」を「学生」に統一
         normalized_text = text.replace('學生', '学生')
         
@@ -532,28 +577,37 @@ class Interviewer:
         normalized_names = {re.sub(r'[\s()（）、,，。*]', '', name): name for name in candidate_names}
         
         # テキストから候補者名を探す
+        found = False
         for norm_name, orig_name in normalized_names.items():
             if norm_name in re.sub(r'[\s()（）、,，。*]', '', normalized_text):
-                return orig_name
+                candidate_name = orig_name
+                found = True
+                break
         
-        # 部分一致で探す（「学生」+ 英数字のパターン）
-        for orig_name in candidate_names:
-            # 「学生」+ 英数字のパターンを抽出
-            pattern = orig_name.replace('学生', r'(?:学生|學生)')
-            if re.search(pattern, normalized_text):
-                return orig_name
+        if not found:
+            # 部分一致で探す（「学生」+ 英数字のパターン）
+            for orig_name in candidate_names:
+                # 「学生」+ 英数字のパターンを抽出
+                pattern = orig_name.replace('学生', r'(?:学生|學生)')
+                if re.search(pattern, normalized_text):
+                    candidate_name = orig_name
+                    found = True
+                    break
         
-        # さらに柔軟なマッチング: 英数字部分のみでマッチ
-        for orig_name in candidate_names:
-            # 英数字部分を抽出（例: "学生C2" -> "C2"）
-            match = re.search(r'([A-Z]{1,3}\d{0,2})', orig_name)
-            if match:
-                code = match.group(1)
-                # テキスト内にこのコードが含まれているか
-                if code in normalized_text:
-                    return orig_name
+        if not found:
+            # さらに柔軟なマッチング: 英数字部分のみでマッチ
+            for orig_name in candidate_names:
+                # 英数字部分を抽出（例: "学生C2" -> "C2"）
+                match = re.search(r'([A-Z]{1,3}\d{0,2})', orig_name)
+                if match:
+                    code = match.group(1)
+                    if code in normalized_text:
+                        candidate_name = orig_name
+                        found = True
+                        break
         
-        return None
+        return candidate_name, confidence
+
     
     def rank_candidates_by_motivation(self, candidate_states):
         """候補者を志望度順にランキング（構造化出力を使用）"""
@@ -1005,7 +1059,11 @@ class Interviewer:
 
 1. 序盤 (1-{int(total_rounds * 0.4)}): 慎重に判断してください。明らかな誤りや矛盾がない限り、欠損とはみなさないでください。
 2. 中盤 ({int(total_rounds * 0.4) + 1}-{int(total_rounds * 0.7)}): 標準的な基準で判断してください。自然な文脈で言及すべき情報を逃している場合は欠損の可能性があります。
-3. 終盤 ({int(total_rounds * 0.7) + 1}-{total_rounds}): 総合的に判断してください。これまでの会話全体を通して、重要なトピックについての理解を確認できない場合は、知識欠損の可能性を検討してください。ただし、断定するには根拠（誤った回答、回避的な回答、質問への不自然な沈黙など）が必要です。
+3. 終盤 ({int(total_rounds * 0.7) + 1}-{total_rounds}): **判断の総仕上げ**です。以下のいずれかに該当する場合は「知識欠損」とみなしてください。
+    - 質問されたのに、具体的・正確に答えられなかった項目。
+    - 会話の流れで言及するのが自然なのに、言及しなかった重要項目。
+    - 回答が抽象的で、具体的な企業情報を含んでいない項目。
+    ただし、全く話題に上がらなかった項目については、無理に欠損としないこと。あくまで「会話の中に現れた知識のほころび」を見逃さないようにしてください。
 
 # 正解の企業情報 (キーと値のペア)
 ```json
