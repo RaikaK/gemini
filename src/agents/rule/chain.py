@@ -8,7 +8,7 @@ from src.env.state_data import StateData
 
 # カードID定義
 ID_CYCLONE = 1010
-ID_HARPIE = 1007
+ID_HARPIE = 1007  # 大嵐
 ID_PREMATURE_BURIAL = 1009
 ID_MONSTER_REBORN = 1025
 ID_CALL_OF_HAUNTED = 1031
@@ -142,14 +142,40 @@ class ChainExecutor:
         return self._get_pass_or_no(commands)
 
     # =========================================================================
-    # C. ダメージステップ / 戦闘関連 (chain.txt 準拠)
+    # B. 自分のカードへのチェーン (CL2以降)
     # =========================================================================
 
     def _respond_to_my_chain(self, state: StateData, commands: List[CommandEntry]) -> Optional[CommandEntry]:
-        """自分の行動に更にチェーンするか（主にダメステ）"""
-        # 基本的には相手の行動を待つが、ダメステで「収縮」→「聖槍」のような重ね掛けが必要な場合
-        # 現状のシンプルな実装ではパス
+        """
+        自分の行動にチェーンするケース (CL2以降)
+        基本的にはパスだが、以下のケースで検討：
+        1. ダメージステップで、自分の「収縮」発動に対して、さらに「聖槍」や「月の書」を重ねたい場合
+           (chain.txt 付近のロジック)
+        """
+        duel_state = state.duel_state_data
+        
+        # ダメージステップかつ、自分が何か発動した直後
+        if duel_state.general_data.current_phase == c.Phase.BATTLE:
+             # 直前の自分のカードが「収縮」等であるか確認したいが、
+             # 簡易的に「さらに発動可能なコンバットトリックがあれば重ねる」
+             
+             # 聖槍 (Lance)
+             lance = self._find_command_by_card_id(commands, ID_LANCE)
+             if lance:
+                 # 自分のモンスターを守るため、あるいはダメ押し
+                 return lance
+                 
+             # 収縮 (Shrink)
+             shrink = self._find_command_by_card_id(commands, ID_SHRINK)
+             if shrink:
+                 return shrink
+
+        # 基本は相手に権利を渡す（パス）
         return self._get_pass_or_no(commands)
+
+    # =========================================================================
+    # C. イベント直後の反応 (攻撃宣言時、召喚成功時など - CL1)
+    # =========================================================================
 
     def _respond_to_event(self, state: StateData, commands: List[CommandEntry]) -> Optional[CommandEntry]:
         """
