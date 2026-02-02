@@ -1,0 +1,163 @@
+from typing import Callable
+
+from ygo.models.command_request import CommandEntry
+
+from src.env.state_data import StateData
+
+from ..options.chain_effect_set_query import OPTIONS
+from ..utils import Situation, write_debug_log
+
+
+def select_chain_effect_set_query(
+    state: StateData, selectable_commands: list[CommandEntry], selection_type: int, selection_id: int
+) -> int:
+    """チェーンの効果処理中 (SelectionType:10) & 手札から魔法・罠カードをセットしますか？ (SelectionId:1)"""
+
+    # 状況取得
+    situation: Situation = Situation(state)
+
+    # ランキング定義
+    ranking: list[tuple[str, Callable[[Situation], bool]]] = [
+        ("yes_no:NO", lambda s: s.my_szone_count >= 5),
+        ("yes_no:NO", lambda s: s.has_rival_card_in_chain_stack("大嵐")),
+        (
+            "yes_no:NO",
+            lambda s: s.is_my_turn
+            and (
+                s.has_card_in_hand("月の書")
+                or s.has_card_in_hand("サイクロン")
+                or s.has_card_in_hand("収縮")
+                or s.has_card_in_hand("禁じられた聖槍")
+                or s.has_card_in_hand("銀龍の轟咆")
+            ),
+        ),
+        (
+            "yes_no:NO",
+            lambda s: s.has_card_in_hand("ライトニング・ボルテックス") and s.my_hand_count <= 2,
+        ),
+        ("yes_no:NO", lambda s: s.has_card_in_hand("大嵐")),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and s.is_end_phase
+            and (
+                s.has_card_in_hand("リビングデッドの呼び声")
+                or s.has_card_in_hand("戦線復帰")
+                or s.has_card_in_hand("銀龍の轟咆")
+                or s.has_card_in_hand("強化蘇生")
+            ),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and s.is_end_phase
+            and (
+                s.has_card_in_hand("聖なるバリア －ミラーフォース－")
+                or s.has_card_in_hand("激流葬")
+                or s.has_card_in_hand("月の書")
+                or s.has_card_in_hand("サイクロン")
+                or s.has_card_in_hand("禁じられた聖槍")
+                or s.has_card_in_hand("収縮")
+            ),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and s.my_lp <= 3000
+            and (
+                s.has_card_in_hand("聖なるバリア －ミラーフォース－")
+                or s.has_card_in_hand("激流葬")
+                or s.has_card_in_hand("月の書")
+                or s.has_card_in_hand("禁じられた聖槍")
+                or s.has_card_in_hand("収縮")
+            ),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and (s.has_card_in_hand("聖なるバリア －ミラーフォース－") or s.has_card_in_hand("激流葬")),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and (
+                s.has_card_in_hand("リビングデッドの呼び声")
+                or s.has_card_in_hand("戦線復帰")
+                or s.has_card_in_hand("強化蘇生")
+            ),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_rival_turn
+            and (
+                s.has_card_in_hand("月の書")
+                or s.has_card_in_hand("サイクロン")
+                or s.has_card_in_hand("収縮")
+                or s.has_card_in_hand("禁じられた聖槍")
+                or s.has_card_in_hand("銀龍の轟咆")
+                or s.has_card_in_hand("砂塵の大竜巻")
+            ),
+        ),
+        (
+            "yes_no:YES",
+            lambda s: s.is_my_turn
+            and (
+                s.has_card_in_hand("聖なるバリア －ミラーフォース－")
+                or s.has_card_in_hand("激流葬")
+                or s.has_card_in_hand("リビングデッドの呼び声")
+                or s.has_card_in_hand("戦線復帰")
+                or s.has_card_in_hand("強化蘇生")
+                or s.has_card_in_hand("砂塵の大竜巻")
+            ),
+        ),
+        ("yes_no:NO", lambda s: True),
+        ("yes_no:YES", lambda s: True),
+    ]
+
+    # 選択可能な行動を評価
+    command_scores: list[float] = []
+
+    for target_command in selectable_commands:
+        target_command_score: float = float("-inf")
+        target_command_identifier: str | None = None
+
+        # 識別子を特定
+        for command_identifier, command_condition in OPTIONS.items():
+            if all(getattr(target_command, attr, None) == val for attr, val in command_condition.items()):
+                target_command_identifier = command_identifier
+                break
+
+        # 例外処理
+        if not target_command_identifier:
+            write_debug_log(
+                selectable_commands, selection_type, selection_id, f"Unidentified command: {target_command}"
+            )
+
+        # ランキングで評価
+        for rank_index, (rank_identifier, rank_condition) in enumerate(ranking):
+            rank_score = len(ranking) - rank_index
+
+            if rank_identifier == target_command_identifier and rank_condition(situation):
+                target_command_score = rank_score
+                break
+
+        # 評価結果を保存
+        command_scores.append(target_command_score)
+
+    # 最良行動を抽出
+    max_score = max(command_scores)
+    candidate_indices = [i for i, score in enumerate(command_scores) if score == max_score]
+
+    # 最良行動を選択
+    best_command_index = candidate_indices[0]
+
+    if len(candidate_indices) > 1:
+        # 同点は存在しない
+        write_debug_log(
+            selectable_commands,
+            selection_type,
+            selection_id,
+            f"Ambiguous commands: {[selectable_commands[i] for i in candidate_indices]}",
+        )
+
+    return best_command_index
